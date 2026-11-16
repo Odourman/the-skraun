@@ -24,11 +24,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/exact_sources build/test_scripts
-          for name in fast score p1; do
+          for name in fast score p1 opt; do
             case "$name" in
               fast) src=romdev_r1_fast_pf.asm ;;
               score) src=romdev_r1_score_contrast.asm ;;
               p1) src=romdev_r1_p1_stress.asm ;;
+              opt) src=romdev_r1_optimized_pf.asm ;;
             esac
             dasm "experiments/$src" -f3 -o"build/romdev-r1-$name.bin" -l"build/romdev-r1-$name.lst" -s"build/romdev-r1-$name.sym"
             test "$(stat -c%s build/romdev-r1-$name.bin)" -eq 4096
@@ -37,6 +38,7 @@ jobs:
           done
           sha256sum build/*.bin | tee build/SHA256SUMS
           /usr/bin/python3 tests/romdev_r1_static_ledger.py | tee build/R1_STATIC_RESOURCE_BUDGET.txt
+          /usr/bin/python3 tests/romdev_r1_mask_aliases.py | tee build/R1_ROM_MASK_ALIAS_EXACTNESS.txt
           cp tests/romdev_r1_*.py build/test_scripts/
           cp .github/workflows/romdev-r1-stella.yml build/
       - name: Genuine Stella 6.7.1 joystick reversal images at ten percent slow motion
@@ -46,7 +48,7 @@ jobs:
           export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
             set -euo pipefail
-            for name in fast score p1; do
+            for name in fast score p1 opt; do
               rom="romdev-r1-$name"
               stella -logtoconsole 1 -audio.enabled 0 -threads 0 -speed 10 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/$rom.bin" > "build/stella_$name.log" 2>&1 &
               pid=$!
