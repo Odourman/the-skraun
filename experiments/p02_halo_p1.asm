@@ -494,7 +494,7 @@ UpdateHaloPosition:
         bne HaloPos2
         lda PlayerX
         sec
-        sbc #11
+        sbc #9
         sta HaloX
         lda PlayerY
         sec
@@ -506,7 +506,7 @@ HaloPos2:
         bne HaloPos3
         lda PlayerX
         sec
-        sbc #13
+        sbc #10
         sta HaloX
         lda PlayerY
         sec
@@ -516,7 +516,7 @@ HaloPos2:
 HaloPos3:
         lda PlayerX
         sec
-        sbc #9
+        sbc #8
         sta HaloX
         lda PlayerY
         sec
