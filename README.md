@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Latest MAIN decision — R1 completed as developer self-test; R2 separately authorized (2026-11-16):** [R1 report](https://github.com/Odourman/the-skraun/blob/experiment/romdev-r1-renderer-feasibility/docs/ROMDEV_P02_R1_RENDERER_FEASIBILITY_MAIN_HANDOFF_2026-11-16.md), [draft PR #12](https://github.com/Odourman/the-skraun/pull/12), [green real-Stella self-test](https://github.com/Odourman/the-skraun/actions/runs/43906912249). Fast input 1–2-frame diagnostic, 528 ROM mask bytes saved, but same-PF-color obstacle/halo ambiguity and P1-only 71/76 cycle worst line mean R1 is NOT a validated full-game architecture. **[New MAIN authorization: P02-R2 renderer/sprite scheduling feasibility](handoff/MAIN_TO_ROM_DEV_P02_R2_RENDERER_SCHEDULING_AUTHORIZED_2026-11-16.md)** compares two-line raster scheduling, split/multi-region kernels, selective PF writes and conservative same-Y enemy slot tests. **No P02-B3c, no mainline merge, no independent VERIFICATION at this stage.**
+
+
 **Research advisory for the currently authorized P02-R1 study:** [Critical audit of all 30 classic Atari 2600 tricks against The Skraun's measured PF/cycle/scenery constraints](docs/R1_30_ATARI_TRICKS_RELEVANCE_AUDIT_2026-11-16.md). Focus on #08 two-line kernels, #14 multiple display kernels and #24 disciplined precomputed masks; #05/#07/#16/#18/#24 are already used or being evaluated. This advisory does **not** authorize any additional development stage.
 
 
