@@ -108,19 +108,19 @@ for candidate,obj in cases.items():
             assert seen[(level,"right",pose)]["x"]==seen[(level,"left",pose)]["x"],(candidate,level,pose,"mirror moves player")
             assert seen[(level,"right",pose)]["y"]==seen[(level,"left",pose)]["y"],(candidate,level,pose,"mirror y drift")
     # First-stage consecutive 24 original emulator frames: A for 8, B for 8, A for 8,
-    # while staying at first level and right-facing. The sequence begins at StageFrame=3:
-    # A(5),B(8),A(8),B(3). Their actual captured pixel art
+    # while staying at first level and right-facing. The sequence begins at StageFrame=2:
+    # A(6),B(8),A(8),B(2). Their actual captured pixel art
     # must match the respective P0 image rather than source-only inferred animation.
     walkrows=[]
     for idx in range(24):
-        pose="A" if ((3+idx)//8)%2==0 else "B" # first frame StageFrame=3
+        pose="A" if ((2+idx)//8)%2==0 else "B" # first frame StageFrame=3
         path=B/("frames_"+candidate)/(f"walk_{idx:02d}.png")
         assert path.is_file(),("MISSING consecutive Stella frame",path)
         info=rows_from_png(path,reference(candidate,pose,"right"),1,1)
         assert info["x"]==seen[(1,"right","A")]["x"],(candidate,idx,"walking but diagnostic P0 X drift")
         walkrows.append(info["rows"])
-    assert sum(w==reference(candidate,"A","right") for w in walkrows)==13,(candidate,"unexpected A-frame cadence")
-    assert sum(w==reference(candidate,"B","right") for w in walkrows)==11,(candidate,"unexpected B-frame cadence")
+    assert sum(w==reference(candidate,"A","right") for w in walkrows)==14,(candidate,"unexpected A-frame cadence")
+    assert sum(w==reference(candidate,"B","right") for w in walkrows)==10,(candidate,"unexpected B-frame cadence")
     # Extract code-safe source-mirroring, not silent fallbacks.
     assert seen[(1,"right","A")]["rows"] != seen[(1,"right","B")]["rows"],(candidate,"animation is static")
     print("STELLA EXACT BITMAP 12/12 PASS",candidate,"+24 1-frame walk images, 1x/2x/4x NUSIZ, exact 12row mirror")
