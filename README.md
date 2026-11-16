@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Current MAIN-authorized ROM DEVELOPMENT sprint (2026-11-16):** [Combined scope: gray Skraun animation self-tests, REFP0 hardware mirror experiment, and P02-B3a three-position asymmetric playfield feasibility](handoff/MAIN_TO_ROM_DEV_AUTHORIZED_SCOPE_2026-11-16.md). This is not implementation completion, a verified release, or permission for B3b/B3c. Independent VERIFICATION is deferred until MAIN requests a substantial milestone package.
+
+
 **Upright sprite correction (2026-11-16):** The static gray troll+halo experiment was found to display its sprite vertically inverted because its bottom-to-top ROM row table contradicted a descending scanline index. Corrected in [draft PR #6](https://github.com/Odourman/the-skraun/pull/6), with a passing real-Stella per-pixel orientation regression across all 3 levels. See [the row-order audit](docs/ATARI2600_SPRITE_ROW_ORDER_AUDIT_2026-11-16.md). This remains developer self-test, not independent acceptance.
 
 **Separate workstreams:** [ROM DEVELOPMENT handoff](handoff/ROM_DEVELOPMENT_START.md) | [Independent VERIFICATION handoff](handoff/VERIFICATION_START.md). These are prompts for separate conversations, not automatically created chats.
