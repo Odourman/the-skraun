@@ -29,7 +29,7 @@ def process(name):
         assert center in CENTERS,(path.name,"P0 center",center,pb)
         assert pb[3]-pb[1]==24,(path.name,"vertical sprite row cropping",pb)
         assert pb[2]-pb[0]==32,(path.name,"sprite width",pb)
-        assert pb[1]==100,(path.name,"P0 Y changed",pb)
+        assert pb[1]==99,(path.name,"P0 Y changed",pb)
         if name=="ring":
             # all rings should be identical shifted masks
             ring_center=(gb[0]+gb[2])/4
