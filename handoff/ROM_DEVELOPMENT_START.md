@@ -28,3 +28,6 @@ Du är **ROM DEVELOPMENT** för Atari 2600-spelet THE SKRAUN. **MAIN** är en se
 Ange: commit/branch, scope, ändrade filer, byggkommando, ROM-storlek, SHA-256, faktiskt observerad Stella-bild, regressionstester, timingstatus, kvarstående fel och vad VERIFICATION behöver kontrollera. Länka direkt till GitHub Actions och Google Drive-artifakter.
 
 **Börja inte ny P02-B3-implementation eller komplett stridsmotor utan separat MAIN-auktorisation.**
+## Atari hardware optimization to review
+
+For horizontal left/right orientation, Atari 2600 can mirror the Player 0 bitmap in hardware: `REFP0=$0B`, bit 3 `#$08` enables reflection, 0 disables. The current experimental gray ROM stores duplicate left/right mirrored tables; consider a separate measured optimization that keeps only the A/B pose tables and updates `REFP0` once per facing change. This must not be confused with vertical row order in the static-halo ROM. Source: https://www.atariage.com/2600/programming/2600_101/docs/stella.html . Test in Stella before any production acceptance.
