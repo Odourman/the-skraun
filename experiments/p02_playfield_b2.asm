@@ -138,7 +138,7 @@ SelectPointers:
         lda Level
         cmp #1
         bne SetLevelTwo
-        lda #79
+        lda #64
         sta PlayerX
         lda #0
         sta NUSIZ0
@@ -154,7 +154,7 @@ SelectPointers:
 SetLevelTwo:
         cmp #2
         bne SetLevelThree
-        lda #74
+        lda #59
         sta PlayerX
         lda #5
         sta NUSIZ0
@@ -168,7 +168,7 @@ SetLevelTwo:
         sta TrollPtr+1
         rts
 SetLevelThree:
-        lda #66
+        lda #51
         sta PlayerX
         lda #7
         sta NUSIZ0
