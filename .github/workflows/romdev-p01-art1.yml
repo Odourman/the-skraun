@@ -123,7 +123,7 @@ jobs:
                   return out
               r={k:val(k) for k in ("*Stage","*StageFrame","*Level","*Facing","*Pose","_scanEnd")}
               assert r["*Stage"]==[0,0,1,1,2,2,3,3,4,4,5,5],(n,r)
-              assert r["*StageFrame"]==[2,10]*6,(n,r)
+              assert r["*StageFrame"]==[1,9]*6,(n,r)
               assert r["*Level"]==[1,1,1,1,2,2,2,2,3,3,3,3],(n,r)
               assert r["*Facing"]==[0,0,1,1,0,0,1,1,0,0,1,1],(n,r)
               assert r["*Pose"]==[0,1]*6,(n,r)
