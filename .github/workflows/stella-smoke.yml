@@ -50,7 +50,26 @@ jobs:
             wid=$(head -n1 build/window_ids.txt || true)
             if [ -n "$wid" ]; then
               xdotool windowfocus "$wid" || true
-              xdotool key --window "$wid" F12 || true
+              xdotool key --window "$wid" F12
+              sleep 0.5
+              cp build/the-skraun-p01.png build/p01_level1.png
+              xdotool key --window "$wid" F1
+              sleep 0.5
+              xdotool key --window "$wid" F12
+              sleep 0.5
+              cp build/the-skraun-p01.png build/p01_level2.png
+              xdotool key --window "$wid" F1
+              sleep 0.5
+              xdotool key --window "$wid" F12
+              sleep 0.5
+              cp build/the-skraun-p01.png build/p01_level3.png
+              xdotool keydown --window "$wid" Right
+              sleep 0.7
+              xdotool keyup --window "$wid" Right
+              sleep 0.5
+              xdotool key --window "$wid" F12
+              sleep 0.5
+              cp build/the-skraun-p01.png build/p01_level3_right.png
             fi
             scrot -z build/stella_desktop.png
             sleep 2
@@ -70,6 +89,7 @@ jobs:
           if unique < 4 or nonblack < 200:
               raise SystemExit('Stella screenshot blank/inconclusive; fail closed.')
           PY
+          /usr/bin/python3 tests/check_stella_images.py | tee build/STELLA_VISUAL_CHECK.log
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,5 +102,6 @@ jobs:
             build/xwininfo.txt
             build/all_window_ids.txt
             build/stella_process.txt
+            build/STELLA_VISUAL_CHECK.log
             build/the-skraun-p01.bin
           if-no-files-found: warn
