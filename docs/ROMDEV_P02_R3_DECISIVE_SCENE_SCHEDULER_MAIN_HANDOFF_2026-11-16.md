@@ -115,3 +115,18 @@ Mask-deduplikation: overlap/partial 40 unika×19-byte PF masktabellblock =760 RO
 - Fullständigt MAIN ZIP med 3 ROM, source/list/sym, 57 autentiska Stella PNG, debugger-sessioner och beräknade CSV samt SHA manifest publiceras som separat slutpaket.
 
 **Ingen B3c, R4, AI, collision, main-merge eller oberoende VERIFICATION.**
+
+
+## 10. SLUTLIGT FRYST 184-FILERS MAIN-PAKET, KONTROLLERAD INTEGRITET
+
+Det slutliga MAIN-paketet skapades via [GitHub Actions SUCCESS #43920898468](https://github.com/Odourman/the-skraun/actions/runs/43920898468) genom att hämta **två separat godkända, frysta körningar**: faktiskt DASM-bygge #43919399638 och faktisk Stella Debugger/bildregression #43919941150. PAKETET innehåller **184 filer totalt efter manifest/checklog**, 3 unika exakta 4096-byte BIN-versioner (kopior finns både i build- och debuggerdel), .asm/.lst/.sym, 57 originalgame-PNGs (plus 57 motsvarande original-saveSnap-rawkopior, debugger GUI och bildmontage separat), 3 direkta Stella debugger-sessioner, full static path-CSV, per-frame färg/pixel/20–30–60Hz-data, full MAIN handoff-rapport, testskript och två CI-workflows.
+
+**Fristående inner-ZIP:** THE_SKRAUN_P02_R3_COMPLETE_MAIN_DELIVERY_2026-11-16.zip, **SHA-256 ac71c5aef26f3c66ba18dac042d89ecc7fb150aab926d526d37fa625d5330e96**. Den inre ZIP:en och dess hela FILE_SHA256_MANIFEST.txt har sedan byggts upp och kontrollerats på nytt i en separat lokal filsystemsvalidering: alla SHA256-poster **OK**. Oavsett om original-ROM finns i två undermappar är BIN-SHA:n per variant exakt som tabellen i avsnitt 2.
+
+**Drive-versionen** av paketet ligger här och är den **yttre GitHub Actions-artifakt-ZIP:en**, innehållande den fullständiga inner-ZIP:en och PACKAGE_SHA256.txt: https://drive.google.com/file/d/144hABkr1rC0blhz5kGsolrzFwLb6_RtG/view?usp=drivesdk . Packa upp wrappern först för att nå fristående slutpaketet.
+
+**Jämförelsebild med ENBART de ursprungliga Stella 6.7.1-emulatorpixlarna**, sex paneler som visar actual full/partial/stagger, guld/blå olika frame-faser och level3:s höger PF2: https://drive.google.com/file/d/1N-sHAYWLPf3v_RFsQV9d7qAki7_lcQiZ/view?usp=drivesdk
+
+**Samlad Drive-mapp:** https://drive.google.com/drive/folders/1lxeqjTpPM3hhTz3Xm-YX_zf6AifV1ME3
+
+Detta är ett **avslutat negativt tekniskt feasibilitybeslut**, inte godkänd färdig spelmotor. **NO-GO direkt B3c, ingen R4, ingen AI, ingen merge till main och ingen oberoende VERIFICATION**. MAIN avgör nästa separata auktorisation.
