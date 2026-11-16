@@ -88,7 +88,7 @@ jobs:
                           idx=side*2+posei;xb=10+idx*310
                           im=Image.open(base/("frames_"+name)/("state_"+str(stage)+"_"+pose+".png")).convert("RGB")
                           x0={1:146,2:140,3:124}[level];y0={1:106,2:100,3:94}[level]
-                          width={1:16,2:32,3:64}[level];height=12*level if level<3 else36
+                          width={1:16,2:32,3:64}[level];height=12*level if level<3 else 36
                           crop=im.crop((x0-10,y0-8,x0+width+10,y0+height+8))
                           scale=min(6,160//crop.height,295//crop.width)
                           bigger=crop.resize((crop.width*scale,crop.height*scale),Image.Resampling.NEAREST)
