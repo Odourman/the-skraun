@@ -43,7 +43,7 @@ for level in (1,2,3):
     assert (bb[2]-bb[0],bb[3]-bb[1])==(16*level,12*level)
     actual=sample(im,bb,level)
     print("SIZEMASK",level,"bbox",bb,"actual",[f"{v:08b}" for v in actual],"expected",[[f"{v:08b}" for v in pp] for pp in patterns.values()])
-    assert actual in patterns.values(), ("inverted or wrong sprite",level)
+    assert actual in (tuple(v) for v in patterns.values()), ("inverted or wrong sprite",level)
 
 for face in ("Right","Left"):
     found=set()
