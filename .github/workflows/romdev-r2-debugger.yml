@@ -41,7 +41,7 @@ jobs:
           export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
             set -euo pipefail
-            for n in twoline dual hud; do
+            for n in twoline dual hud interlace; do
               stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/$n.bin" > "build/stella_debug_$n.log" 2>&1 &
               pid=$!
               win=""
