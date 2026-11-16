@@ -1,0 +1,55 @@
+name: P01 Stella Visual Smoke (diagnostic)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/main.asm'
+      - '.github/workflows/stella-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stella-diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM and Stella dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool
+      - name: Build ROM
+        run: |
+          mkdir -p build
+          dasm src/main.asm -f3 -obuild/the-skraun-p01.bin -lbuild/the-skraun-p01.lst -sbuild/the-skraun-p01.sym
+          sha256sum build/the-skraun-p01.bin
+          stella -rominfo build/the-skraun-p01.bin
+      - name: Take a Stella screenshot via Xvfb
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -eu
+            stella -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/the-skraun-p01.bin" > build/stella.log 2>&1 &
+            pid=$!
+            sleep 4
+            xdotool key F12
+            sleep 2
+            kill "$pid" || true
+            wait "$pid" || true
+          '
+          find build -maxdepth 1 -type f -printf '%f %s bytes\n'
+          find build -maxdepth 1 -type f -iname '*.png' | grep .
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p01-stella-visual-diagnostic
+          path: |
+            build/*.png
+            build/stella.log
+            build/the-skraun-p01.bin
+          if-no-files-found: warn
