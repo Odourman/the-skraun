@@ -83,3 +83,13 @@ Full original-PNG analysis pinpoints **the same extra top line in all twelve lev
 - One self-contained package includes exact 3 ROM and SHA, ASM, .lst/.sym, all 108 untouched original PNG, debugger trace, negative test, full 36-state ledger, nearest-neighbor actual-Stella viewing aid, GIF/APNG source-frame sequences, file checksum manifest, reproducible scripts and this report. Links added on package validation.
 
 **No further scope is started.**
+
+## 9. FRYST SLUTPAKET, FÖRKLARAD RÖD TESTGRIND OCH HASHKONTROLL
+
+- **GitHub Actions reproducible package SUCCESS:** https://github.com/Odourman/the-skraun/actions/runs/43948698028 . Paketeringen PASS betyder INTE att den underkända original-Stella-pixelregressionen har gjorts grön. Workflown kontrollerar uttryckligen att originaltestet #43947105697 fortfarande har conclusion=failure och bevarar alla 12 level3-Fail.
+- **En komplett inner-ZIP:** THE_SKRAUN_P01_ART1_COMPLETE_MAIN_II_DELIVERY_2026-11-16.zip, SHA-256 **3dcdc3e1837a8543e36ff9577aa7dad5528b811180b261419b2363e463a16c4e**, 361942 bytes, 285 ZIP entries, fil-CRC PASS, **275 av 275 filer i SHA256-manifestet PASS**. Innehåller 3 ROMs, 108 autentiska Stella original-PNGs, tillhörande .asm/.lst/.sym, 36 state-ledger, 72 gångframes CSV, verkliga Stella debugger-sessioner och 262-line traces, två exakta input JSON, original real-frame NN crops / 4:3 visning / APNG (~60Hz) / saktad GIF, statisk cykel/RAM/ROM-redovisning, tester och denna rapport.
+- **Drive nedladdning:** https://drive.google.com/file/d/1BNS9A9KiuGHrQ1WRUwhxWwZJo05N5MGx/view?usp=drivesdk . Detta är GitHub Actions **yttre wrapper-ZIP** på 273532 bytes med inner-ZIP plus PACKAGE_SHA256.txt; packa först upp wrappern för att få ovanstående självständiga inner-ZIP. Drive metadata kontrollerad, mappen https://drive.google.com/drive/folders/11s5rWZTkpHVplOCRcAhGSPnzC4C-iT5l .
+- **Full käll-/experimentrevision:** https://github.com/Odourman/the-skraun/pull/18 (DRAFT, INTE MERGED).
+- **Strikt originaltest FAIL:** https://github.com/Odourman/the-skraun/actions/runs/43947105697. Detta är AVSIKTLIGT bevarad negativ faktisk evidens, inte ett fel som tyst har åtgärdats.
+
+**SLUT: TECHNICAL FAIL som fullständigt 36/36-pixelkrav; VISUAL READABILITY begränsad; ART IDENTITY INTE GODKÄND. Inga nya sprites, P01-ART2, R4/B3c, main-merge eller oberoende VERIFICATION.**
