@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**NEW MAIN VISUAL GATE after R3 (2026-11-16):** R3 technical developer self-tests support a **NO-GO** for full-game continuation in the tested renderers (same-Y enemy 20 Hz each, alternate halo/scenery 30 Hz, 2–4 static cycles spare), and **the R3 Stella screenshot shows a confirmed UPSIDE-DOWN player regression**: its descending `Troll3` reader draws feet before ears. Its tiny red/green enemies and three blue columns are **diagnostic placeholders, not final knights/archer or four-world scenery**. [Visual FAIL issue #15](https://github.com/Odourman/the-skraun/issues/15); [narrow MAIN-approved R3-VFIX source/real Stella regression task](handoff/MAIN_TO_ROM_DEV_R3_VFIX_ORIENTATION_REGRESSION_2026-11-16.md). No R4/B3c/art implementation authorized; no independent verification yet.
+
+
 **Latest MAIN decision — P02-R2 accepted as bounded developer evidence (2026-11-16):** [R2 report](https://github.com/Odourman/the-skraun/blob/experiment/romdev-r2-two-line-scheduler/docs/ROMDEV_P02_R2_RENDERER_SCHEDULING_MAIN_HANDOFF_2026-11-16.md), [draft PR #13](https://github.com/Odourman/the-skraun/pull/13), [genuine Stella test](https://github.com/Odourman/the-skraun/actions/runs/43912037744), [16 debugger frame-state tests](https://github.com/Odourman/the-skraun/actions/runs/43911806707). Two-line/P1 diagnostic 68/76 static worst line, dual different P1 bitmaps 76/76 at fixed 64-clock spacing, HUD placeholder arena 64/76 without P1, alternating gold/blue raster 74/76 with 50% gold ring rows. **Not a feasible production proof for free-positioning three actors plus arrow/orb/level3 halo/scenery.** MAIN separately authorizes [P02-R3 decisive scene/sprite scheduler feasibility](handoff/MAIN_TO_ROM_DEV_P02_R3_DECISIVE_SCENE_SCHEDULER_AUTHORIZED_2026-11-16.md) as a bounded go/no-go architecture decision. **No B3c, no R4, no merge, VERIFICATION deferred.**
 
 
