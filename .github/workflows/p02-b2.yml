@@ -30,7 +30,7 @@ jobs:
           test "$(stat -c %s build/p02-playfield-b2.bin)" -eq 4096
           sha256sum build/p02-playfield-b2.bin | tee build/SHA256SUMS
           stella -rominfo build/p02-playfield-b2.bin | tee build/stella_rominfo.txt
-      - name: Stella screenshots: levels 1 through 3
+      - name: 'Stella screenshots: levels 1 through 3'
         shell: bash
         run: |
           set -euo pipefail
