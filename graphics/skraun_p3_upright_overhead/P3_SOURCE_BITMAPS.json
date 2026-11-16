@@ -1,0 +1,567 @@
+{
+  "project": "The Skraun",
+  "study": "GRAPHICS P3 – Upright Overhead Character Proof",
+  "date": "2026-11-16",
+  "status": "GRAPHIC DESIGN DATA ONLY; NOT STELLA; NOT FINAL ART",
+  "authoritative_override": "Direct user MAIN II P3 order: upright at all times, viewed overhead, not lying down. Overrides horizontal anatomical-axis inference of P1/P2. No rewrite of frozen decisions 01–60.",
+  "private_original": "Read from private Drive original; NOT included or reproduced in package, public GitHub, or previews.",
+  "source_urls": {
+    "decisions": "https://github.com/Odourman/the-skraun/blob/main/docs/DESIGN_DECISIONS_01-60_2026-11-16.md",
+    "visual_direction": "https://github.com/Odourman/the-skraun/blob/main/docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md",
+    "q1": "https://github.com/Odourman/the-skraun/blob/graphics/skraun-v0-3-final-readability-20261116/graphics/skraun_v0_3/SKRAUN_V03.json",
+    "p1": "https://github.com/Odourman/the-skraun/blob/graphics/p1-horizontal-axis-perspective-proof-20261116/graphics/skraun_p1_horizontal_axis/SKRAUN_P1_PIXEL_MASKS.json",
+    "p2": "https://github.com/Odourman/the-skraun/blob/graphics/p2-identity-silhouette-proof-20261116/graphics/skraun_p2_identity/P2_SPRITES_SOURCE.json",
+    "stella_reference": "https://github.com/Odourman/the-skraun/blob/experiment/romdev-p01-art1-p0-stella-readout/docs/ROMDEV_P01_ART1_MAIN_II_STELLA_VISUAL_READOUT_2026-11-16.md"
+  },
+  "data_convention": {
+    "width_bits": 8,
+    "logical_rows": 12,
+    "row0": "horns/crown ABOVE upper body (upright), NOT left/right-facing horizontal prone body",
+    "row11": "feet BELOW torso (upright), NOT lower paws of horizontal body",
+    "bit7": "leftmost pixel, x0",
+    "bit0": "rightmost pixel, x7",
+    "right_facing": "RIGHT-labeled 8x12 upright design with modest right contour bias; NOT a side-view or separate up/down pose",
+    "left_facing": "exact per-row bit reversal (no row order flip)",
+    "up_down_joystick": "both use same right/left upright art; no third or fourth facing source"
+  },
+  "conceptual_sizes": {
+    "1": {
+      "x_width_multiplier": 1,
+      "row_repeat": 1,
+      "width_color_clocks": 8,
+      "height_scanlines": 12,
+      "NUSIZ0": "$00"
+    },
+    "2": {
+      "x_width_multiplier": 2,
+      "row_repeat": 2,
+      "width_color_clocks": 16,
+      "height_scanlines": 24,
+      "NUSIZ0": "$05"
+    },
+    "3": {
+      "x_width_multiplier": 4,
+      "row_repeat": 3,
+      "width_color_clocks": 32,
+      "height_scanlines": 36,
+      "NUSIZ0": "$07"
+    }
+  },
+  "preview": {
+    "native_arena": "160 TIA color clocks x 192 scanlines",
+    "tv_4_3": "640x480 nearest-neighbor from 160x192 (x4, y2.5 display units per source raster step)",
+    "color_gray_RGB": [
+      210,
+      210,
+      209
+    ],
+    "contrast_forest_RGB": [
+      20,
+      41,
+      33
+    ],
+    "contrast_night_RGB": [
+      11,
+      20,
+      37
+    ],
+    "background_only": "flat colors, no playfield, no Stella",
+    "gif_duration_ms_each_pose": 140
+  },
+  "controls": {
+    "Q1_prior_best_upright": {
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "00111100",
+        "00111100",
+        "11111100",
+        "10111111",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11011011",
+        "10000010"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "00111100",
+        "00111100",
+        "00111111",
+        "11111101",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11011011",
+        "01000001"
+      ],
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "00111100",
+        "00111100",
+        "00111111",
+        "11111101",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11011011",
+        "01000001"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "00111100",
+        "00111100",
+        "11111100",
+        "10111111",
+        "00111100",
+        "00111100",
+        "01111110",
+        "11011011",
+        "10000010"
+      ],
+      "A_B_different_cells": 10,
+      "changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          7,
+          11
+        ]
+      ],
+      "intent": "Frozen Q1 up/down anatomical layout for historical aesthetic comparison, not newly approved",
+      "visual_risk": "frontal humanoid face even though source considered topdown"
+    },
+    "P1_A_negative_prone": {
+      "A": [
+        "01000100",
+        "11001100",
+        "01001100",
+        "01111110",
+        "01111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01111110",
+        "01001100",
+        "11001100",
+        "01000100"
+      ],
+      "B": [
+        "00101000",
+        "01101100",
+        "01001100",
+        "01111110",
+        "01111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01111110",
+        "01001100",
+        "11000110",
+        "10000010"
+      ],
+      "A_left": [
+        "00100010",
+        "00110011",
+        "00110010",
+        "01111110",
+        "11111110",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01111110",
+        "00110010",
+        "00110011",
+        "00100010"
+      ],
+      "B_left": [
+        "00010100",
+        "00110110",
+        "00110010",
+        "01111110",
+        "11111110",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01111110",
+        "00110010",
+        "01100011",
+        "01000001"
+      ],
+      "A_B_different_cells": 12,
+      "changed_cells_xy": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "intent": "Frozen P1-A source. Horizontal lying quadruped; use only as WRONG interpretation negative control",
+      "visual_risk": "turtle/beetle and prone"
+    }
+  },
+  "new_candidates": {
+    "U1_upright_face_priority": {
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000001"
+      ],
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "10000011"
+      ],
+      "A_B_different_cells": 7,
+      "changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "intent": "Upright head/horns, two dark eye gaps, two-pixel enclosed mouth, arms fan out from shoulders, two independent feet; mild asymmetric right cheek",
+      "visual_risk": "Can still look too front-facing because face is visible from strictly overhead. Upright torso, not side profile.",
+      "vs_Q1_changed_bits": {
+        "A": 18,
+        "B": 17
+      },
+      "vs_P1_changed_bits": {
+        "A": 33,
+        "B": 30
+      }
+    },
+    "U2_upright_body_priority": {
+      "A": [
+        "00100100",
+        "00111110",
+        "00110110",
+        "00011110",
+        "00111100",
+        "11111111",
+        "10011001",
+        "01111110",
+        "00111100",
+        "00100100",
+        "01100110",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "00111110",
+        "00110110",
+        "00011110",
+        "00111100",
+        "01111111",
+        "10011011",
+        "11111100",
+        "00111100",
+        "00100100",
+        "01001110",
+        "10000111"
+      ],
+      "A_left": [
+        "00100100",
+        "01111100",
+        "01101100",
+        "01111000",
+        "00111100",
+        "11111111",
+        "10011001",
+        "01111110",
+        "00111100",
+        "00100100",
+        "01100110",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111100",
+        "01101100",
+        "01111000",
+        "00111100",
+        "11111110",
+        "11011001",
+        "00111111",
+        "00111100",
+        "00100100",
+        "01110010",
+        "11100001"
+      ],
+      "A_B_different_cells": 8,
+      "changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ],
+      "intent": "Smaller asymmetrical crown, broader shoulders and more pronounced arm-to-body gaps, long separated legs and two large feet; head details simplified",
+      "visual_risk": "Looks more like small topdown person/robot, with weak mouth and horns. Less identity than U1.",
+      "vs_Q1_changed_bits": {
+        "A": 26,
+        "B": 26
+      },
+      "vs_P1_changed_bits": {
+        "A": 37,
+        "B": 31
+      }
+    }
+  },
+  "face_anatomy_hypotheses": {
+    "U1": {
+      "horns": [
+        [
+          2,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "eyes_as_unlit_pixels": [
+        [
+          2,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "mouth_opening_unlit_pixels": [
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ]
+      ],
+      "shoulder_band_rows": [
+        5,
+        6
+      ],
+      "legs_feet_rows": [
+        9,
+        10,
+        11
+      ]
+    },
+    "U2": {
+      "horns": [
+        [
+          2,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "face": "simplified two gaps; no reliably clear open mouth at L1",
+      "shoulder_band_rows": [
+        5,
+        6,
+        7
+      ],
+      "legs_feet_rows": [
+        9,
+        10,
+        11
+      ]
+    }
+  },
+  "claims": [
+    "The visible features here are encoded data but not proven perceptually recognisable at 1x.",
+    "Facing is represented by exact mirror; none of the rows is reoriented when moving vertically.",
+    "Upright orientation is symbolic/overhead-inspired; 8x12 facial details may force visually frontal reading.",
+    "No ROM, Stella, game engine, PAL, or independent verification executed in P3."
+  ],
+  "U1_vs_U2_changed_bits": {
+    "A": 20,
+    "B": 25
+  }
+}
