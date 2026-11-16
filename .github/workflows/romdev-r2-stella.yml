@@ -1,0 +1,96 @@
+name: P02-R2 DASM and two-line/dual-copy/HUD Stella feasibility
+on:
+  push:
+    branches: [experiment/romdev-r2-two-line-scheduler]
+    paths:
+      - '.github/workflows/romdev-r2-stella.yml'
+      - 'experiments/romdev_r2_*.asm'
+      - 'tests/romdev_r2_*.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  r2-roms:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM, Stella 6.7.1, Xvfb, Pillow and desktop automation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Four source ROMs, 4KB each, symbols/listings/hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/sources
+          for v in baseline twoline dual hud; do
+            case "$v" in
+              baseline) asm=experiments/romdev_r1_p1_stress.asm ;;
+              twoline) asm=experiments/romdev_r2_two_line_p1.asm ;;
+              dual) asm=experiments/romdev_r2_two_line_dualcopy.asm ;;
+              hud) asm=experiments/romdev_r2_multikernel_hud.asm ;;
+            esac
+            cp "$asm" "build/sources/"
+            dasm "$asm" -f3 -o"build/r2-$v.bin" -l"build/r2-$v.lst" -s"build/r2-$v.sym"
+            test "$(stat -c%s build/r2-$v.bin)" -eq 4096
+            echo "$v ROM 4096B"
+          done
+          sha256sum build/*.bin | tee build/SHA256SUMS
+          /usr/bin/python3 -m py_compile tests/romdev_r2_*.py
+          /usr/bin/python3 tests/romdev_r2_static.py | tee build/R2_STATIC_CYCLE_LEDGER.txt
+          cp tests/romdev_r2_*.py build/
+          cp .github/workflows/romdev-r2-stella.yml build/
+      - name: Genuine Stella image capture, 3 centres + reversals, all variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            for v in baseline twoline dual hud; do
+              rom="r2-$v"
+              stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -speed 10 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/$rom.bin" > "build/stella_$v.log" 2>&1 &
+              pid=$!
+              wid=""
+              for j in $(seq 1 28); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid"
+              xdotool windowfocus "$wid" || true
+              sleep 0.55
+              snap() {
+                xdotool key --window "$wid" F12
+                sleep 0.13
+                test -s "build/$rom.png"
+                cp "build/$rom.png" "build/$v-$1.png"
+              }
+              snap centre80
+              xdotool keydown --window "$wid" Right
+              sleep 2.0
+              snap centre104
+              xdotool keyup --window "$wid" Right
+              xdotool keydown --window "$wid" Left
+              sleep 3.6
+              snap centre56
+              xdotool keyup --window "$wid" Left
+              xdotool keydown --window "$wid" Right
+              sleep 1.8
+              snap reverse
+              xdotool keyup --window "$wid" Right
+              scrot -z "build/desktop_$v.png"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.5
+            done
+          '
+          /usr/bin/python3 tests/romdev_r2_images.py | tee build/R2_REAL_STELLA_IMAGE_RESULTS.txt
+      - name: Preserve success OR failure images, exact assembler, ROM, symbols and cycle ledger
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r2-twoline-dual-hud-original-stella
+          path: build/
+          if-no-files-found: warn
