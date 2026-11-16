@@ -49,3 +49,16 @@ Efter användarens observation verifierades att den tidigare kombinerade P02-gr�
 **Fix:** [draft PR #6](https://github.com/Odourman/the-skraun/pull/6) i grenen `fix/p02-gray-halo-upright`, separat från `main`. Riktig Stella 6.7.1 bekräftar korrekt radorientering pixel för pixel på nivå 1–3, 4K NTSC ROM SHA-256 `7dda240f58656277e5508ad444368b2c33cad0ee9c9a5c259b27e0a7eda44bed`. Full audit i `docs/ATARI2600_SPRITE_ROW_ORDER_AUDIT_2026-11-16.md`, evidenspaket på Google Drive. P01/hela P02 är **inte oberoende verifierade**.
 
 Roller: MAIN = den här huvudchatten; ROM DEVELOPMENT = separat implementation/självtest; VERIFICATION = separat oberoende granskning. Startprompter finns i `handoff/ROM_DEVELOPMENT_START.md` och `handoff/VERIFICATION_START.md`.
+
+## MAIN uppdatering – A/B/C accepterade som egenkontroller, P02-B3b auktoriserad (2026-11-16)
+
+Efter jämförelse med faktiska GitHub PR #8–#10, byggkörningar och samlad rapport har MAIN **accepterat A, B och C som klara avgränsade utvecklaregenkontroller**. Ingen gren har slagits ihop med `main` och inget oberoende VERIFICATION har genomförts.
+
+- A: två riktiga gångposer, vänster/höger, tre storlekar och 8-riktningsrörelse i Stella. Den diagnostiska vänsterkantsmarginalen är inte en generell kernellösning eller färdig banagräns.
+- B: `REFP0` hårdvaruspegling genomförd och utvecklartestad. Fyra bitmaptabeller reduceras till två och **24 ROM-byte** sparas; integrerad timing ej slutligt mätt.
+- C: P02-B3a visar asymmetrisk ring i tre fasta X-centra 56/80/104 och grå P0. Debugger visar 262 scanlines vid provat läge. Beräknat högst **64 av 76 CPU-cykler/scanline** för synlig rutin (statisk kalkyl, **inte** full värstafallsmätning). Ingen fri joystickföljning, hinder eller fiender.
+- Jämförbar originalrapport: https://github.com/Odourman/the-skraun/blob/experiment/romdev-c-b3a/docs/ROMDEV_ABC_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md . Samlat evidens: https://drive.google.com/drive/folders/1MyI-ZuVqSj_MwQRebn7C0emfxlU5jdeX .
+- **Nytt uttryckligt MAIN-uppdrag:** https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_TO_ROM_DEV_B3B_AUTHORIZED_SCOPE_2026-11-16.md – B3b, faktisk horisontell joystickföljning i 4-TIA-klocksteg och begränsat PF-hindrars/processorbudget-test. Ingen B3c, fiendekod eller produktionsintegration nu.
+- **VERIFICATION vilande**, eftersom oberoende kontroll ska samlas för senare större leveranspaket. Öppna historiska verifieringsärenden stängs inte av detta beslut.
+
+Tidigare statusuppgifter längre upp på sidan visar dåtidens läge; **denna sektion är senare och ersätter formuleringen att B3a inte var byggd**.
