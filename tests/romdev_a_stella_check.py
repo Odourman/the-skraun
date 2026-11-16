@@ -29,9 +29,10 @@ def bitmap(path):
 
 def sample(im,bb,level):
     x0,y0,x1,y1=bb
-    assert (x1-x0,y1-y0)==(16*level,12*level), (x0,y0,x1,y1,level)
+    scale={1:1,2:2,3:4}[level]
+    assert (x1-x0,y1-y0)==(16*scale,12*level), (x0,y0,x1,y1,level)
     return tuple(sum((128>>col) for col in range(8)
-                     if isgray(im.getpixel((x0+2*level*col+level,y0+row*level)))
+                     if isgray(im.getpixel((x0+2*scale*col+scale,y0+row*level)))
                     ) for row in range(12))
 
 def isgray(rgb):
@@ -41,7 +42,7 @@ def isgray(rgb):
 for level in (1,2,3):
     im,bb=bitmap(f"build/size_{level}.png")
     print("SIZE",level,bb)
-    assert (bb[2]-bb[0],bb[3]-bb[1])==(16*level,12*level)
+    assert (bb[2]-bb[0],bb[3]-bb[1])==(16*{1:1,2:2,3:4}[level],12*level)
     actual=sample(im,bb,level)
     print("SIZEMASK",level,"bbox",bb,"actual",[f"{v:08b}" for v in actual],"expected",[[f"{v:08b}" for v in pp] for pp in patterns.values()])
     assert actual in (tuple(v) for v in patterns.values()), ("inverted or wrong sprite",level)
