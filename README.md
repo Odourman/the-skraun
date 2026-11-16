@@ -49,7 +49,9 @@ No license has been selected yet. Do not assume permission to reuse this project
 - [P01 Stella screenshot evidence](docs/P01_STELLA_VISUAL_EVIDENCE_2026-11-16.md) — actual emulator PNGs, three sizes, rightward motion and test limitations.
 - [P01 Stella scanline observation](docs/P01_STELLA_TIMING_EVIDENCE_2026-11-16.md) — direct 262-line debugger screenshot; not yet a full CPU timing audit.
 - [P01 independent verification](https://github.com/Odourman/the-skraun/issues/1) — still open; no independent approval yet.
-- [P02 halo feasibility plan](docs/P02_HALO_FEASIBILITY_PLAN.md) — proposed technical experiments only; P02 not implemented.
+- [P02 halo feasibility plan](docs/P02_HALO_FEASIBILITY_PLAN.md) — original technical research scope.
+- [P02-A P1 halo experiment (draft PR #2)](https://github.com/Odourman/the-skraun/pull/2) — separate executable ROM and Stella captures; rejected as a final rendering solution because of level-3 width and P1 occupation; not merged.
+- [P02-B playfield halo plan](docs/P02_B_PLAYFIELD_FEASIBILITY_PLAN.md) — next research plan only, not implemented.
 - [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
 
 Regular CI verifies assembly and model-based logic. Separate Stella visual CI verifies three sprite sizes and one movement direction. **Neither is independent verification or proof of original-hardware timing.**
