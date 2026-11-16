@@ -84,3 +84,10 @@ MAIN kan acceptera **B3b som avgränsad utvecklaregenkontroll** för en joystick
 - [Direkt Stella Debugger efter riktiga joystick-signaler, fyra 262-line-tillstånd](https://github.com/Odourman/the-skraun/actions/runs/43900278446)
 - [DASM-symbolbaserad statisk worst-case-ledger](https://github.com/Odourman/the-skraun/actions/runs/43900062518). Det workflowets senare bildtest föll på gammalt harness-y-värde; själva cykelberäkningen passerade och nyare bildkörningar visar PASS.
 - [Drive-evidensmapp](https://drive.google.com/drive/folders/1fn4RTvPreT6dsVQD5HUaLYIRPfLffz8h)
+
+## 11. Slutlig CI- och leveranskontroll
+- **Slutlig, grön bild-/ROM-/hinder-/sprite-/cykelregression:** [GitHub Actions run #43901341243](https://github.com/Odourman/the-skraun/actions/runs/43901341243), inklusive extra test för exakt assemblerad P0-radmask, testfiler, två kompletta 4K-ROM, SHA256SUMS, DASM-listning/symboler, 154 Stella-bilder och enumererad cykel-CSV.
+- **Direkt Stella Debugger med faktisk joystickinmatning före debuggerläge:** [run #43900278446](https://github.com/Odourman/the-skraun/actions/runs/43900278446). Fyra olika RAM Mode-värden och 262 scanlines i varje, inga illustrerade bilder.
+- Google Drive: [B3b:s slutliga Stella-/source-/ROM-arkiv](https://drive.google.com/file/d/1JSoosf9xjUiPAIC2BQhgL-s7l-CbgYzl/view?usp=drivesdk), [fyra joystick-/debuggertillstånd](https://drive.google.com/file/d/1cfas8NzvtadExBnFxuiHOphCxAwIwtNt/view?usp=drivesdk) och [bildmontage med enbart riktiga Stella-pixlar](https://drive.google.com/file/d/18ZYn53VcgsZj8k_zOeWyDK17IXtZAvYI/view?usp=drivesdk).
+- Avgränsad, omersatt **draft PR #11**: https://github.com/Odourman/the-skraun/pull/11 (base=experiment/romdev-c-b3a, inte main, ingen merge).
+- ROM-källorna efter uppsättning av slutliga bildtestscript har inte ändrats; den aktuella SHA256SUMS i den godkända jobbartefakten är leveransens binära auktoritet. Inga utlovade senare utvecklingssteg har utförts.
