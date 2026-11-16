@@ -141,6 +141,10 @@ HUD:
         sta PF2
         dey
         bne HUD
+        lda #0
+        sta PF0
+        sta PF1
+        sta PF2
         lda Frames
         and #1
         bne PFBlue
@@ -205,6 +209,8 @@ RegionPair:
         sta GRP1
         lda ActiveX
         jsr PositionP1
+        lda #0
+        sta HMP0             ; CRITICAL: prevent midframe HMOVE shifting independent gray P0
         sta WSYNC
         sta HMOVE
         sta WSYNC

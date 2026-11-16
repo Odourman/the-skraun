@@ -143,6 +143,10 @@ HUD:
         sta PF2
         dey
         bne HUD
+        lda #0
+        sta PF0
+        sta PF1
+        sta PF2
         lda #$2E
         sta COLUPF
         lda #0
@@ -200,6 +204,8 @@ RegionTop:
         sta GRP1
         lda ActiveX
         jsr PositionP1
+        lda #0
+        sta HMP0             ; CRITICAL: prevent midframe HMOVE shifting independent gray P0
         sta WSYNC
         sta HMOVE
         sta WSYNC
@@ -256,6 +262,8 @@ RegionMid:
         sta GRP1
         lda ActiveX
         jsr PositionP1
+        lda #0
+        sta HMP0             ; CRITICAL: prevent midframe HMOVE shifting independent gray P0
         sta WSYNC
         sta HMOVE
         sta WSYNC

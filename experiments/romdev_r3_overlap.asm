@@ -138,6 +138,10 @@ HUD:
         sta PF2
         dey
         bne HUD
+        lda #0
+        sta PF0
+        sta PF1
+        sta PF2
         lda Frames
         and #1
         bne PFBlue
