@@ -29,6 +29,7 @@ jobs:
           dasm experiments/p02_halo_p1.asm -f3 -obuild/p02-halo-p1.bin -lbuild/p02-halo-p1.lst -sbuild/p02-halo-p1.sym
           test "$(stat -c %s build/p02-halo-p1.bin)" -eq 4096
           sha256sum build/p02-halo-p1.bin | tee build/SHA256SUMS
+          python3 experiments/p02_cpu_budget.py build/p02-halo-p1.bin | tee build/p02_cpu_model.log
           stella -rominfo build/p02-halo-p1.bin
       - name: Capture fire at three levels in actual Stella
         shell: bash
