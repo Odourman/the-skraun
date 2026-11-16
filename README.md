@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Most recent MAIN decision — P02-B3b completed (2026-11-16):** The [B3b experiment in draft PR #11](https://github.com/Odourman/the-skraun/pull/11) was accepted as a **bounded developer self-test**: 13 horizontal joystick-following ring positions and precomposed scene masks. The current driver moves only one 4-clock step per 16 NTSC frames (not playable-final). A static worst-case kernel estimate is **63/76 CPU cycles per scanline**; runtime general scenery composition exceeds this budget in the unchanged kernel, while ring and obstacles visually merge into one PF color. No enemy or HUD feasibility has been proven. [Full B3b report](https://github.com/Odourman/the-skraun/blob/experiment/romdev-b3b-horizontal-follow/docs/ROMDEV_B3B_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md). **MAIN now authorizes only [P02-R1 renderer architecture feasibility](handoff/MAIN_TO_ROM_DEV_P02_R1_RENDERER_FEASIBILITY_AUTHORIZED_2026-11-16.md), not B3c or mainline integration.** Independent VERIFICATION remains deferred.
+
+
 **Latest MAIN decision (2026-11-16):** ROM DEVELOPMENT's A/B/C developer self-tests are accepted as *bounded engineering evidence*, not independently verified or merged. A: gray walking Skraun. B: REFP0 horizontal hardware mirroring (24 source ROM bytes saved). C: three fixed asymmetric playfield ring centers with actual Stella screenshots and a sampled 262-line frame; **not** free joystick following. The C kernel's 64/76-cycle worst-case is currently a static calculation only. [Full A/B/C handoff](https://github.com/Odourman/the-skraun/blob/experiment/romdev-c-b3a/docs/ROMDEV_ABC_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md). [New MAIN-authorized P02-B3b task](handoff/MAIN_TO_ROM_DEV_B3B_AUTHORIZED_SCOPE_2026-11-16.md) tests horizontal joystick follow and bounded scenery competition. **No independent VERIFICATION now; no B3c authorization.**
 
 
