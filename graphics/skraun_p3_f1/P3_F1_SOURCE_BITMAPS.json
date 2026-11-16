@@ -1,0 +1,380 @@
+{
+  "project": "THE SKRAUN",
+  "phase": "GRAPHICS P3-F1 – upright facing readability",
+  "date": "2026-11-16",
+  "authority": "https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_GRAPHICS_P3_F1_UPRIGHT_FACING_READABILITY_AUTHORIZED_2026-11-16.md",
+  "issue": "https://github.com/Odourman/the-skraun/issues/21",
+  "status": "DESIGN ONLY; NO STELLA; NOT APPROVED; EXACTLY TWO NEW CANDIDATES",
+  "private_original": "Inspected in private Drive only. User photo is not included, redistributed or transformed into the ZIP/GitHub.",
+  "baseline": {
+    "source_path": "graphics/skraun_p3_upright_overhead/P3_SOURCE_BITMAPS.json",
+    "source_branch": "graphics/p3-upright-overhead-character-proof-20261116",
+    "sha256_of_exact_baseline_json": "72ebc4dc58200f2761e942b5d6c21ac8e0308fba368d15d976715c850056450f",
+    "A_B_rows_canonical_sha256": "dbd9211fcb89d5ab1db2e51af78a2451550236451a604985d15f5ce68df2ac31"
+  },
+  "conventions": {
+    "width_bits": 8,
+    "height_rows": 12,
+    "bit7": "image x=0",
+    "bit0": "image x=7",
+    "top_first_row0": "head/horns",
+    "top_first_row11": "feet",
+    "right_authored": "right-facing standing stylization, not literal head-right horizontal quadruped",
+    "left_derived": "reverse 8 bits in each row, no vertical reversal",
+    "movement": "up/down has no separate sprite: use current left/right facing",
+    "body": "upright, head over torso, arms sideways, two separate legs below"
+  },
+  "preview": {
+    "color_gray_rgb": [
+      210,
+      210,
+      209
+    ],
+    "off_rgb": [
+      17,
+      25,
+      35
+    ],
+    "forest_bg_rgb": [
+      20,
+      41,
+      33
+    ],
+    "night_bg_rgb": [
+      11,
+      20,
+      37
+    ],
+    "native_screen_cc_scanlines": [
+      160,
+      192
+    ],
+    "tv_approx_pixels": [
+      640,
+      480
+    ],
+    "tv_approx": "nearest-neighbor resampling of native raster; not actual CRT/Stella",
+    "walk_frame_duration_ms": 140,
+    "blind_seed": 20261116
+  },
+  "conceptual_levels": {
+    "1": {
+      "x_repeat": 1,
+      "y_repeat": 1,
+      "width_color_clocks": 8,
+      "scanline_height": 12
+    },
+    "2": {
+      "x_repeat": 2,
+      "y_repeat": 2,
+      "width_color_clocks": 16,
+      "scanline_height": 24
+    },
+    "3": {
+      "x_repeat": 4,
+      "y_repeat": 3,
+      "width_color_clocks": 32,
+      "scanline_height": 36
+    }
+  },
+  "frozen_control": {
+    "U1_frozen": {
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000001"
+      ],
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "10000011"
+      ],
+      "A_B_changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "A_B_changes": 7,
+      "original_hash_A_B": "dbd9211fcb89d5ab1db2e51af78a2451550236451a604985d15f5ce68df2ac31"
+    }
+  },
+  "new_candidates": {
+    "D1_face_ear_permanent": {
+      "A": [
+        "00100010",
+        "01111111",
+        "01011011",
+        "01100111",
+        "00100110",
+        "11011111",
+        "10011110",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "00100010",
+        "01111111",
+        "01011011",
+        "01100111",
+        "00100110",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "10000011"
+      ],
+      "design_priority": "horn/face/open mouth; permanent right-biased horn cheek and jaw",
+      "honest_weakness": "2x2 dark mouth can look like a hole or mask; larger right cheek may resemble a single-eyed profile; also a frontal face despite directional asymmetry",
+      "A_left": [
+        "01000100",
+        "11111110",
+        "11011010",
+        "11100110",
+        "01100100",
+        "11111011",
+        "01111001",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "01000100",
+        "11111110",
+        "11011010",
+        "11100110",
+        "01100100",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000001"
+      ],
+      "A_B_changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          1,
+          11
+        ]
+      ],
+      "A_B_changes": 9,
+      "vs_original_U1_changes": {
+        "A": 10,
+        "B": 8
+      },
+      "original_hash_A_B": "5e2970223efa2a74c097641eef7ea16793604f2d114d468c1f25e5581eb7f34c"
+    },
+    "D2_shoulder_arm_permanent": {
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111111",
+        "11011111",
+        "10011110",
+        "00111111",
+        "00111110",
+        "01100110",
+        "01000100",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111111",
+        "01111111",
+        "11011110",
+        "00111111",
+        "00111110",
+        "01100110",
+        "01100110",
+        "10000111"
+      ],
+      "design_priority": "longer bent arms/hands and stable right shoulder/torso offset; U1 face/horns preserved",
+      "honest_weakness": "one-row U1 mouth may remain too small; shoulder wedge may look like a robot or waving human rather than original creature",
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "11111100",
+        "11111011",
+        "01111001",
+        "11111100",
+        "01111100",
+        "01100110",
+        "00100010",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "11111100",
+        "11111110",
+        "01111011",
+        "11111100",
+        "01111100",
+        "01100110",
+        "01100110",
+        "11100001"
+      ],
+      "A_B_changed_cells_xy": [
+        [
+          0,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ],
+      "A_B_changes": 7,
+      "vs_original_U1_changes": {
+        "A": 9,
+        "B": 13
+      },
+      "original_hash_A_B": "25cc28eec12a517c94d1ffdd5319b44676c03daa9d0eb4a069aad91d3f44b28f"
+    }
+  },
+  "limitations": [
+    "Hamming counts are objective source distances, not human direction recognition",
+    "stylized face permitted on overhead PLAYFIELD",
+    "No ROM, Stella, hardware, performance, collision, or gameplay test",
+    "No final sprite approval"
+  ]
+}
