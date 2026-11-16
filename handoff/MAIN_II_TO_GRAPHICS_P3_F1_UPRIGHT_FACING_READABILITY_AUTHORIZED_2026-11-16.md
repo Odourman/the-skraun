@@ -1,5 +1,7 @@
 # THE SKRAUN — MAIN II TO GRAPHICS: P3-F1 UPRIGHT FACING READABILITY PROOF
 
+> **MAIN II PRIORITY AMENDMENT after direct user feedback (2026-11-16):** The user has now evaluated P3 and said **"U1 är lite åt rätt håll"**. This is **partial encouragement only, NOT an art PASS and NOT confirmation that U1's present design is nearly finished**. The original P3-F1 mission remains two small 8×12 families D1/D2, but its **assessment priority changes**: **(1) unmistakably upright original Skraun character identity at native L1, (2) visually distinct mirrored left/right facing, (3) A/B gait clarity**. Directional Hamming counts alone are no longer the principal success criterion. Make meaningful identity improvements, not merely a subtle mirror asymmetry, but do not expand the number of families, geometry, hardware, or phases. If that cannot fit, report a candid NEGATIVE IDENTITY+FACING result and STOP. This amendment supersedes any "primary criterion = facing alone" wording below; otherwise the original scope and stop rules stand.
+
 **A NEW, EXPLICIT, SINGLE BOUNDED DESIGN-ONLY AUTHORIZATION BY MAIN II — 2026-11-16.**
 **Reason:** After P3 delivery MAIN II was asked to continue, without any declaration that U1 is final art. The narrow unresolved question is whether the upright standing troll actually **looks turned left versus right** while keeping the original recognisable face and animation. This is **not** P4/v0.4, P01-ART2, new ROM, an acceptance of U1, or permission to iterate indefinitely.
 
