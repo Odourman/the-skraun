@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**LATEST MAIN REVIEW – R3-VFIX completed as developer self-test (2026-11-16):** [draft PR #16](https://github.com/Odourman/the-skraun/pull/16) fixes upside-down Skraun in all three frozen R3 diagnostic variants. [Authentic Stella regression #43925833442](https://github.com/Odourman/the-skraun/actions/runs/43925833442) shows 57/57 old captures FAIL the upright pixel contract and 57/57 corrected PASS; 57 sampled states are 262 NTSC scanlines. Exactly **36 active P0 sprite ROM bytes** change in each 4096-byte ROM; no kernel/PF/P1/input data changes. [Final reproducible package #43926438951](https://github.com/Odourman/the-skraun/actions/runs/43926438951). This is a **source/render orientation correction only**, not approved character art, recognizable knights/archer, world scenery, HUD or full-game renderer. [Visual gate #15](https://github.com/Odourman/the-skraun/issues/15) remains **OPEN for art/readability**, with orientation component resolved. R3's full-game architecture **NO-GO remains**. No R4, B3c, new art implementation, merge or independent VERIFICATION authorized.
+
+
 **NEW MAIN VISUAL GATE after R3 (2026-11-16):** R3 technical developer self-tests support a **NO-GO** for full-game continuation in the tested renderers (same-Y enemy 20 Hz each, alternate halo/scenery 30 Hz, 2–4 static cycles spare), and **the R3 Stella screenshot shows a confirmed UPSIDE-DOWN player regression**: its descending `Troll3` reader draws feet before ears. Its tiny red/green enemies and three blue columns are **diagnostic placeholders, not final knights/archer or four-world scenery**. [Visual FAIL issue #15](https://github.com/Odourman/the-skraun/issues/15); [narrow MAIN-approved R3-VFIX source/real Stella regression task](handoff/MAIN_TO_ROM_DEV_R3_VFIX_ORIENTATION_REGRESSION_2026-11-16.md). No R4/B3c/art implementation authorized; no independent verification yet.
 
 
