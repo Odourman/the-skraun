@@ -64,6 +64,7 @@ ClearTIA:
         sta COLUP1
         lda #2         ; R1-B: CTRLPF SCORE: left PF uses COLUP0, right uses COLUP1
         sta CTRLPF
+        lda #0                 ; SCORE bit must NOT leak into background/PF registers
         sta COLUBK
         sta PF0
         sta PF1
