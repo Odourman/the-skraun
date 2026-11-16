@@ -21,7 +21,7 @@ def actual_sprite_mask():
     # Exact 6502-accessed source bytes from the assembled ROM and DASM symbol,
     # rather than trusting a vertically-flipped source illustration.
     sym=Path("build/romdev-b3b-dynamic.sym").read_text()
-    address=int(re.search(r"^Troll2\\s+([0-9a-fA-F]{4})", sym, re.M).group(1),16)
+    address=int(re.search(r"^Troll2\s+([0-9a-fA-F]{4})", sym, re.M).group(1),16)
     data=Path("build/romdev-b3b-dynamic.bin").read_bytes()
     offset=address-0xF000
     assert 0<=offset<4096-193
