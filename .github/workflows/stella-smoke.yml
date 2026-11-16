@@ -19,7 +19,7 @@ jobs:
       - name: Install DASM and Stella dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y dasm stella xvfb xdotool scrot
+          sudo apt-get install -y dasm stella xvfb xdotool scrot x11-utils
       - name: Build ROM
         run: |
           mkdir -p build
@@ -36,6 +36,9 @@ jobs:
             stella -logtoconsole 1 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/the-skraun-p01.bin" > build/stella.log 2>&1 &
             pid=$!
             sleep 4
+            ps -p "$pid" -o pid,stat,args > build/stella_process.txt || true
+            xwininfo -root -tree > build/xwininfo.txt || true
+            xdotool search --all --name "." > build/all_window_ids.txt || true
             xdotool search --onlyvisible --name Stella > build/window_ids.txt || true
             wid=$(head -n1 build/window_ids.txt || true)
             if [ -n "$wid" ]; then
@@ -49,6 +52,7 @@ jobs:
           '
           find build -maxdepth 1 -type f -printf '%f %s bytes\n'
           find build -maxdepth 1 -type f -iname '*.png' | grep .
+          test -s build/window_ids.txt || { echo 'Stella window missing; visual verification NOT achieved'; exit 1; }
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -58,5 +62,8 @@ jobs:
             build/*.png
             build/stella.log
             build/window_ids.txt
+            build/xwininfo.txt
+            build/all_window_ids.txt
+            build/stella_process.txt
             build/the-skraun-p01.bin
           if-no-files-found: warn
