@@ -126,3 +126,11 @@ F. Oberoende verifiering i emulator och på riktig Atari 2600-kompatibel hårdva
 - Batari Basic manual (som dokumentation av TIA-objekt/multisprite-begränsningar, inte som beslut om programspråk): https://www.randomterrain.com/bb_files/atari-2600-memories-batari-basic-commands.html
 
 **Gränsdragning:** Designbeslut 38–60 har fattats inom delegerat scope. Inget har skrivits, assemblerats eller verifierats som körbar ROM i denna genomgång. Exakta cykelbudgetar, grafikmetod, joystickrespons och nivåbalans är fortfarande öppna för tekniska test och speltest.
+
+## SENARE ANVÄNDARKORRIGERING TILL BESLUT 01: TROLLETS UPPRÄTTA SPRITE (2026-11-16)
+
+**ÄNDRINGSNOT, bevarar den historiska tabellen oförändrad:** Användaren förtydligade uttryckligen efter P1/P2 att spelplanen fortfarande är sedd ovanifrån men **Skraun ska hela tiden stå upprätt**, alltså ingen kropp som ligger i horisontell djur-/fyrfotalayout. Huvud med horn/ögon/mun uppe i den stående figuren, armar åt sidorna, ben/fötter nedåt. Figuren har **två** visuella facings, vänster/höger som exakt spegel, oavsett joystickens åtta rörelseriktningar; vertikal rörelse får inte rotera figuren eller kräva separat up/down-sprite.
+
+Den gamla beslut 01-frasen **"fyrfotat troll"** får därmed **inte användas som krav på liggande quadruped/fyra tassar runt en horisontell rygg**. Denna senare direkta användarkorrigering har företräde för **visuell kroppshållning och perspektivtolkning**. Beslut 01:s magiska 360° halo, övriga spelregler och alla gamla oförändrade källfiler består. Världen är fortfarande overhead, men ett stiliserat upprätt trollansikte behöver inte ritas som om även ansiktet måste fotograferas optiskt exakt från 90 grader ovanför.
+
+[Uppdaterad visuell riktning](SKRAUN_VISUAL_DIRECTION_2026-11-16.md) och [MAIN II:s detaljerade GRAPHICS P3-beslut](MAIN_II_GRAPHICS_P3_UPRIGHT_USER_CLARIFICATION_REVIEW_AND_DECISION_2026-11-16.md). Ingen ny sprite, mer ROM eller dimension är härmed godkänd.
