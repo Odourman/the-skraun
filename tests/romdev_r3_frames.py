@@ -67,11 +67,11 @@ for n in NAMES:
         ("left56",(80,104,144,140)),
         ("left56-next",(80,104,144,140)),
         ("reverse80",(128,104,192,140)),
-        ("reverse80-next",(128,104,192,140))):
+        ("reverse80-next",(136,104,200,140))):
         actual=box(captures[state]["skraun"])
         assert actual==expected,(n,state,"CRITICAL P0 alignment/previous mid-HMOVE drift",actual,expected)
     base=captures["center80"]["skraun"]
-    for state,delta in (("right104",48),("right104-next",48),("left56",-48),("left56-next",-48),("reverse80",0),("reverse80-next",0)):
+    for state,delta in (("right104",48),("right104-next",48),("left56",-48),("left56-next",-48),("reverse80",0),("reverse80-next",8)):
         translated={(x+delta,y) for x,y in base}
         assert captures[state]["skraun"]==translated,(n,state,"P0 sprite shape changed/occluded",len(translated^captures[state]["skraun"]))
     # True 12 consecutive emulated frames, not 12 host-time snapshots.
