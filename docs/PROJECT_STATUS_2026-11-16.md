@@ -62,3 +62,14 @@ Efter jämförelse med faktiska GitHub PR #8–#10, byggkörningar och samlad ra
 - **VERIFICATION vilande**, eftersom oberoende kontroll ska samlas för senare större leveranspaket. Öppna historiska verifieringsärenden stängs inte av detta beslut.
 
 Tidigare statusuppgifter längre upp på sidan visar dåtidens läge; **denna sektion är senare och ersätter formuleringen att B3a inte var byggd**.
+
+## Senaste MAIN-beslut: B3b accepterad som egenkontroll; P02-R1 auktoriserad (16 november 2026)
+
+Detta är senaste lägesuppdateringen och ersätter äldre framtidsformuleringar ovan som beskrev B3b som ännu inte genomförd.
+
+- ROM DEVELOPMENTs B3b utvecklartest [PR #11](https://github.com/Odourman/the-skraun/pull/11) visar 13 joystickstyrda 4-TIA-klockslägen och synkroniserad asymmetrisk PF-ring/P0. Realtidsbilder i [grön Stella-körning](https://github.com/Odourman/the-skraun/actions/runs/43901341243) och fyra verkliga joysticklägen med 262 scanlines i [Stella Debugger](https://github.com/Odourman/the-skraun/actions/runs/43900278446). Detta är **egenkontroller**, inte oberoende verifiering.
+- Två 4K-ROM-varianter: dynamisk SHA-256 `7d96bcb71532643307922f62814900b09a1525ede06795c17417607634efd060`; prekomponerade syntetiska hinder SHA-256 `31b859d711bb08228b03015f9039b1df97c77628ab3637f754ad3df77b599bbe`.
+- **Allvarliga begränsningar:** Endast 1 horisontellt steg per 16 NTSC-bildrutor (~267 ms), enbart 13 testpositioner, 63/76 cykler värstafall **statiskt beräknat** (13 cyklers marginal). Generell runtime-hinderkomposition i oförändrad kernel behöver minst ~79/76 cykler och saknar visuell separation mellan ring och hinder. Två riddare + bågskytt + pil + orb + HUD har inte testats i gemensam kernel.
+- Full leveransrapport: https://github.com/Odourman/the-skraun/blob/experiment/romdev-b3b-horizontal-follow/docs/ROMDEV_B3B_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md . Evidensmapp: https://drive.google.com/drive/folders/1fn4RTvPreT6dsVQD5HUaLYIRPfLffz8h .
+- **MAIN:s enda nya implementationsauktorisation:** [P02-R1 renderer architecture feasibility](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_TO_ROM_DEV_P02_R1_RENDERER_FEASIBILITY_AUTHORIZED_2026-11-16.md) – diagnostiskt förbättrad respons, jämförelse av PF/hybrid/hinderrendering, konservativ budget för framtida fiender och HUD. Ingen B3c, ingen färdig stridsmotor, ingen produktionsmerge.
+- **VERIFICATION fortfarande vilande** fram till en senare större sammanhängande milstolpe. Ingen oberoende PASS har utfärdats.
