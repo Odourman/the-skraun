@@ -191,7 +191,7 @@ MoveHorizontal:
         rts
 GoLeft:
         lda PlayerX
-        cmp #20
+        cmp #30
         bcc HorizontalDone
         beq HorizontalDone
         dec PlayerX
