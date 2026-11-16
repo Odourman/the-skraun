@@ -41,7 +41,9 @@ def isgray(rgb):
 for level in (1,2,3):
     im,bb=bitmap(f"build/size_{level}.png")
     assert (bb[2]-bb[0],bb[3]-bb[1])==(16*level,12*level)
-    assert sample(im,bb,level) in patterns.values(), ("inverted or wrong sprite",level)
+    actual=sample(im,bb,level)
+    print("SIZEMASK",level,"bbox",bb,"actual",[f"{v:08b}" for v in actual],"expected",[[f"{v:08b}" for v in pp] for pp in patterns.values()])
+    assert actual in patterns.values(), ("inverted or wrong sprite",level)
 
 for face in ("Right","Left"):
     found=set()
