@@ -34,6 +34,10 @@ jobs:
           stella -rominfo build/romdev-b3b-dynamic.bin | tee build/rominfo_dynamic.txt
           stella -rominfo build/romdev-b3b-obstacles.bin | tee build/rominfo_obstacles.txt
           /usr/bin/python3 tests/romdev_b3b_cycle_ledger.py | tee build/B3B_STATIC_CYCLE_SUMMARY.txt
+          mkdir -p build/exact_sources build/test_scripts build/workflows
+          cp experiments/romdev_b3b_dynamic.asm experiments/romdev_b3b_obstacles.asm build/exact_sources/
+          cp tests/romdev_b3b_cycle_ledger.py tests/romdev_b3b_stella_check.py build/test_scripts/
+          cp .github/workflows/romdev-b3b-stella.yml .github/workflows/romdev-b3b-debugger.yml .github/workflows/romdev-b3b-joystick-debugger.yml build/workflows/
       - name: Drive live Stella joystick through reversals while taking original screenshots
         shell: bash
         run: |
