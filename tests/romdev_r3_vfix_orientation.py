@@ -13,6 +13,30 @@ parser.add_argument("--old", default="before")
 parser.add_argument("--new", default="build")
 args=parser.parse_args()
 old=pathlib.Path(args.old); new=pathlib.Path(args.new)
+# Separate direct screenshot orientation oracle: expected FAIL on original ($C2 at top),
+# PASS on corrected ($24 at top), independent of BIN diff checks.
+if args.orientation_only:
+    cases=0
+    for name in ("overlap","partial","stagger"):
+        for frame in [f"seq_{i:02d}" for i in range(12)]+[
+                "center80","right104","right104-next","left56","left56-next",
+                "reverse80","reverse80-next"]:
+            img=Image.open(new/("frames_"+name)/(frame+".png")).convert("RGB")
+            px=img.load()
+            graypts=[(x,y) for y in range(228) for x in range(320) if px[x,y]==(210,210,209)]
+            assert len(graypts)==1320,(name,frame,"unexpected P0 pixel count")
+            xmin=min(x for x,y in graypts)
+            ymin=min(y for x,y in graypts)
+            top=0
+            for bit in range(8):
+                x=xmin+bit*8+4
+                if px[x,ymin]==(210,210,209):
+                    top|=1<<(7-bit)
+            assert top==0x24,(name,frame,"actual Stella head/ears TOP must be 0x24, got",hex(top))
+            cases+=1
+    print("PASS upright orientation-only in",cases,"actual Stella game frames")
+    sys.exit(0)
+
 names=("overlap","partial","stagger")
 states=[f"seq_{i:02d}" for i in range(12)]+["center80","right104","right104-next",
        "left56","left56-next","reverse80","reverse80-next"]
