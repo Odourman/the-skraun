@@ -96,7 +96,6 @@ VBlankPad:
         ldx #192
 Visible:
         sta WSYNC
-        dex
         lda Troll2,x
         sta GRP0
         ldy RingRowMap,x
@@ -112,7 +111,7 @@ Visible:
         sta PF1
         lda #0
         sta PF2                 ; right PF2 unused
-        txa
+        dex
         bne Visible
 
         sta WSYNC               ; first overscan line (prevents 263-line frame)
@@ -220,6 +219,7 @@ P0XTable:
 ; Indexed by descending scanline X (191..0); outside ring points to
 ; row 32 of each compact 33-byte table. Within ring, mirrored about Y=95.5.
 RingRowMap:
+        dc.b $20              ; unreachable x=0 padding for 192..1 countdown
         dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
         dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
         dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
@@ -237,6 +237,7 @@ RingRowMap:
         dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
         dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
 Troll2:
+        dc.b $00              ; unreachable x=0 padding for 192..1 countdown
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
