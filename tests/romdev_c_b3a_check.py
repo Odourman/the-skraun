@@ -31,6 +31,8 @@ for clock in (56,80,104):
     print("CENTER",clock,"ring",gb,"gold pixels",len(g),"P0",pb)
     assert gb[0]<pb[0] and gb[1]<pb[1] and gb[2]>pb[2] and gb[3]>pb[3], ("ring not enclosing P0",clock)
     assert abs((gb[0]+gb[2]-1)/2-clock*2)<=5, ("not centered at requested TIA x",clock,gb)
+    assert abs((gb[0]+gb[2])-(pb[0]+pb[2]))<=8, ("P0 not horizontally centered in halo",clock,gb,pb)
+    assert abs((gb[1]+gb[3])-(pb[1]+pb[3]))<=8, ("P0 not vertically centered in halo",clock,gb,pb)
     assert len(g)>150, ("missing/fragmented ring",clock)
     allgold.append((clock,g,gb))
 a,b,c=allgold
