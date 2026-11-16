@@ -93,9 +93,10 @@ VBlankPad:
         lda #0
         sta VBLANK
 
-        ldx #191
+        ldx #192
 Visible:
         sta WSYNC
+        dex
         lda Troll2,x
         sta GRP0
         ldy RingRowMap,x
@@ -111,8 +112,8 @@ Visible:
         sta PF1
         lda #0
         sta PF2                 ; right PF2 unused
-        dex
-        bpl Visible
+        txa
+        bne Visible
 
         sta WSYNC               ; first overscan line (prevents 263-line frame)
         lda #2
