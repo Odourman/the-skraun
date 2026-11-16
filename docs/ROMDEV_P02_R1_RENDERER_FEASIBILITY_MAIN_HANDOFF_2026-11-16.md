@@ -111,3 +111,9 @@ Tidiga kandidater byggde ROM:erna korrekt men ett Python-test hade syntaxfel. Ef
 - Samlad Drive-mapp: https://drive.google.com/drive/folders/1AwRVTCgs5Dz99Zwj0-7n3A4IAfJVILf7
 
 **Ingen oberoende VERIFICATION, ingen merge till main, ingen B3c/B3d/B3e/kollisionsimplementation.**
+
+## 9. Slutligt fryst utvecklarevidens och PR
+- **Draft PR #12** (inte mergad, bas R1:s parent B3b-experiment, inte main): https://github.com/Odourman/the-skraun/pull/12
+- **Slutlig framgångsrik fyr-ROM-regression #43906912249** är den aktuella reproducerbara kanoniska ingenjörskörningen för R1: 4×4096-byte ROM, 492 verkliga Stella-bilder, autentisk ensam P1, mask-pixelregression, original-SHA, symbols/ASM, 9984 path-cycle CSV och separat CSV för objekt/HUD.
+- **Totalt sammanslaget leveranspaket för MAIN**, verifierat mot de fyra SHA-256-värdena, innehåller 581 arkivposter och har ZIP-SHA256 **86f7918b70e739bdc782c46983f452736f3d86e4e6b56715641a4ab16dd1d1c0**. Detta ZIP skapades av ROM DEVELOPMENT som en praktisk distribution av de tre slutliga frysta GitHub Actions-evidensarkiven plus de äkta Stella-bilderna och leveransmanifestet; huvudrapporten här i GitHub är normerande om en kopia saknar uppdateringar.
+- Drive-kopior av respektive fryst evidensarkiv är länkade under avsnitt 8. Ingen implementation av B3c eller senare, ingen oberoende VERIFICATION.
