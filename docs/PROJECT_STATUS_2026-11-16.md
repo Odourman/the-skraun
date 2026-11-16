@@ -73,3 +73,16 @@ Detta är senaste lägesuppdateringen och ersätter äldre framtidsformuleringar
 - Full leveransrapport: https://github.com/Odourman/the-skraun/blob/experiment/romdev-b3b-horizontal-follow/docs/ROMDEV_B3B_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md . Evidensmapp: https://drive.google.com/drive/folders/1fn4RTvPreT6dsVQD5HUaLYIRPfLffz8h .
 - **MAIN:s enda nya implementationsauktorisation:** [P02-R1 renderer architecture feasibility](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_TO_ROM_DEV_P02_R1_RENDERER_FEASIBILITY_AUTHORIZED_2026-11-16.md) – diagnostiskt förbättrad respons, jämförelse av PF/hybrid/hinderrendering, konservativ budget för framtida fiender och HUD. Ingen B3c, ingen färdig stridsmotor, ingen produktionsmerge.
 - **VERIFICATION fortfarande vilande** fram till en senare större sammanhängande milstolpe. Ingen oberoende PASS har utfärdats.
+
+## Senaste MAIN-beslut – R1 accepterad som egenkontroll; R2 separat auktoriserad (2026-11-16)
+
+MAIN granskade den frysta R1-rapporten, GitHub [draft PR #12](https://github.com/Odourman/the-skraun/pull/12), assemblergrenen samt [GitHub Actions run #43906912249](https://github.com/Odourman/the-skraun/actions/runs/43906912249). Den slutliga PR-headen ligger två dokumentationscommits efter den sista godkända Stella-körningen; kodfilerna har inte ändrats däremellan. **R1 är avslutad som teknisk utvecklaregenkontroll, men är INTE oberoende verifierad, produktionsgodkänd eller mergad.**
+
+Resultat: 2-frame diagnostisk SWCHA-kontroll (1 frame respons vid testad fas), 13 X-positioner, fyra reproducerbara 4KiB NTSC-ROMs, 528 byte deduplicerad hindermask, faktisk extra P1-sprite på PF-rader, 262 scanlines i testade tillstånd. Värstafallscykler FAST 63/76, OPT 64/76, SCORE 63/76, P1 71/76 är **statiskt beräknade** med DASM-symboler. Ring och hinder inom samma PF-cell har fortfarande inte självständigt synliga färglager. Rimlig kapacitet för 2 riddare + bågskytt + pil + orb + HUD **är inte bevisad**; R1:s naiva belastningsmodell anger ≥102/76 för ett utvalt same-Y-fall, inte att alla framtida kernels är omöjliga. Nivå 3:s ringradie är fortfarande inte testad.
+
+R1 full rapport: https://github.com/Odourman/the-skraun/blob/experiment/romdev-r1-renderer-feasibility/docs/ROMDEV_P02_R1_RENDERER_FEASIBILITY_MAIN_HANDOFF_2026-11-16.md
+R1 Drive-bevis: https://drive.google.com/drive/folders/1AwRVTCgs5Dz99Zwj0-7n3A4IAfJVILf7
+
+**NÄSTA ENDA AKTUELLA ROM DEVELOPMENT-AUKTORISATION:** P02-R2, en avgränsad renderer- och sprite-schemaläggningsförstudie av tvålinjers-PF, olika kernelzoner/selek­tiva TIA-uppdateringar och verkliga same-Y-belastningsfall med hinder och nivå3-ringsräckvidd. Fullt scope: https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_TO_ROM_DEV_P02_R2_RENDERER_SCHEDULING_AUTHORIZED_2026-11-16.md . Drive: https://docs.google.com/document/d/1tFiRcbfWgyitOPOTJZqz2oDD5nzp9-eWT7V6rPYszjk/edit
+
+**B3c, B3d/B3e, fiende-AI, färdig HUD, produktionsmerge och nästa utvecklingsfas är INTE auktoriserade. VERIFICATION förblir vilande** tills MAIN lämnar över ett betydande fryst systempaket.
