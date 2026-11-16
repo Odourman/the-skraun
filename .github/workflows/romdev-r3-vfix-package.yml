@@ -1,0 +1,82 @@
+name: R3-VFIX frozen MAIN delivery – old FAIL, upright PASS
+on:
+  push:
+    branches: [fix/romdev-r3-upright-20261116]
+    paths:
+      - '.github/workflows/romdev-r3-vfix-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  freeze-vfix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch immutable original R3 and green R3-VFIX evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p package/ORIGINAL_R3_FROZEN package/CORRECTED_R3_VFIX_STELLA package/CURRENT_GITHUB_SOURCE/tests package/CURRENT_GITHUB_SOURCE/experiments package/CURRENT_GITHUB_SOURCE/workflows
+          gh run download 43919941150 --repo "$GITHUB_REPOSITORY" --name romdev-r3-exact-60hz-stella-frames --dir package/ORIGINAL_R3_FROZEN
+          gh run download 43925833442 --repo "$GITHUB_REPOSITORY" --name romdev-r3-vfix-original-fails-fixed-passes-stella --dir package/CORRECTED_R3_VFIX_STELLA
+          cp docs/ROMDEV_R3_VFIX_MAIN_HANDOFF_2026-11-16.md package/MAIN_R3_VFIX_FINAL_HANDOFF.md
+          cp experiments/romdev_r3_*.asm package/CURRENT_GITHUB_SOURCE/experiments/
+          cp tests/romdev_r3_static.py tests/romdev_r3_frames.py tests/romdev_r3_vfix_orientation.py package/CURRENT_GITHUB_SOURCE/tests/
+          cp .github/workflows/romdev-r3-vfix.yml .github/workflows/romdev-r3-vfix-package.yml package/CURRENT_GITHUB_SOURCE/workflows/
+          cat >package/README_MAIN.txt <<'EOF'
+          THE SKRAUN – R3-VFIX bounded sprite orientation correction, 2026-11-16.
+          REAL original Stella 6.7.1 frame evidence: OLD 57 fail, FIXED 57 pass.
+          Three original 4096B R3-ROMs untouched in ORIGINAL_R3_FROZEN; three new
+          4096B ROMs in CORRECTED_R3_VFIX_STELLA. New bitmap only head-first.
+          See MAIN_R3_VFIX_FINAL_HANDOFF.md for source audit, tests and SHA.
+          Skraun: orientation correction candidate, not final approved art.
+          Enemy images: temporary 8-byte test silhouettes, not approved knights/archer.
+          Obstacle columns: synthetic diagnostics; HUD: placeholder.
+          Forest/mountain/dream/night artwork NOT IMPLEMENTED.
+          R3 NO-GO remains. No B3c/R4/AI/main merge/independent VERIFICATION.
+          EOF
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          orig=Path("package/ORIGINAL_R3_FROZEN");correct=Path("package/CORRECTED_R3_VFIX_STELLA")
+          oldhash={"overlap":"f25c8622c115f85717b1fd51ff2a30cfb6fa293e95aceb228257c0655067775c","partial":"411f7ce389e0853f071011e0ab2be34ad90c47f352ea524f1ad39e98891d501c","stagger":"94ae477a944a042a6e605b6046b4e833b0cf3387bc62906e75491e47a649f226"}
+          newhash={"overlap":"2c29a696c3a7b5c05ba84a829f6ae64cbc58886778d929799d057048645f8f55","partial":"89098ad4026cd4e770381d30c2469fe5faac3cbde2fd3d27d38f33a85ef98221","stagger":"53b00adf2325cfd84a6fac52cd504db6349b46922da5a259ac1b7ad2923c54e3"}
+          x=json.loads((correct/"R3_VFIX_ORIGINAL_FAIL_FIXED_PASS_PIXEL_ORIENTATION.json").read_text())
+          scans=json.loads((correct/"R3_DIRECT_DEBUGGER_TRACE.json").read_text())
+          for n in newhash:
+              a=(orig/("r3-"+n+".bin")).read_bytes()
+              b=(correct/("r3-"+n+".bin")).read_bytes()
+              assert len(a)==len(b)==4096
+              assert hashlib.sha256(a).hexdigest()==oldhash[n]
+              assert hashlib.sha256(b).hexdigest()==newhash[n]
+              assert x[n]["old_rom_sha256"]==oldhash[n] and x[n]["new_rom_sha256"]==newhash[n]
+              assert x[n]["actual_old_stella_cases_that_fail_new_upright_contract"]==19
+              assert x[n]["actual_fixed_stella_cases_that_pass_new_upright_contract"]==19
+              assert x[n]["emitted_rom_byte_differences"]==36
+              assert len(scans[n]["scanlines"])==19 and all(s==262 for s in scans[n]["scanlines"])
+              assert len(list((orig/("frames_"+n)).glob("*.png")))==19
+              assert len(list((correct/("frames_"+n)).glob("*.png")))==19
+              source=Path("package/CURRENT_GITHUB_SOURCE/experiments/romdev_r3_"+n+".asm")
+              assert source.read_bytes()==(correct/"sources"/source.name).read_bytes()
+          neg=(correct/"VFIX_EXPECTED_ORIGINAL_FAIL.log").read_text()
+          assert "actual Stella head/ears TOP must be 0x24" in neg and "'0xc2'" in neg
+          assert "PASS upright orientation-only in 57 actual Stella game frames" in (correct/"VFIX_CORRECTED_57_IMAGE_ORIENTATION_PASS.txt").read_text()
+          assert "PASS 57/57 real old images FAIL" in (correct/"VFIX_57_BEFORE_AFTER_PIXELS_AND_BIN_DELTA.txt").read_text()
+          print("FROZEN PACKAGE: PASS 3 old 4096B BIN exact SHA, 3 corrected exact SHA, 57 old+57 new PNG, 57x262 debugger scans, 36-byte delta, original FAIL/new PASS")
+          PY
+          (cd package && find . -type f ! -name FILE_SHA256_MANIFEST.txt -print0 | sort -z | xargs -0 sha256sum > FILE_SHA256_MANIFEST.txt && sha256sum -c FILE_SHA256_MANIFEST.txt > SHA256_MANIFEST_CHECK.log)
+          (cd package && zip -q -r ../THE_SKRAUN_R3_VFIX_COMPLETE_MAIN_DELIVERY_2026-11-16.zip .)
+          sha256sum THE_SKRAUN_R3_VFIX_COMPLETE_MAIN_DELIVERY_2026-11-16.zip >PACKAGE_SHA256.txt
+          echo "MAIN R3-VFIX file count: $(find package -type f | wc -l)"
+      - name: Upload audited standalone 3-ROM VFIX MAIN package
+        uses: actions/upload-artifact@v4
+        with:
+          name: THE_SKRAUN_R3_VFIX_COMPLETE_MAIN_DELIVERY_2026-11-16
+          path: |
+            THE_SKRAUN_R3_VFIX_COMPLETE_MAIN_DELIVERY_2026-11-16.zip
+            PACKAGE_SHA256.txt
+          if-no-files-found: error
