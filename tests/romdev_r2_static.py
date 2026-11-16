@@ -53,7 +53,9 @@ for name,(path,pair,dual,hud) in variants.items():
                 if scene:
                     t+=2+3; pf2=t
                     t+=2+3; pf0=t
+                    t+=8                        # four timed NOPs before right PF1
                     t+=2+3; pf1=t
+                    t+=2+3                      # clear PF2 before right-side PF2 pixels
                 else:pf0=pf1=0
                 t+=4+crossing(sym["Troll2"],x)+3
                 t+=2+3                         # restore next line PF gold color
