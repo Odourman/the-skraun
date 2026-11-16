@@ -25,6 +25,7 @@ variants={
  "twoline":("experiments/romdev_r2_two_line_p1.asm",True,False,False),
  "dual":("experiments/romdev_r2_two_line_dualcopy.asm",True,True,False),
  "hud":("experiments/romdev_r2_multikernel_hud.asm",False,False,True),
+ "interlace":("experiments/romdev_r2_two_line_interlace.asm",True,False,False),
 }
 def crossing(addr,index):
     return 1 if (addr&255)+index>255 else 0
@@ -40,6 +41,27 @@ for name,(path,pair,dual,hud) in variants.items():
         for x in range(visible,0,-1):
             a_line=not pair or x%2==0
             idx=mp[x if a_line else x+1]
+            if name=="interlace" and not a_line:
+                # B line draws independently blue scene stencil. Actual src branch:
+                # 1 P0 load, 3 left PF clears, X-indexed row test, 3 right-left PF writes,
+                # P1 load, color reset and loop tail.
+                t=4+crossing(sym["Troll2"],x)+3
+                t+=2+3+3+3                    # zero and three left PF clears
+                t+=4+crossing(sym["ObstacleRows"],x)
+                scene=83<=x<=110
+                t+=2 if scene else 3
+                if scene:
+                    t+=2+3; pf2=t
+                    t+=2+3; pf0=t
+                    t+=2+3; pf1=t
+                else:pf0=pf1=0
+                t+=4+crossing(sym["Troll2"],x)+3
+                t+=2+3                         # restore next line PF gold color
+                t+=2+(3 if x>1 else 2)+3     # DEX/BNE/WSYNC
+                maxcycles=max(maxcycles,t);maxpf0=max(maxpf0,pf0);maxpf1=max(maxpf1,pf1)
+                all_paths.append((name,c,x,"B",idx,t,pf0,pf1,0,0))
+                if t>=74:worstpaths.append((c,x,t))
+                continue
             t=4+crossing(sym["Troll2"],x)+3 # P0 load, GRP0
             if a_line:t+=4+crossing(sym["RingRowMap"],x) # first physical line has row map fetch
             t+=2+3  # LDA #0, STA left PF0
@@ -56,6 +78,7 @@ for name,(path,pair,dual,hud) in variants.items():
                 t+=4+crossing(sym["Troll2"],x)+3 # one P1 bitmap written late
                 knight=t
             else:knight=0
+            if name=="interlace":t+=2+3   # A-line late COLUPF write sets blue for B, after ring edge
             t+=2 # DEX
             if not pair or (x%2==1):t+=3 if x>1 else 2
             t+=3 # NEXT WSYNC
@@ -83,11 +106,12 @@ for name,(path,pair,dual,hud) in variants.items():
     else:
         print(f"STATIC WITHIN 76: {name}, needs direct Stella/Debugger frame and pixel proof")
     summary.append((name,maxcycles,76-maxcycles,maxpf0,maxpf1,maxarch,maxknight,h,len(worstpaths)))
-assert len(all_paths)==13*(192*3+176)
+assert len(all_paths)==13*(192*4+176)
 with open("build/R2_ALL_ASSEMBLED_RASTER_PATHS.csv","w",newline="") as f:
     w=csv.writer(f);w.writerow(("variant","tia_x","physical_countdown_x","two_line_phase","pf_index","cycles_including_next_wsync","right_pf0_write","right_pf1_write","second_P1_GRP1_write","next_P1_GRP1_preload"));w.writerows(all_paths)
 with open("build/R2_STATIC_SUMMARY.csv","w",newline="") as f:
     w=csv.writer(f);w.writerow(("variant","static_worst_CPU_cycles","margin","latest_right_PF0","latest_right_PF1","second_copy_write","next_knight_preload","hud_kernel_cycle_cost","paths_at_least_74_cycles"));w.writerows(summary)
+print("Interlace: 50% vertical row duty for each scene/halo color; NOT 50% frame-rate flicker. Distortion/legibility must be judged from genuine emulator images.")
 print("Timing caveat: 262 frame lines alone DO NOT guarantee PF deadlines or two correct independently shaped P1 copies.")
 print("Level3 bounded reach: level2 40 TIA clocks wide ring must grow beyond LEVEL3 P0 (NUSIZ0 4x width=32 TIA clocks); leave margin to both screen edges; no new fixed radius proposed.")
 print("RAM: original source P1, two-line, dual 10 bytes $80-$89; HUD source 10 bytes. No extra RAM used by line pair or HUD demo.")
