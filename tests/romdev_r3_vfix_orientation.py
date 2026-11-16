@@ -11,6 +11,7 @@ from PIL import Image
 parser=argparse.ArgumentParser()
 parser.add_argument("--old", default="before")
 parser.add_argument("--new", default="build")
+parser.add_argument("--orientation-only", dest="orientation_only", action="store_true")
 args=parser.parse_args()
 old=pathlib.Path(args.old); new=pathlib.Path(args.new)
 # Separate direct screenshot orientation oracle: expected FAIL on original ($C2 at top),
