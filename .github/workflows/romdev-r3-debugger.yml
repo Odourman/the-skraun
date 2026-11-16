@@ -89,18 +89,30 @@ jobs:
               cmd "print *Mode"
               cmd "print _scanEnd"
               snap right104
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap right104-next
               cmd "joy0Right 1"
               cmd "joy0Left 0"
               cmd "frame #24"
               cmd "print *Mode"
               cmd "print _scanEnd"
               snap left56
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap left56-next
               cmd "joy0Left 1"
               cmd "joy0Right 0"
               cmd "frame #12"
               cmd "print *Mode"
               cmd "print _scanEnd"
               snap reverse80
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap reverse80-next
               cmd "joy0Right 1"
               cmd "saveSes $PWD/build/R3_$n-SESSION.txt"
               scrot -z "build/DBG_GUI_$n.png"
@@ -129,17 +141,17 @@ jobs:
               scans=values('_scanEnd')
               frames=values('*Frames')
               print(n,"GENUINE STELLA MODES",modes,"_scanEnd",scans,"Frames",frames)
-              assert modes==[6,12,0,6],(n,modes)
-              assert len(scans)==16 and all(v==262 for v in scans),(n,scans)
+              assert modes==[6,12,12,0,0,6,6],(n,modes)
+              assert len(scans)==19 and all(v==262 for v in scans),(n,scans)
               seq=list(Path("build/frames_"+n).glob("seq_*.png"))
               assert len(seq)==12,(n,len(seq),"missing exact-frame snapshots")
-              for p in seq+[Path("build/frames_"+n)/(label+".png") for label in ("center80","right104","left56","reverse80")]:
+              for p in seq+[Path("build/frames_"+n)/(label+".png") for label in ("center80","right104","right104-next","left56","left56-next","reverse80","reverse80-next")]:
                   im=Image.open(p).convert("RGB")
                   assert im.width==320 and im.height in (192,228),(p,im.size)
                   assert sum(max(v)>70 for v in im.getdata())>1000,("blank screenshot",p)
               results[n]={"Mode":modes,"scanlines":scans,"frame_count_trace":frames,"snapshots":len(seq)}
           Path("build/R3_DIRECT_DEBUGGER_TRACE.json").write_text(json.dumps(results,indent=2))
-          print("PASS: real Stella 6.7.1 262-line NTSC, 3 ROMs, 48 genuine exact-frame screenshots; visual actor duty must be checked separately")
+          print("PASS: real Stella 6.7.1 262-line NTSC, 3 ROMs, 57 genuine exact-frame screenshots incl both visual phases at each edge")
           PY
           if test -f tests/romdev_r3_frames.py; then
             /usr/bin/python3 tests/romdev_r3_frames.py | tee build/R3_EXACT_FRAME_VISIBILITY.txt
