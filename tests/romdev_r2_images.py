@@ -74,6 +74,20 @@ for state in STATES:
     baseGold=pixels(images["baseline",state],is_gold)
     r2Gold=pixels(images["interlace",state],is_gold)
     assert len(r2Gold)>100,("interlaced halo disappeared",state)
+    # Hard reject ghost obstacles and omitted third scenery column.
+    xx=max(x for x,y in baseGold)
+    ghost={(x,y) for x,y in r2Gold if x>xx}
+    assert not ghost,("PF2 right-half ghost beyond all original ring+obstacles",state,len(ghost),max(x for x,y in ghost))
+    im=images["interlace",state]
+    blue={(x,y) for y in range(im.height) for x in range(im.width)
+          if (lambda p:p[2]>140 and p[2]>p[0]*1.5 and p[2]>p[1]*1.5)(im.getpixel((x,y)))}
+    # Obstacles at TIA x56,88,108 => PNG x112..119, 176..183, 216..223.
+    permitted=set(range(112,120))|set(range(176,184))|set(range(216,224))
+    unexpected={(x,y) for x,y in blue if x not in permitted}
+    assert not unexpected,("blue PF pixels outside the three obstacle columns",state,len(unexpected))
+    found={c:len([(x,y) for x,y in blue if c<=x<c+8]) for c in (112,176,216)}
+    assert all(v>=10 for v in found.values()),("missing individually colored obstacle",state,found)
+    print("INTERLACE 3 SCENE BLUE COLUMNS",state,found)
     print("INTERLACE RING DUTY",state,"gold rows/pixels",len(r2Gold),"baseline",len(baseGold),"ratio",round(len(r2Gold)/len(baseGold),3))
 hud=images["hud","centre80"]
 # Stella 320x228 original capture places first HUD active line at y=15; arena begins at y=31.
