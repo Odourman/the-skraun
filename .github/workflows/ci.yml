@@ -1,0 +1,97 @@
+name: The Skraun CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: the-skraun-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  design-integrity:
+    name: Verify design documents
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify all 60 decisions are present
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import re
+
+          decisions = pathlib.Path('docs/DESIGN_DECISIONS_01-60_2026-11-16.md')
+          comparison = pathlib.Path('docs/ATARI2600_COMPARISON_01-60_2026-11-16.md')
+          prototype = pathlib.Path('docs/PROTOTYPE_01_PLAN.md')
+          for path in (decisions, comparison, prototype):
+              if not path.is_file() or path.stat().st_size < 100:
+                  raise SystemExit(f'Missing or unexpectedly empty: {path}')
+
+          text = decisions.read_text(encoding='utf-8')
+          found = [int(n) for n in re.findall(
+              r'^\|\s*(?:\*\*)?(\d{2})(?:\*\*)?\s*\|', text, re.MULTILINE
+          )]
+          expected = list(range(1, 61))
+          if sorted(found) != expected:
+              raise SystemExit(f'Decision log mismatch: expected 01-60, got {found}')
+
+          comparison_text = comparison.read_text(encoding='utf-8')
+          if '60' not in comparison_text:
+              raise SystemExit('Comparison document does not mention decision 60')
+
+          print('PASS: Design log includes exactly decisions 01-60; documents exist.')
+          PY
+
+  prototype-build:
+    name: Assemble P01 when source exists
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check for prototype assembly source
+        id: source
+        shell: bash
+        run: |
+          if [ -f src/main.asm ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No src/main.asm yet: P01 ROM assembly is pending, not verified."
+          fi
+
+      - name: Install DASM
+        if: steps.source.outputs.present == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+          dasm --help 2>&1 | head -n 8 || true
+
+      - name: Build NTSC P01 ROM
+        if: steps.source.outputs.present == 'true'
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm src/main.asm -f3 -obuild/the-skraun-p01.bin -lbuild/the-skraun-p01.lst -sbuild/the-skraun-p01.sym
+          test "$(stat -c %s build/the-skraun-p01.bin)" -eq 4096
+          sha256sum build/the-skraun-p01.bin | tee build/SHA256SUMS
+
+      - name: Upload build artifacts
+        if: steps.source.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-skraun-p01-ntsc
+          path: |
+            build/the-skraun-p01.bin
+            build/the-skraun-p01.lst
+            build/the-skraun-p01.sym
+            build/SHA256SUMS
+          if-no-files-found: error
