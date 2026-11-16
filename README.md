@@ -4,7 +4,7 @@
 
 ## Project status (2026-11-16)
 
-**Design established; technical feasibility not yet verified.** This repository is being initialized for development. No playable or independently verified ROM exists in this repository yet.
+**Design established; P01 source compiled successfully but runtime feasibility remains unverified.** The first NTSC prototype is assembled automatically by GitHub Actions. It has not yet passed visual tests in Stella or independent verification.
 
 The project currently has 60 gameplay design decisions documented in the MAIN conversation and its exported design log. Those decisions govern implementation; this README is only an overview.
 
@@ -43,9 +43,11 @@ No license has been selected yet. Do not assume permission to reuse this project
 
 - [MAIN design decisions 01–60](docs/DESIGN_DECISIONS_01-60_2026-11-16.md) — the gameplay rules to preserve, including the level-3 overpowered design and reversed world order.
 - [Atari 2600 comparison, decisions 01–60](docs/ATARI2600_COMPARISON_01-60_2026-11-16.md) — advisory research and engineering risks; not implementation proof.
-- [P01 prototype plan](docs/PROTOTYPE_01_PLAN.md) — first executable experiment, **not yet implemented**.
-- [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. Once `src/main.asm` exists, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
+- [P01 prototype plan](docs/PROTOTYPE_01_PLAN.md) — source implemented; independent runtime approval pending.
+- [P01 source code](src/main.asm) — 6502 / DASM movement, three sizes and two leg poses.
+- [P01 build report](docs/P01_BUILD_REPORT_2026-11-16.md) — CI evidence, SHA-256 and still-open tests.
+- [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
 
-A green CI status **before** `src/main.asm` exists means only that the document checks passed and the build job correctly detected missing source. It must not be presented as ROM verification.
+A green CI status means the source assembled and the document checks passed, **not** that Stella / real hardware has verified the graphics and timings.
 
 Google Drive retains a separate project folder named **THE SKRAUN - Atari 2600**, including historic decisions 01–19 and exported decisions 01–60. GitHub provides the tracked code, CI and revisioned engineering documents.
