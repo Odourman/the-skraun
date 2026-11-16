@@ -1,0 +1,214 @@
+{
+  "project": "THE SKRAUN",
+  "scope": "U1-FIX1 - one narrow correction, no new family",
+  "date": "2026-11-16",
+  "status": "GRAPHICS DESIGN ONLY - NOT STELLA - NOT APPROVED",
+  "baseline": {
+    "repository": "Odourman/the-skraun",
+    "branch": "graphics/p3-upright-overhead-character-proof-20261116",
+    "file": "graphics/skraun_p3_upright_overhead/P3_SOURCE_BITMAPS.json",
+    "github_blob_sha": "16f3c53d809fb3b3d67e52512199ddc3f40d450b",
+    "baseline_u1_canonical_json_sha256": "72ebc4dc58200f2761e942b5d6c21ac8e0308fba368d15d976715c850056450f"
+  },
+  "rules": {
+    "columns": 8,
+    "rows": 12,
+    "palette_gray": [
+      210,
+      210,
+      209
+    ],
+    "forest": [
+      20,
+      41,
+      33
+    ],
+    "night": [
+      11,
+      20,
+      37
+    ],
+    "native_screen": [
+      160,
+      192
+    ],
+    "tv_approx": [
+      640,
+      480
+    ],
+    "left": "exact horizontal mirror of each right row",
+    "vertical_joystick": "reuse last horizontal facing; no up/down sprite",
+    "level1": [
+      8,
+      12
+    ],
+    "level2_concept": [
+      16,
+      24
+    ],
+    "level3_concept": [
+      32,
+      36
+    ]
+  },
+  "frozen_U1": {
+    "A": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100111",
+      "00111110",
+      "11111110",
+      "10111100",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01000110",
+      "11000011"
+    ],
+    "B": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100111",
+      "00111110",
+      "01111111",
+      "00111101",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01100010",
+      "11000001"
+    ],
+    "A_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "11100110",
+      "01111100",
+      "01111111",
+      "00111101",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01100010",
+      "11000011"
+    ],
+    "B_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "11100110",
+      "01111100",
+      "11111110",
+      "10111100",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01000110",
+      "10000011"
+    ]
+  },
+  "single_corrected_U1_FIX1": {
+    "A": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "10111100",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01000110",
+      "11000011"
+    ],
+    "B": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "01111101",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01100010",
+      "10000011"
+    ],
+    "A_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "01111100",
+      "11111110",
+      "00111101",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01100010",
+      "11000011"
+    ],
+    "B_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "01111100",
+      "11111110",
+      "10111110",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01000110",
+      "11000001"
+    ]
+  },
+  "changes": {
+    "head": {
+      "pixel_original_right": [
+        7,
+        3
+      ],
+      "action": "1 to 0 in both walking poses; mirrored left head x0 y3",
+      "head_edit_per_pose": 1
+    },
+    "gait_reason": "Reassign rightward lead-arm/left trailing-arm levels, and make B right step have wider right foot; preserve rest of original U1 silhouette and facial marks",
+    "pose_A_changed_cells_xy": [
+      [
+        7,
+        3
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        7,
+        5
+      ]
+    ],
+    "pose_B_changed_cells_xy": [
+      [
+        7,
+        3
+      ],
+      [
+        1,
+        6
+      ],
+      [
+        1,
+        11
+      ],
+      [
+        6,
+        11
+      ]
+    ]
+  },
+  "warning": "No demonstration of perceptually correct horizontal facing at native level1 is claimed. Measured source-bit differences are not a viewer test. A/B GIFs are stationary with no visual directional arrow."
+}
