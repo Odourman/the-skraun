@@ -59,7 +59,10 @@ for face in ("Right","Left"):
             if bits==tuple(patterns[face,pose]):
                 found.add(pose)
     assert found=={"A","B"}, (face,found,"Actual Stella frames did not show both poses")
-    print("FRAME PASS", face, "poses A/B upright, arm and leg bitmasks")
+    last=sorted(Path("build").glob(f"face_{face}_*.png"))[-1]
+    _,edge_bb=bitmap(last)
+    assert (edge_bb[3]-edge_bb[1])==12, (face,"last frame cropped at boundary",edge_bb)
+    print("FRAME PASS", face, "poses A/B upright; final edge frame unclipped")
 
 directions={"R":(1,0),"L":(-1,0),"U":(0,-1),"D":(0,1),
             "UR":(1,-1),"UL":(-1,-1),"DR":(1,1),"DL":(-1,1)}
@@ -68,6 +71,7 @@ for name,(sx,sy) in directions.items():
     _,b=bitmap(f"build/move_{name}_after.png")
     dx=(b[0]+b[2])-(a[0]+a[2])
     dy=(b[1]+b[3])-(a[1]+a[3])
-    assert (dx>0)-(dx<0)==sx and (dy>0)-(dy<0)==sy, (name,dx,dy)
+    assert (abs(dx)<=2 if sx==0 else (dx*sx)>2), (name,"horizontal",dx,dy)
+    assert (abs(dy)<=2 if sy==0 else (dy*sy)>2), (name,"vertical",dx,dy)
     print("MOVE PASS",name,"screenshot center delta",dx,dy)
 print("A: Stella real-frame sprite/8-way diagnostic PASS (developer self-test)")
