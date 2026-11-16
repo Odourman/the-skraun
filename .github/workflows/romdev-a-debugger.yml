@@ -2,7 +2,9 @@ name: ROMDEV A Stella Debugger frame timing capture
 on:
   push:
     branches: [experiment/romdev-a-gray-stella]
-    paths: ['.github/workflows/romdev-a-debugger.yml']
+    paths:
+      - '.github/workflows/romdev-a-debugger.yml'
+      - 'experiments/p01_skraun_gray_topdown.asm'
   workflow_dispatch:
 permissions:
   contents: read
