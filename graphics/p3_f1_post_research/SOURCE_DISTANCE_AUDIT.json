@@ -1,0 +1,126 @@
+{
+  "warning": "SOURCE HAMMING ONLY, NOT HUMAN FACING/IDENTITY PROOF",
+  "method": "number of differing cells out of 96; head-only rows 0-5",
+  "families": {
+    "U1": {
+      "states": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "pairwise_hamming_96_cells": [
+        [
+          0,
+          10,
+          7,
+          5
+        ],
+        [
+          10,
+          0,
+          5,
+          7
+        ],
+        [
+          7,
+          5,
+          0,
+          12
+        ],
+        [
+          5,
+          7,
+          12,
+          0
+        ]
+      ],
+      "A_R_vs_A_L": 10,
+      "B_R_vs_B_L": 12,
+      "A_R_vs_B_L": 5,
+      "A_R_vs_B_R": 7,
+      "head_only_A_R_vs_A_L": 6,
+      "head_only_A_vs_B": 2
+    },
+    "D1": {
+      "states": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "pairwise_hamming_96_cells": [
+        [
+          0,
+          16,
+          9,
+          15
+        ],
+        [
+          16,
+          0,
+          15,
+          9
+        ],
+        [
+          9,
+          15,
+          0,
+          22
+        ],
+        [
+          15,
+          9,
+          22,
+          0
+        ]
+      ],
+      "A_R_vs_A_L": 16,
+      "B_R_vs_B_L": 22,
+      "A_R_vs_B_L": 15,
+      "A_R_vs_B_R": 9,
+      "head_only_A_R_vs_A_L": 6,
+      "head_only_A_vs_B": 0
+    },
+    "D2": {
+      "states": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "pairwise_hamming_96_cells": [
+        [
+          0,
+          18,
+          8,
+          14
+        ],
+        [
+          18,
+          0,
+          14,
+          8
+        ],
+        [
+          8,
+          14,
+          0,
+          22
+        ],
+        [
+          14,
+          8,
+          22,
+          0
+        ]
+      ],
+      "A_R_vs_A_L": 18,
+      "B_R_vs_B_L": 22,
+      "A_R_vs_B_L": 14,
+      "A_R_vs_B_R": 8,
+      "head_only_A_R_vs_A_L": 8,
+      "head_only_A_vs_B": 2
+    }
+  }
+}
