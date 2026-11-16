@@ -1,0 +1,78 @@
+name: P02-R3 frozen decisive MAIN delivery with 57 original Stella frames
+on:
+  push:
+    branches: [experiment/romdev-r3-decisive-scene-scheduler]
+    paths:
+      - '.github/workflows/romdev-r3-final-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  r3-frozen-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rehydrate frozen successful R3 genuine DASM ROMs and Stella Debugger evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p package/DASM_FINAL_3_ROMS package/DIRECT_STELLA_57_ORIGINAL_FRAMES package/CURRENT_GITHUB_SOURCE
+          gh run download 43919399638 --repo "$GITHUB_REPOSITORY" --name romdev-r3-actual-4k-dasm-build --dir package/DASM_FINAL_3_ROMS
+          gh run download 43919941150 --repo "$GITHUB_REPOSITORY" --name romdev-r3-exact-60hz-stella-frames --dir package/DIRECT_STELLA_57_ORIGINAL_FRAMES
+          cp docs/ROMDEV_P02_R3_DECISIVE_SCENE_SCHEDULER_MAIN_HANDOFF_2026-11-16.md package/MAIN_R3_FINAL_DECISIVE_TECHNICAL_REPORT.md
+          cp experiments/romdev_r3_*.asm package/CURRENT_GITHUB_SOURCE/
+          cp tests/romdev_r3_*.py package/CURRENT_GITHUB_SOURCE/
+          cp .github/workflows/romdev-r3-*.yml package/CURRENT_GITHUB_SOURCE/
+          printf '%s\n' 'THE SKRAUN P02-R3 — MAIN FINAL 2026-11-16' 'R3 developer self-test only; no independent VERIFICATION.' 'NO-GO automatic B3c: 20Hz same-Y enemies and 30Hz frame-alternating ring/hindrance with 2-4 CPU cycles left.' 'No R4/B3c/AI/merges; see technical report.' 'Original 3 ROMs, direct 262-line Stella Debugger, 57 original-game PNG images.' > package/README_MAIN.txt
+          sed 's#build/##g' package/DASM_FINAL_3_ROMS/SHA256SUMS >package/DASM_FINAL_3_ROMS/SHA256SUMS_FLAT
+          (cd package/DASM_FINAL_3_ROMS && sha256sum -c SHA256SUMS_FLAT)
+          (cd package/DIRECT_STELLA_57_ORIGINAL_FRAMES && sha256sum -c <(sed 's#build/##g' SHA256SUMS))
+          test "$(find package/DASM_FINAL_3_ROMS -maxdepth 1 -name '*.bin' | wc -l)" -eq 3
+          test "$(find package/DIRECT_STELLA_57_ORIGINAL_FRAMES -name '*.png' -path '*/frames_*/*' | wc -l)" -eq 57
+          test "$(find package/DIRECT_STELLA_57_ORIGINAL_FRAMES -maxdepth 1 -name 'R3_*-SESSION.txt' | wc -l)" -eq 3
+          test -s package/DASM_FINAL_3_ROMS/R3_ALL_ASSEMBLED_SCANLINE_PATHS.csv
+          test -s package/DIRECT_STELLA_57_ORIGINAL_FRAMES/R3_ACTUAL_STELLA_PER_FRAME_PIXEL_COUNTS.csv
+          /usr/bin/python3 - <<'PY'
+          import json, pathlib, hashlib
+          rom=pathlib.Path("package/DASM_FINAL_3_ROMS")
+          db=pathlib.Path("package/DIRECT_STELLA_57_ORIGINAL_FRAMES")
+          expected={
+              "overlap":"f25c8622c115f85717b1fd51ff2a30cfb6fa293e95aceb228257c0655067775c",
+              "partial":"411f7ce389e0853f071011e0ab2be34ad90c47f352ea524f1ad39e98891d501c",
+              "stagger":"94ae477a944a042a6e605b6046b4e833b0cf3387bc62906e75491e47a649f226"
+          }
+          for n,sha in expected.items():
+              b=(rom/("r3-"+n+".bin")).read_bytes()
+              assert len(b)==4096 and hashlib.sha256(b).hexdigest()==sha,(n,"binary mismatch")
+              src=rom/"sources"/("romdev_r3_"+n+".asm")
+              assert src.exists() and src.read_bytes()==(pathlib.Path("package/CURRENT_GITHUB_SOURCE")/src.name).read_bytes(),(n,"current GitHub source not frozen original!")
+          t=json.loads((db/"R3_DIRECT_DEBUGGER_TRACE.json").read_text())
+          measured=json.loads((db/"R3_ACTUAL_STELLA_12_FRAME_DUTY_AND_ALIGNMENTS.json").read_text())
+          expectcounts={"overlap":[4,4,4,6,6],"partial":[6,6,12,6,6],"stagger":[12,12,12,12,0]}
+          for n in expected:
+              assert t[n]["Mode"]==[6,12,12,0,0,6,7],(n,t[n]["Mode"])
+              assert len(t[n]["scanlines"])==19 and all(v==262 for v in t[n]["scanlines"]),(n,"not 262")
+              assert t[n]["snapshots"]==12
+              counts=measured[n]["actors_measured_active_frames_out_of_12"]
+              actual=[counts["knight_1"],counts["knight_2"],counts["archer"],measured[n]["halo_frames_out_of_12"],measured[n]["scene_frames_out_of_12"]]
+              assert actual==expectcounts[n],(n,actual)
+              assert len(list((db/("frames_"+n)).glob("*.png")))==19
+          print("R3 FROZEN PACKAGE CHECK PASS: 3 original 4K ROMs, source identical, 57 ORIGINAL STELLA PNGs, 57 DIRECT 262 NTSC readings, 20/30/60 Hz measured")
+          PY
+          (cd package && find . -type f ! -name FILE_SHA256_MANIFEST.txt -print0 | sort -z | xargs -0 sha256sum > FILE_SHA256_MANIFEST.txt && sha256sum -c FILE_SHA256_MANIFEST.txt > SHA256_MANIFEST_CHECK.log)
+          (cd package && zip -qr ../THE_SKRAUN_P02_R3_COMPLETE_MAIN_DELIVERY_2026-11-16.zip .)
+          sha256sum THE_SKRAUN_P02_R3_COMPLETE_MAIN_DELIVERY_2026-11-16.zip > PACKAGE_SHA256.txt
+          echo "R3 FINAL PACKAGE INTERNAL FILE COUNT: $(find package -type f | wc -l)"
+          echo "R3 FINAL ROM and direct Stella source/manifest integrity PASS"
+      - name: Archive one self-contained R3 MAIN decision package
+        uses: actions/upload-artifact@v4
+        with:
+          name: THE_SKRAUN_P02_R3_COMPLETE_MAIN_DELIVERY_2026-11-16
+          path: |
+            THE_SKRAUN_P02_R3_COMPLETE_MAIN_DELIVERY_2026-11-16.zip
+            PACKAGE_SHA256.txt
+          if-no-files-found: error
