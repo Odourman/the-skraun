@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Research advisory for the currently authorized P02-R1 study:** [Critical audit of all 30 classic Atari 2600 tricks against The Skraun's measured PF/cycle/scenery constraints](docs/R1_30_ATARI_TRICKS_RELEVANCE_AUDIT_2026-11-16.md). Focus on #08 two-line kernels, #14 multiple display kernels and #24 disciplined precomputed masks; #05/#07/#16/#18/#24 are already used or being evaluated. This advisory does **not** authorize any additional development stage.
+
+
 **Most recent MAIN decision — P02-B3b completed (2026-11-16):** The [B3b experiment in draft PR #11](https://github.com/Odourman/the-skraun/pull/11) was accepted as a **bounded developer self-test**: 13 horizontal joystick-following ring positions and precomposed scene masks. The current driver moves only one 4-clock step per 16 NTSC frames (not playable-final). A static worst-case kernel estimate is **63/76 CPU cycles per scanline**; runtime general scenery composition exceeds this budget in the unchanged kernel, while ring and obstacles visually merge into one PF color. No enemy or HUD feasibility has been proven. [Full B3b report](https://github.com/Odourman/the-skraun/blob/experiment/romdev-b3b-horizontal-follow/docs/ROMDEV_B3B_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md). **MAIN now authorizes only [P02-R1 renderer architecture feasibility](handoff/MAIN_TO_ROM_DEV_P02_R1_RENDERER_FEASIBILITY_AUTHORIZED_2026-11-16.md), not B3c or mainline integration.** Independent VERIFICATION remains deferred.
 
 
