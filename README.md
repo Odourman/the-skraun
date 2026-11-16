@@ -37,3 +37,15 @@ See [the first prototype gate](docs/PROTOTYPE_01_PLAN.md).
 ## License
 
 No license has been selected yet. Do not assume permission to reuse this project's original assets or code.
+
+
+## Design, research and CI
+
+- [MAIN design decisions 01–60](docs/DESIGN_DECISIONS_01-60_2026-11-16.md) — the gameplay rules to preserve, including the level-3 overpowered design and reversed world order.
+- [Atari 2600 comparison, decisions 01–60](docs/ATARI2600_COMPARISON_01-60_2026-11-16.md) — advisory research and engineering risks; not implementation proof.
+- [P01 prototype plan](docs/PROTOTYPE_01_PLAN.md) — first executable experiment, **not yet implemented**.
+- [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. Once `src/main.asm` exists, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
+
+A green CI status **before** `src/main.asm` exists means only that the document checks passed and the build job correctly detected missing source. It must not be presented as ROM verification.
+
+Google Drive retains a separate project folder named **THE SKRAUN - Atari 2600**, including historic decisions 01–19 and exported decisions 01–60. GitHub provides the tracked code, CI and revisioned engineering documents.
