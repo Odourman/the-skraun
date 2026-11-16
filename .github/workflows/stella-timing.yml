@@ -1,0 +1,65 @@
+name: P01 Stella Debugger Timing (experimental)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/stella-timing.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stella-timing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Stella, DASM and Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot
+      - name: Assemble ROM and create Stella debugger script
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm src/main.asm -f3 -obuild/the-skraun-p01.bin -lbuild/the-skraun-p01.lst -sbuild/the-skraun-p01.sym
+          cat > build/the-skraun-p01.script <<'SCRIPT'
+          base dec
+          frame #10
+          print _scanEnd
+          print _fCount
+          print _fCycles
+          saveSes
+          SCRIPT
+          sha256sum build/the-skraun-p01.bin | tee build/ROM_SHA256.txt
+      - name: Launch Stella debugger and preserve evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/the-skraun-p01.bin" > build/stella_debugger.log 2>&1 &
+            pid=$!
+            sleep 8
+            xwininfo -root -tree > build/xwindows.txt || true
+            scrot -z build/debugger_desktop.png || true
+            ps -p "$pid" -o pid,stat,args > build/process.txt || true
+            kill "$pid" || true
+            wait "$pid" || true
+          '
+          find . "$HOME/.config/stella" -type f \( -name '*.txt' -o -name '*.script' \) -printf '%p %s bytes\n' | head -n 50 | tee build/session_files.txt || true
+          cat build/stella_debugger.log
+          test -s build/debugger_desktop.png
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p01-stella-debugger-timing-diagnostic
+          path: |
+            build/*
+            /home/runner/.config/stella/*.txt
+            /home/runner/.config/stella/state/*.txt
+          if-no-files-found: warn
