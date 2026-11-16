@@ -41,3 +41,11 @@
 4. Integrera inte grå figur eller ny ring på `main` förrän aktuella scope och mätningar håller. P01-oberoende verifiering ska inte antas passerad.
 
 **Övergripande slutsats:** Speldesignen är långt gången, men spelet är fortfarande i hårdvaru- och kärngrafikprototypstadiet. Det finns ingen färdig spelbar kampbana och inga riktiga bakgrundsvärldar i ROM ännu.
+
+## KORRIGERING AV SPRITEORIENTERING – 2026-11-16
+
+Efter användarens observation verifierades att den tidigare kombinerade P02-grå-RING-ROM:en ritade trollet upp och ned. Rasterloopen läste bitmaptabeller via nedräknande index 191→0, men figurtabellerna lagrades i fel vertikal ordning. Samma metod förekommer i det tidiga B2-experimentet; dess gröna screenshot-test bevisar bara storlek/ring, inte rättvänd sprite.
+
+**Fix:** [draft PR #6](https://github.com/Odourman/the-skraun/pull/6) i grenen `fix/p02-gray-halo-upright`, separat från `main`. Riktig Stella 6.7.1 bekräftar korrekt radorientering pixel för pixel på nivå 1–3, 4K NTSC ROM SHA-256 `7dda240f58656277e5508ad444368b2c33cad0ee9c9a5c259b27e0a7eda44bed`. Full audit i `docs/ATARI2600_SPRITE_ROW_ORDER_AUDIT_2026-11-16.md`, evidenspaket på Google Drive. P01/hela P02 är **inte oberoende verifierade**.
+
+Roller: MAIN = den här huvudchatten; ROM DEVELOPMENT = separat implementation/självtest; VERIFICATION = separat oberoende granskning. Startprompter finns i `handoff/ROM_DEVELOPMENT_START.md` och `handoff/VERIFICATION_START.md`.
