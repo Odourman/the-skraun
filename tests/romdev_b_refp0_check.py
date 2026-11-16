@@ -88,6 +88,6 @@ print("RAM: no extra new zero-page symbols beyond $80..$8E; both 15 bytes")
 for name in ("a","b"):
     sym=Path(f"build/romdev-{name}.sym").read_text()
     for label in ("MapLarge","GfxRightA"):
-        match=re.search(r"^"+label+r"\\s+\\$?([0-9a-fA-F]{4})",sym,re.M|re.I)
-        print("SYMBOL",name,label,match.group(1) if match else "format unsupported; inspect sym artifact")
+        matching=[line for line in sym.splitlines() if label.lower() in line.lower()]
+        print("SYMBOL",name,label,matching[:3])
 
