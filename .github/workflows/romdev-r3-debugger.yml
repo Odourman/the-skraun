@@ -50,10 +50,16 @@ jobs:
                 sleep 1
               done
               test -n "$wid" || { cat "build/debugger_$n.log"; exit 8; }
+              sleep 2.7
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+              test -n "$wid" && xdotool getwindowname "$wid"
               xdotool windowfocus "$wid" || true
-              sleep 1.3
+              sleep 0.7
               cmd(){
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+                test -n "$wid" || { echo "Stella debugger window vanished"; exit 11; }
                 printf "%s\n" "$1" >> "build/COMMANDS_$n.txt"
+                xdotool windowfocus "$wid" || true
                 xdotool type --window "$wid" --clearmodifiers --delay 7 "$1"
                 xdotool key --window "$wid" Return
                 sleep 0.13
