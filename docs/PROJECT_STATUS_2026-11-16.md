@@ -20,6 +20,7 @@
 | P02-B2 statisk halo med P0-troll | Bounded Stella test PASS, tre storlekar | https://github.com/Odourman/the-skraun/pull/3 |
 | P02-B3 dynamisk ring | Plan och testgrind dokumenterade, **ingen ROM ännu** | `docs/P02_B3_DYNAMIC_RING_GATE.md` i B2-grenen |
 | Ny grå overhead-Skraun | ROM byggd, 3 storlekar och grundrörelse i Stella; grafiken är fortfarande preliminär | https://github.com/Odourman/the-skraun/pull/4 |
+| Grå Skraun med statisk haloring | 4K ROM och tre Stella-bilder godkända i begränsad egenkontroll, men **ingen rörlig halo** | https://github.com/Odourman/the-skraun/pull/5 |
 | Skog/berg/dröm/natt, riddare, grön bågskytt, kollisioner, poäng och ljud | **Inte implementerade** i de testade prototyperna | Återstår |
 
 ## Nytt visuell implementationstest
