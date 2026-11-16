@@ -80,14 +80,15 @@ Frame:
         jsr UpdateMotion
         sta WSYNC                ; VBLANK scanline 2
         jsr SelectPtrs           ; 71 cycles, in one VBLANK scanline
+        sta WSYNC                ; VBLANK scanline 3; prevent 87-cycle path overflow
         ldx Mode
         lda P0XTable,x
-        jsr PositionP0           ; VBLANK scanline 3 (inside routine)
-        sta WSYNC                ; VBLANK scanline 4
+        jsr PositionP0           ; VBLANK scanline 4 (inside routine)
+        sta WSYNC                ; VBLANK scanline 5
         sta HMOVE
-        ldx #33
+        ldx #32
 VBlankPad:
-        sta WSYNC                ; VBLANK scanlines 5..37
+        sta WSYNC                ; VBLANK scanlines 6..37
         dex
         bne VBlankPad
         lda #0
