@@ -76,11 +76,11 @@ for state in STATES:
     assert len(r2Gold)>100,("interlaced halo disappeared",state)
     print("INTERLACE RING DUTY",state,"gold rows/pixels",len(r2Gold),"baseline",len(baseGold),"ratio",round(len(r2Gold)/len(baseGold),3))
 hud=images["hud","centre80"]
-# Stella 320x228 output places first active visible HUD line at y=30.
-bar=[hud.getpixel((x,y)) for y in range(30,46) for x in range(0,320)]
+# Stella 320x228 original capture places first HUD active line at y=15; arena begins at y=31.
+bar=[hud.getpixel((x,y)) for y in range(15,31) for x in range(0,320)]
 lit=sum(max(v)>70 for v in bar)
-print("SEPARATE HUD PLACEHOLDER first 16 active display rows (y30..45) nonblack pixel count",lit)
-assert lit>=32,("HUD stripe bars missing: expected >=32 independently visible pixels",lit)
+print("SEPARATE HUD PLACEHOLDER first 16 active HUD rows (y15..30) nonblack pixel count",lit)
+assert lit>=1000,("HUD stripe bars missing in actual 16-row band",lit)
 with open("build/R2_GENUINE_IMAGE_GEOMETRY.json","w") as f:
     json.dump({"stella_pngs":rec,"two_enemy_copies":dual_status,"hud_nonblack_pixels":lit},f,indent=2)
 with open("build/R2_GENUINE_IMAGE_GEOMETRY.csv","w",newline="") as f:
