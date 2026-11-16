@@ -2,7 +2,9 @@ name: ROMDEV C Stella Debugger timing evidence
 on:
   push:
     branches: [experiment/romdev-c-b3a]
-    paths: ['.github/workflows/romdev-c-debugger.yml']
+    paths:
+      - '.github/workflows/romdev-c-debugger.yml'
+      - 'experiments/romdev_c_b3a.asm'
   workflow_dispatch:
 permissions:
   contents: read
