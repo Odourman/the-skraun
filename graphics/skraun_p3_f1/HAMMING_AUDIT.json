@@ -1,0 +1,135 @@
+{
+  "caution": "NO PERCEPTUAL PASS: Hamming only counts bit differences; family silhouette and direction at actual L1 require user review.",
+  "source_cells": 96,
+  "families": {
+    "U1_frozen": {
+      "A_RIGHT__A_LEFT": 10,
+      "B_RIGHT__B_LEFT": 12,
+      "A_RIGHT__B_RIGHT": 7,
+      "A_LEFT__B_LEFT": 7,
+      "A_RIGHT__B_LEFT": 5,
+      "A_LEFT__B_RIGHT": 5,
+      "A_RIGHT__A_LEFT_HEAD_ONLY_ROWS_0_4": 4,
+      "B_RIGHT__B_LEFT_HEAD_ONLY_ROWS_0_4": 4,
+      "A_RIGHT__B_RIGHT_HEAD_ONLY_ROWS_0_4": 0,
+      "four_case_pairwise_matrix_order": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "four_case_pairwise_matrix": [
+        [
+          0,
+          10,
+          7,
+          5
+        ],
+        [
+          10,
+          0,
+          5,
+          7
+        ],
+        [
+          7,
+          5,
+          0,
+          12
+        ],
+        [
+          5,
+          7,
+          12,
+          0
+        ]
+      ]
+    },
+    "D1_face_ear_permanent": {
+      "A_RIGHT__A_LEFT": 22,
+      "B_RIGHT__B_LEFT": 20,
+      "A_RIGHT__B_RIGHT": 9,
+      "A_LEFT__B_LEFT": 9,
+      "A_RIGHT__B_LEFT": 17,
+      "A_LEFT__B_RIGHT": 17,
+      "A_RIGHT__A_LEFT_HEAD_ONLY_ROWS_0_4": 12,
+      "B_RIGHT__B_LEFT_HEAD_ONLY_ROWS_0_4": 12,
+      "A_RIGHT__B_RIGHT_HEAD_ONLY_ROWS_0_4": 0,
+      "four_case_pairwise_matrix_order": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "four_case_pairwise_matrix": [
+        [
+          0,
+          22,
+          9,
+          17
+        ],
+        [
+          22,
+          0,
+          17,
+          9
+        ],
+        [
+          9,
+          17,
+          0,
+          20
+        ],
+        [
+          17,
+          9,
+          20,
+          0
+        ]
+      ]
+    },
+    "D2_shoulder_arm_permanent": {
+      "A_RIGHT__A_LEFT": 24,
+      "B_RIGHT__B_LEFT": 22,
+      "A_RIGHT__B_RIGHT": 7,
+      "A_LEFT__B_LEFT": 7,
+      "A_RIGHT__B_LEFT": 23,
+      "A_LEFT__B_RIGHT": 23,
+      "A_RIGHT__A_LEFT_HEAD_ONLY_ROWS_0_4": 6,
+      "B_RIGHT__B_LEFT_HEAD_ONLY_ROWS_0_4": 6,
+      "A_RIGHT__B_RIGHT_HEAD_ONLY_ROWS_0_4": 0,
+      "four_case_pairwise_matrix_order": [
+        "A_RIGHT",
+        "A_LEFT",
+        "B_RIGHT",
+        "B_LEFT"
+      ],
+      "four_case_pairwise_matrix": [
+        [
+          0,
+          24,
+          7,
+          23
+        ],
+        [
+          24,
+          0,
+          23,
+          7
+        ],
+        [
+          7,
+          23,
+          0,
+          22
+        ],
+        [
+          23,
+          7,
+          22,
+          0
+        ]
+      ]
+    }
+  }
+}
