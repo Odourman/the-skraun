@@ -151,8 +151,14 @@ R2Pair:
         sta PF2                  ; TIA x56: first fixed obstacle
         lda #$40
         sta PF0                  ; TIA x88: second fixed obstacle
+        nop                      ; precisely delay right-PF1 handoff until color-clock window
+        nop
+        nop
+        nop
         lda #$10
-        sta PF1                  ; TIA x108: third fixed obstacle
+        sta PF1                  ; TIA x108: third fixed obstacle, after right-half latch
+        lda #0
+        sta PF2                  ; CRITICAL: clear mirrored left PF2 before right PF2 at x128
 R2NoScene:
         lda Troll2,x
         sta GRP1
