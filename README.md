@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**New MAIN visual DESIGN PROPOSAL (advisory only, 2026-11-16):** [Post-R3-VFIX visual identity/readability review](docs/SKRAUN_POST_R3_VISUAL_DESIGN_REVIEW_PROPOSAL_2026-11-16.md) compares the user's original gray overhead Skraun, real Stella A/B sprites, the R3 placeholder knights/archer and synthetic scenery; proposes visually recognizable enemies and forest/mountain/dream/night world silhouettes, with exact criteria for later original-TIA art testing. **No graphic asset, renderer, B3c/R4, or production merge is approved by this proposal.** R3-VFIX passed developer tests but final art and full-game feasibility remain open.
+
+
 **LATEST MAIN REVIEW – R3-VFIX completed as developer self-test (2026-11-16):** [draft PR #16](https://github.com/Odourman/the-skraun/pull/16) fixes upside-down Skraun in all three frozen R3 diagnostic variants. [Authentic Stella regression #43925833442](https://github.com/Odourman/the-skraun/actions/runs/43925833442) shows 57/57 old captures FAIL the upright pixel contract and 57/57 corrected PASS; 57 sampled states are 262 NTSC scanlines. Exactly **36 active P0 sprite ROM bytes** change in each 4096-byte ROM; no kernel/PF/P1/input data changes. [Final reproducible package #43926438951](https://github.com/Odourman/the-skraun/actions/runs/43926438951). This is a **source/render orientation correction only**, not approved character art, recognizable knights/archer, world scenery, HUD or full-game renderer. [Visual gate #15](https://github.com/Odourman/the-skraun/issues/15) remains **OPEN for art/readability**, with orientation component resolved. R3's full-game architecture **NO-GO remains**. No R4, B3c, new art implementation, merge or independent VERIFICATION authorized.
 
 
