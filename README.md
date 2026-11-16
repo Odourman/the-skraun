@@ -4,6 +4,8 @@
 
 ## Project status (2026-11-16)
 
+[Current verified project status and next gates](docs/PROJECT_STATUS_2026-11-16.md).
+
 **Design established; P01 baseline runs in Stella but independent verification remains open.** A new light-gray overhead sprite is being tested separately in draft PR #4. B1/B2 static halo experiments passed bounded Stella visual tests; the moving B3 halo, complete enemies and world backgrounds are not implemented.
 
 The project currently has 60 gameplay design decisions documented in the MAIN conversation and its exported design log. Those decisions govern implementation; this README is only an overview.
