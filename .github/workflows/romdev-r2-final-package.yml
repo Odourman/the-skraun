@@ -1,0 +1,56 @@
+name: P02-R2 frozen consolidated MAIN delivery
+on:
+  push:
+    branches: [experiment/romdev-r2-two-line-scheduler]
+    paths:
+      - '.github/workflows/romdev-r2-final-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  make-r2-delivery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rehydrate frozen real Stella and direct debugger evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p package/FINAL_REAL_ROM_STELLA package/DIRECT_STELLA_DEBUGGER package/GITHUB_CURRENT_SOURCE
+          gh run download 43912037744 --repo "$GITHUB_REPOSITORY" --name romdev-r2-twoline-dual-hud-original-stella --dir package/FINAL_REAL_ROM_STELLA
+          gh run download 43911806707 --repo "$GITHUB_REPOSITORY" --name romdev-r2-direct-debugger-16-motion-states --dir package/DIRECT_STELLA_DEBUGGER
+          cp docs/ROMDEV_P02_R2_RENDERER_SCHEDULING_MAIN_HANDOFF_2026-11-16.md package/MAIN_R2_CONSOLIDATED_TECHNICAL_REPORT.md
+          cp experiments/romdev_r2_*.asm package/GITHUB_CURRENT_SOURCE/
+          cp tests/romdev_r2_*.py package/GITHUB_CURRENT_SOURCE/
+          cp .github/workflows/romdev-r2-*.yml package/GITHUB_CURRENT_SOURCE/
+          cat > package/README_MAIN.txt <<'EOF'
+          THE SKRAUN P02-R2 MAIN DELIVERY — 2026-11-16.
+          Developer self-tests only. NO independent VERIFICATION, B3c/R3 or main merge.
+          See MAIN_R2_CONSOLIDATED_TECHNICAL_REPORT.md for full technical limits.
+          R2 real ROMs and Stella screenshot test: Actions 43912037744.
+          R2 live Stella Debugger 16 state test: Actions 43911806707.
+          Draft pull request #13 targets the prior experimental R1 branch, not main.
+          Five original 4096-byte ROMs, all original source/listing/symbols, CSV and PNG tests.
+          EOF
+          sed 's#build/##g' package/FINAL_REAL_ROM_STELLA/SHA256SUMS > package/FINAL_REAL_ROM_STELLA/SHA256SUMS_FLAT
+          (cd package/FINAL_REAL_ROM_STELLA && sha256sum -c SHA256SUMS_FLAT)
+          test -s package/FINAL_REAL_ROM_STELLA/R2_LEVEL3_HYPOTHETICAL_EDGE_AND_MASKS.csv
+          test -s package/FINAL_REAL_ROM_STELLA/R2_STATIC_SUMMARY.csv
+          test -s package/DIRECT_STELLA_DEBUGGER/R2_DEBUGGER_MEASUREMENTS.json
+          test "$(find package/FINAL_REAL_ROM_STELLA -name '*-centre*.png' | wc -l)" -eq 15
+          find package -type f ! -name FILE_SHA256_MANIFEST.txt -print0 | sort -z | xargs -0 sha256sum > package/FILE_SHA256_MANIFEST.txt
+          (cd package && zip -q -r ../THE_SKRAUN_P02_R2_COMPLETE_MAIN_DELIVERY_2026-11-16.zip .)
+          sha256sum THE_SKRAUN_P02_R2_COMPLETE_MAIN_DELIVERY_2026-11-16.zip | tee PACKAGE_SHA256.txt
+          echo "PACKAGE FILE COUNT: $(find package -type f | wc -l)"
+      - name: Upload self-contained exact MAIN source/evidence ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: THE_SKRAUN_P02_R2_COMPLETE_MAIN_DELIVERY_2026-11-16
+          path: |
+            THE_SKRAUN_P02_R2_COMPLETE_MAIN_DELIVERY_2026-11-16.zip
+            PACKAGE_SHA256.txt
+          if-no-files-found: error
