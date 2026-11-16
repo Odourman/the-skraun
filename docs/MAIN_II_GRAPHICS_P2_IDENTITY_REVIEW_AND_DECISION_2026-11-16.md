@@ -1,0 +1,30 @@
+# THE SKRAUN — MAIN II: GRAPHICS P2 FINAL REVIEW AND DECISION
+**Date:** 2026-11-16
+**Decision:** **P2 DELIVERED / SOURCE-AND-PACKAGE ACCEPTED / NEGATIVE IDENTITY RESULT / NO FINAL SPRITE ACCEPTED**
+**Type:** MAIN quality decision on an isolated DESIGN-ONLY study; **not** ROM, Stella or independent Verification.
+
+## 1. Verified evidence (MAIN II review, not developer assertion alone)
+- Bound order: [MAIN II → GRAPHICS P2](../handoff/MAIN_II_TO_GRAPHICS_P2_SKRAUN_IDENTITY_SILHOUETTE_PROOF_AUTHORIZED_2026-11-16.md).
+- Source: [graphics/p2-identity-silhouette-proof-20261116](https://github.com/Odourman/the-skraun/tree/graphics/p2-identity-silhouette-proof-20261116/graphics/skraun_p2_identity). Compare against frozen P1 head `b5bc31a3485faf67199631c01768bf221f061292`: **8 commits ahead, 0 behind, only 8 new P2 source/documentation files; no P1 source edits**. Isolated, not merged; no P2 draft PR located (source branch + GitHub issue + Drive evidence are explicitly linked).
+- MAIN II downloaded the actual [Drive ZIP](https://drive.google.com/file/d/1vXUaUH463nWgIa48bMEkkbzpWLMjij5E/view): `THE_SKRAUN_GRAPHICS_P2_IDENTITY_2026-11-16.zip`, **168904 bytes**, SHA256 **`5bc754ba215a212778744ada1e3bffab7bc2eb1a5ddfb1da138c612d21891e15`**. ZIP integrity PASS, 24 entries, 23/23 manifest hashes match downloaded bytes.
+- Independently executed delivered `validate_p2.py` against extracted package: PASS for frozen P1 A source, two new source masks, exact 8×12, horizontal mirrors, two genuine A/B poses, fore-/rear-paw change footprints, source-only .inc tables, six native pixel PNGs, three two-frame GIFs, and manifest coverage. This proves **source/data integrity only**.
+- MAIN II opened the **original private user drawing** in Drive, and inspected actual P2 files `02_L1_TV_4x3_NATIVE_COMPARISON.png` and `04_EXACT_BITMAPS_BOTH_FACINGS.png`. P2 previews are deliberately **NOT Stella**. No new ROM, debugger or independent Verification was produced.
+- [Tracking #20](https://github.com/Odourman/the-skraun/issues/20) and [P2 author handoff](https://github.com/Odourman/the-skraun/blob/graphics/p2-identity-silhouette-proof-20261116/graphics/skraun_p2_identity/MAIN_II_P2_HANDOFF.md).
+
+## 2. MAIN independent art assessment
+**Negative identity result confirmed at L1 8×12 display size.** P1 A remains a better overhead quadruped than old frontal Q1 but shell/turtle/beetle-like. I1 represents two nominal dark eye cells, two head contour tips and a two-cell front-mouth opening, but its native rendered image does **not** read naturally as the original two-horned, large-eyed, open-mouthed troll; the facial marks merge into a pincer/jaw or small sprite notch. I2 allocates visibly more to expressive upper/lower limbs and hind paws, but the face/mouth vanishes and it reads as an insect/crab/generic creature. The original drawing's distinctive large eyes, open mouth and long arms are visually front-facing; transplanting every such detail into the 8×12 strict true-overhead profile is a representation tradeoff, not just a missing source-code feature.
+
+Quantitative source differences, from actual P2 JSON/source: I1 A/B changed bitmap cells **16**; I2 **12**. I1 compared to frozen P1 A differs **16** cells in pose A and **20** in pose B; I2 differs **19** and **27**. Both new source designs are genuinely distinct, yet neither improves the actual L1 identity enough for aesthetic approval.
+
+This does **not** mathematically prove that no possible 8×12 overhead Skraun can succeed. It does demonstrate **diminishing returns** for the specific strategy of trying to fit all original frontal facial features, four extended limbs and strong overhead anatomy into one monochrome 8×12 sprite.
+
+## 3. Formal disposition
+1. **ACCEPT GRAPHICS P2 as a completed, well-bounded comparative design-study DELIVERY.** It is correct to report **NEGATIVE IDENTITY RESULT**.
+2. **REJECT aesthetic final acceptance** of I1, I2 and frozen P1 A. P1 A remains **frozen reference only**, not approved production art. I1/I2 are **archived comparative candidates**, not selected art.
+3. **Do not automatically start GRAPHICS P3/v0.4** or attempt more casual 8×12 tweaks. The next valid decision is an explicit **character-representation tradeoff** with the user: (A) maintain strict overhead + existing 8×12 but reinterpret the facial identity nonliterally, (B) test a different footprint/renderer with a separately authorized *feasibility study*, or (C) revise camera/character presentation only with an explicit change to the design rules. None of A–C is authorized by this decision.
+4. **Preserve user-original identity requirements** as unsatisfied, not waived or silently downgraded. A changed dimensional/visual rule, if desired, requires its own explicitly recorded authority. Do not publicly upload the private reference photograph.
+5. [Visual-quality gate #15](https://github.com/Odourman/the-skraun/issues/15) remains **OPEN**. [ART1 L3 raster defect #19](https://github.com/Odourman/the-skraun/issues/19) remains OPEN and repair NOT authorized. [Draft ART1 PR #18](https://github.com/Odourman/the-skraun/pull/18) stays unmerged, and R3's same-Y 20Hz / halo-PF-color / cycle-headroom whole-scene NO-GO is unchanged. [P01 independent gate #1](https://github.com/Odourman/the-skraun/issues/1) remains OPEN.
+6. **No** P01-ART2, P01-ART1 FIX, R4, B3c, new ROM, larger sprite, AI/halo/HUD/world integration, new graphics rounds, merge, or independent VERIFICATION authorized. GRAPHICS stops at this P2 package.
+
+## 4. Next MAIN/user decision (not automatic work)
+**MAIN recommendation:** preserve true topdown and the user's original creature identity, but **stop optimizing the exact same 8×12 monochrome representation** until a separate tradeoff is decided. If identity fidelity is paramount, first evaluate the technical cost of alternative representation in an explicitly bounded, separately authorized research/feasibility gate *before* implementation; do not equate a bigger drawing with a cheap or possible full-game hardware solution. Do not call that research an existing authorization.
