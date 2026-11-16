@@ -1,0 +1,97 @@
+name: P02-R1 real Stella responsive joystick and renderer feasibility
+on:
+  push:
+    branches: [experiment/romdev-r1-renderer-feasibility]
+    paths:
+      - 'experiments/romdev_r1_*.asm'
+      - 'tests/romdev_r1_*.py'
+      - '.github/workflows/romdev-r1-stella.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  r1-real-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM Stella 6.7.1 screenshot and PIL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Assemble three independent 4096-byte NTSC candidate ROMs and count cycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 -m py_compile tests/romdev_r1_*.py
+          mkdir -p build/exact_sources build/test_scripts
+          for name in fast score p1 opt; do
+            case "$name" in
+              fast) src=romdev_r1_fast_pf.asm ;;
+              score) src=romdev_r1_score_contrast.asm ;;
+              p1) src=romdev_r1_p1_stress.asm ;;
+              opt) src=romdev_r1_optimized_pf.asm ;;
+            esac
+            dasm "experiments/$src" -f3 -o"build/romdev-r1-$name.bin" -l"build/romdev-r1-$name.lst" -s"build/romdev-r1-$name.sym"
+            test "$(stat -c%s build/romdev-r1-$name.bin)" -eq 4096
+            cp "experiments/$src" build/exact_sources/
+            stella -rominfo "build/romdev-r1-$name.bin" >"build/rominfo_$name.txt"
+          done
+          sha256sum build/*.bin | tee build/SHA256SUMS
+          /usr/bin/python3 tests/romdev_r1_static_ledger.py | tee build/R1_STATIC_RESOURCE_BUDGET.txt
+          /usr/bin/python3 tests/romdev_r1_object_headroom.py | tee build/R1_ACTOR_HUD_HEADROOM_LOWER_BOUNDS.txt
+          /usr/bin/python3 tests/romdev_r1_mask_aliases.py | tee build/R1_ROM_MASK_ALIAS_EXACTNESS.txt
+          cp tests/romdev_r1_*.py build/test_scripts/
+          cp .github/workflows/romdev-r1-stella.yml build/
+      - name: Genuine Stella 6.7.1 joystick reversal images at ten percent slow motion
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            for name in fast score p1 opt; do
+              rom="romdev-r1-$name"
+              stella -logtoconsole 1 -audio.enabled 0 -threads 0 -speed 10 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/$rom.bin" > "build/stella_$name.log" 2>&1 &
+              pid=$!
+              trap "kill $pid 2>/dev/null || true" EXIT
+              wid=""
+              for j in $(seq 1 28); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid" || { cat "build/stella_$name.log"; exit 7; }
+              xdotool windowfocus "$wid" || true
+              sleep 0.8
+              shot(){
+                local i="$1"
+                xdotool key --window "$wid" F12
+                sleep 0.10
+                test -s "build/$rom.png"
+                cp "build/$rom.png" "build/$(printf "%s_motion_%03d.png" "$name" "$i")"
+              }
+              shot 0
+              xdotool keydown --window "$wid" Right
+              for i in $(seq 1 26); do shot "$i"; sleep 0.13; done
+              xdotool keyup --window "$wid" Right
+              xdotool keydown --window "$wid" Left
+              for i in $(seq 27 74); do shot "$i"; sleep 0.13; done
+              xdotool keyup --window "$wid" Left
+              xdotool keydown --window "$wid" Right
+              for i in $(seq 75 122); do shot "$i"; sleep 0.13; done
+              xdotool keyup --window "$wid" Right
+              scrot -z "build/desktop_$name.png"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.6
+            done
+          '
+          /usr/bin/python3 tests/romdev_r1_real_stella.py | tee build/R1_TRUE_STELLA_IMAGES_AND_MOTION.txt
+      - name: Upload exact sources, ROMs, symbols, screenshots and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r1-original-stella-renderer-feasibility
+          path: build/
+          if-no-files-found: warn
