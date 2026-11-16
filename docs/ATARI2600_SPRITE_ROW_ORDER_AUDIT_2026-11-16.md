@@ -66,3 +66,9 @@ The standalone gray P01 prototype `experiment/gray-topdown-skraun` has a differe
 - **VERIFICATION:** separate source checkout, independent rebuilding, Stella/Debugger comparisons and PASS/FAIL, without modifying the candidate implementation.
 
 Start prompts: `handoff/ROM_DEVELOPMENT_START.md` and `handoff/VERIFICATION_START.md`.
+
+## Additional verified optimization: horizontal mirror using REFP0
+
+The 2600 has a dedicated `REFP0` register at TIA write address `$0B`. Setting bit 3 to `1` (`#$08`) reflects Player 0's eight-bit sprite horizontally at render time; clearing it restores the original. This allows a single A/B set of walking poses to face both directions **without duplicate left/right bitmap tables**. It does **not** correct vertical top/bottom row order (that is a separate table-indexing issue). This is a technical **optimization proposal** for ROM DEVELOPMENT to test, not a change to MAIN's gameplay decisions.
+
+Source: Atari Stella Programmer's Guide, Player Graphics and REFP0 descriptions, https://www.atariage.com/2600/programming/2600_101/docs/stella.html .
