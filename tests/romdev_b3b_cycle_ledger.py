@@ -66,7 +66,7 @@ for name in ("dynamic","obstacles"):
           "zero-page RAM $80-$89 =10 used, 118 free (isolated test only)")
 print("ROM table payload: 13 * 4 * 33 =1716 masks; 2 * 193=386 sprite+rowmap; 8*13=104 pointer entries; 13 P0 X entries")
 print("FUTURE COST: a runtime four-byte scenery OR would add >=4 memory accesses*4 cycles = >=16 cycles/scanline;")
-print("          67+16=83 > 76 (not feasible in this unchanged kernel).")
+print(f"          {maximum}+16={maximum+16} > 76 (not feasible in this unchanged kernel).")
 print("         Fixed per-layout composed masks scale ~1716 bytes per backdrop; 8 layouts =13,728 bytes, before gameplay.")
 with Path("build/B3B_STATIC_CYCLE_LEDGER.csv").open("w",newline="") as f:
     w=csv.writer(f)
