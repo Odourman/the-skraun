@@ -1,0 +1,99 @@
+name: P02-B3b Stella Debugger joystick-state scanlines and cycle probe
+on:
+  push:
+    branches: [experiment/romdev-b3b-horizontal-follow]
+    paths:
+      - 'experiments/romdev_b3b_dynamic.asm'
+      - '.github/workflows/romdev-b3b-debugger.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debugger:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM Stella and GUI tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Build ROM and align debugger symbols
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm experiments/romdev_b3b_dynamic.asm -f3 -obuild/romdev-b3b-dynamic.bin -lbuild/romdev-b3b-dynamic.lst -sbuild/romdev-b3b-dynamic.sym
+          sha256sum build/romdev-b3b-dynamic.bin | tee build/SHA256SUMS
+      - name: Step actual emulated frames with debugger joystick commands and capture measured scanlines
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            set -euo pipefail
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/romdev-b3b-dynamic.bin" > build/debugger.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 30); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              test -n "$wid" && break
+              sleep 1
+            done
+            test -n "$wid"
+            xdotool windowfocus "$wid" || true
+            sleep 3
+            cmd(){
+              printf "%s\n" "$1" >> build/debugger_commands.txt
+              xdotool type --window "$wid" --clearmodifiers --delay 15 "$1"
+              xdotool key --window "$wid" Return
+              sleep 0.35
+            }
+            snap(){
+              scrot -z "build/debugger_$1.png"
+              test -s "build/debugger_$1.png"
+            }
+            cmd "base dec"
+            cmd "frame #32"
+            cmd "print _scanEnd"
+            cmd "print *$80"
+            snap center80
+            cmd "joy0Right 1"
+            cmd "frame #192"
+            cmd "print _scanEnd"
+            cmd "print *$80"
+            snap right_edge
+            cmd "joy0Right 0"
+            cmd "joy0Left 1"
+            cmd "frame #192"
+            cmd "print _scanEnd"
+            cmd "print *$80"
+            snap left_edge
+            cmd "joy0Left 0"
+            cmd "joy0Right 1"
+            cmd "frame #96"
+            cmd "print _scanEnd"
+            cmd "print *$80"
+            snap right_reversal
+            cmd "joy0Right 0"
+            cmd "saveSes"
+            snap final
+            find "$HOME/.config/stella" "$PWD/build" -maxdepth 3 -type f \( -name "*.txt" -o -name "*.script" \) -print | tee build/session_file_index.txt
+            find "$HOME/.config/stella" -maxdepth 3 -type f -name "*.txt" -exec cp {} build/ \; || true
+          '
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          for file in sorted(Path('build').glob('debugger_*.png')):
+              im=Image.open(file).convert('RGB')
+              n=sum(max(p)>30 for p in im.getdata())
+              print(file,im.size,'visible pixels',n)
+              assert n>12000,'blank debugger snapshot: '+str(file)
+          PY
+      - name: Upload debugger proof and exact ROM even when failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-b3b-real-debugger-timing
+          path: build/
+          if-no-files-found: warn
