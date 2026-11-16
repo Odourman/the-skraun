@@ -24,12 +24,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/sources
-          for v in baseline twoline dual hud; do
+          for v in baseline twoline dual hud interlace; do
             case "$v" in
               baseline) asm=experiments/romdev_r1_p1_stress.asm ;;
               twoline) asm=experiments/romdev_r2_two_line_p1.asm ;;
               dual) asm=experiments/romdev_r2_two_line_dualcopy.asm ;;
               hud) asm=experiments/romdev_r2_multikernel_hud.asm ;;
+              interlace) asm=experiments/romdev_r2_two_line_interlace.asm ;;
             esac
             cp "$asm" "build/sources/"
             dasm "$asm" -f3 -o"build/r2-$v.bin" -l"build/r2-$v.lst" -s"build/r2-$v.sym"
