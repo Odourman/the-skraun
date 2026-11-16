@@ -2,7 +2,7 @@
 
 Date: 2026-11-16
 Scope: NTSC 4 KiB 6502 technical prototype; troll silhouette, joystick movement, 3 scale choices, leg animation.
-Status: source implemented and compiled; hardware rendering not yet independently verified. No next prototype gate is approved by this report.
+Status: source compiled; real Stella 6.7.1 has now rendered all three sizes and moved the level-3 troll right in automated screenshot checks. Independent verification and hardware timing are still OPEN. No next prototype gate is approved by this report.
 
 ## Source
 
@@ -31,8 +31,8 @@ Status: source implemented and compiled; hardware rendering not yet independentl
 ## Open P01 verification tasks
 
 1. Load `the-skraun-p01.bin` in Stella in Atari 2600 NTSC mode.
-2. Confirm visible silhouette is readable in all three scale settings and the eye holes and legs look correct.
-3. Verify joystick controls across directions, diagonals, edges, and SELECT press/release; compare at least one static and moving picture at each size.
+2. [SELF-TEST PASS] Three sizes render visibly in Stella 6.7.1, with two black eyes and legs. Independent aesthetic acceptance is still pending.
+3. [PARTIAL PASS] SELECT selects all three sizes and rightward joystick movement works in Stella. Full real-emulator all-direction, diagonal, edge and animation checks remain.
 4. In Stella Debugger, check stable 262-line NTSC frames, no VSYNC/VBLANK or kernel overruns, and note total CPU cycles per scanline.
 5. Check original-hardware behavior where possible, especially HMOVE left-edge effects and line stability.
 6. Ask a separate verifier to repeat these checks and record a distinct verdict.
@@ -45,8 +45,18 @@ No halo, obstacles, enemies, or collision engine has been implemented. P02, P03,
 
 - `tests/p01_cpu_smoke.py` was added to GitHub and integrated into the regular CI build. It uses a limited 6502/WSYNC execution model and checks joystick motion, a two-out-of-three-frame diagonal update, one SELECT activation per press, and stable 262-line modeled frames. CI is a self-test, not independent acceptance.
 - Ubuntu Stella 6.7.1's `-rominfo` recognized the ROM as NTSC and 4K.
-- The first automated Xvfb Stella capture produced no screenshot. A second run saved a 1024×768 **all-black Xvfb desktop**, with no visible Stella window ID. This does *not* establish that the game renders black; it establishes that the headless screenshot check was inconclusive. Visual P01 verification remains OPEN.
+- Early Xvfb Stella attempts produced either no PNG or an all-black desktop with no X11 window. They were **test-harness failures**. A later run succeeded after setting `-audio.enabled 0 -threads 0 -vsync 0`; these historical failures do not describe the ROM rendering.
 - Stella visual diagnostic workflow: https://github.com/Odourman/the-skraun/blob/main/.github/workflows/stella-smoke.yml
 - Manual test guide: https://github.com/Odourman/the-skraun/blob/main/docs/P01_PLAYTEST.md
 
-**P01 gate: NOT YET APPROVED**. A reproducible ROM exists, but visual Stella checks and separate independent verification are outstanding.
+**P01 gate: NOT YET APPROVED**. Assembly, 3-size actual Stella rendering, SELECT and rightward joystick motion passed self-tests; full Stella timing/control testing and separate independent verification remain outstanding.
+
+## Actual Stella 6.7.1 visual and movement self-test (2026-11-16)
+
+- CI run: https://github.com/Odourman/the-skraun/actions/runs/43863924388 — **success**.
+- Primary evidence: https://github.com/Odourman/the-skraun/blob/main/docs/P01_STELLA_VISUAL_EVIDENCE_2026-11-16.md
+- Captured TIA sprite dimensions (native logical): level 1 = 8×12; level 2 = 16×24; level 3 = 32×36. Each level was captured and pixel-measured in real Stella 6.7.1 screenshots.
+- Screenshot sizes (2× horizontal scale): level 1 = 16×12; level 2 = 32×24; level 3 = 64×36.
+- Level 3 rightward movement: capture x=124→210 (86 screenshot pixels) without vertical movement or scale change.
+- `tests/check_stella_images.py` is now the mandatory automated visual check. It prevents all-black screenshots and dimension regressions from being reported as a pass.
+- Full screenshots and GitHub Actions logs are archived in Drive under `P01 - Stella evidence - 2026-11-16`.
