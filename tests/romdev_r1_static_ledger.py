@@ -4,7 +4,7 @@ Distinct from Stella Debugger directly observed frame lengths.
 from pathlib import Path
 import re,csv
 centers=range(56,105,4)
-types={"fast":"romdev_r1_fast_pf.asm","score":"romdev_r1_score_contrast.asm","p1":"romdev_r1_p1_stress.asm"}
+types={"fast":"romdev_r1_fast_pf.asm","score":"romdev_r1_score_contrast.asm","p1":"romdev_r1_p1_stress.asm","opt":"romdev_r1_optimized_pf.asm"}
 def symbols(f):
     out={}
     for l in Path(f).read_text().splitlines():
