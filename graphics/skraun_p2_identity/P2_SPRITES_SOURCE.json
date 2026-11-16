@@ -1,0 +1,483 @@
+{
+  "project": "The Skraun",
+  "study": "GRAPHICS P2 Identity Silhouette Proof",
+  "date": "2026-11-16",
+  "status": "DESIGN ONLY; NOT STELLA; NOT USER/MAIN ART APPROVED",
+  "authority": "https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_GRAPHICS_P2_SKRAUN_IDENTITY_SILHOUETTE_PROOF_AUTHORIZED_2026-11-16.md",
+  "frozen_P1_provenance": {
+    "ref": "graphics/p1-horizontal-axis-perspective-proof-20261116",
+    "path": "graphics/skraun_p1_horizontal_axis/SKRAUN_P1_PIXEL_MASKS.json",
+    "file_sha256": "bf818ec4b998fa66c2ab1db26a637e807737f830efab04854219ab14b9dd99b0",
+    "benchmark_A_and_B_canonical_sha256": "b69419965ff4c6e350c02b1360958aa99f3e35a95734cf07dee1db1e8083921b",
+    "benchmark_name": "A_rounded_back"
+  },
+  "private_original": "Inspected from Google Drive but photo NOT distributed/reproduced in images/ZIP/GitHub",
+  "dimensions": {
+    "columns": 8,
+    "logical_rows": 12,
+    "bit7": "left",
+    "bit0": "right",
+    "row0": "upper limb region, NOT head",
+    "row11": "lower limb region, NOT feet of a biped",
+    "right_facing": "head at right x6-7",
+    "left_facing": "exact 8-bit reversal per logical row"
+  },
+  "levels": {
+    "1": {
+      "width_cc": 8,
+      "height_scanlines": 12,
+      "x_repeat": 1,
+      "row_repeat": 1
+    },
+    "2": {
+      "width_cc": 16,
+      "height_scanlines": 24,
+      "x_repeat": 2,
+      "row_repeat": 2
+    },
+    "3": {
+      "width_cc": 32,
+      "height_scanlines": 36,
+      "x_repeat": 4,
+      "row_repeat": 3
+    }
+  },
+  "preview": {
+    "native_canvas": "160 color clocks x 192 scanlines",
+    "4by3_approx": "640 x 480 nearest-neighbor, x4 and y2.5 (not equal scale and not CRT measured)",
+    "palette_gray_RGB": [
+      202,
+      210,
+      213
+    ],
+    "forest_RGB": [
+      19,
+      38,
+      30
+    ],
+    "night_RGB": [
+      10,
+      20,
+      35
+    ],
+    "gif_timing": "133 ms per pose / 8 nominal NTSC 60Hz frames, fixed for all, ART ONLY"
+  },
+  "frozen_P1_A": {
+    "A": [
+      "01000100",
+      "11001100",
+      "01001100",
+      "01111110",
+      "01111111",
+      "11111101",
+      "11111111",
+      "01111101",
+      "01111110",
+      "01001100",
+      "11001100",
+      "01000100"
+    ],
+    "B": [
+      "00101000",
+      "01101100",
+      "01001100",
+      "01111110",
+      "01111111",
+      "11111101",
+      "11111111",
+      "01111101",
+      "01111110",
+      "01001100",
+      "11000110",
+      "10000010"
+    ],
+    "A_left": [
+      "00100010",
+      "00110011",
+      "00110010",
+      "01111110",
+      "11111110",
+      "10111111",
+      "11111111",
+      "10111110",
+      "01111110",
+      "00110010",
+      "00110011",
+      "00100010"
+    ],
+    "B_left": [
+      "00010100",
+      "00110110",
+      "00110010",
+      "01111110",
+      "11111110",
+      "10111111",
+      "11111111",
+      "10111110",
+      "01111110",
+      "00110010",
+      "01100011",
+      "01000001"
+    ]
+  },
+  "new_candidates": {
+    "I1_head_signature": {
+      "A": [
+        "01001000",
+        "11001000",
+        "01001100",
+        "01101111",
+        "01111011",
+        "11111110",
+        "11111110",
+        "01111011",
+        "01101111",
+        "01001100",
+        "11001000",
+        "01001000"
+      ],
+      "B": [
+        "00100100",
+        "01100100",
+        "01001100",
+        "01101111",
+        "01111011",
+        "11111110",
+        "11111110",
+        "01111011",
+        "01101111",
+        "01001100",
+        "01100100",
+        "00100100"
+      ],
+      "hypothesis": "Broad horn/ear points on upper/lower muzzle outline and two negative eye holes; dark open notch at forward right edge; tapered back and four compact feet.",
+      "design_priority": "Head: eyes+horns+open mouth, keeping strict head-right overhead axis",
+      "feature_coordinates_x_y": {
+        "eyes_negative": [
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            7
+          ]
+        ],
+        "open_mouth_negative_front_edge": [
+          [
+            7,
+            5
+          ],
+          [
+            7,
+            6
+          ]
+        ],
+        "horn_or_ear_contour": [
+          [
+            7,
+            3
+          ],
+          [
+            7,
+            8
+          ]
+        ],
+        "hind_foot_upper_region": [
+          1,
+          0,
+          2,
+          2
+        ],
+        "hind_foot_lower_region": [
+          1,
+          9,
+          2,
+          11
+        ],
+        "fore_foot_upper_region": [
+          4,
+          0,
+          5,
+          2
+        ],
+        "fore_foot_lower_region": [
+          4,
+          9,
+          5,
+          11
+        ]
+      },
+      "candid_limitation": "One-bit mouth appears as a two-cell front-edge notch; may read as jaws or sprite hole, not a recognizable open-mouthed troll at native L1. Horns may look like pincers.",
+      "A_left": [
+        "00010010",
+        "00010011",
+        "00110010",
+        "11110110",
+        "11011110",
+        "01111111",
+        "01111111",
+        "11011110",
+        "11110110",
+        "00110010",
+        "00010011",
+        "00010010"
+      ],
+      "B_left": [
+        "00100100",
+        "00100110",
+        "00110010",
+        "11110110",
+        "11011110",
+        "01111111",
+        "01111111",
+        "11011110",
+        "11110110",
+        "00110010",
+        "00100110",
+        "00100100"
+      ],
+      "changed_cells_AB_xy": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ],
+      "changes_AB_total": 16,
+      "changes_upper_rows_0_2": 8,
+      "changes_lower_rows_9_11": 8,
+      "vs_P1_A_pose_A_changed_bits": 16,
+      "vs_P1_A_pose_B_changed_bits": 20
+    },
+    "I2_limb_signature": {
+      "A": [
+        "00001100",
+        "10011000",
+        "11001000",
+        "01001110",
+        "00111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01001110",
+        "11001000",
+        "10011000",
+        "00001100"
+      ],
+      "B": [
+        "00011000",
+        "01011000",
+        "11010000",
+        "01001110",
+        "00111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01001110",
+        "11010000",
+        "01011000",
+        "00011000"
+      ],
+      "hypothesis": "Longer forelimbs form thin sweeping upper/lower arms; hind feet form separate broad toe pads at left; irregular torso avoids uniform shell.",
+      "design_priority": "Long forelimbs+large rear feet+odd silhouette, limited head detail",
+      "feature_coordinates_x_y": {
+        "eyes_negative": [
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            7
+          ]
+        ],
+        "mouth_readability": "NOT visible",
+        "horn_or_ear_contour": [
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            8
+          ]
+        ],
+        "hind_foot_upper_region": [
+          0,
+          1,
+          1,
+          2
+        ],
+        "hind_foot_lower_region": [
+          0,
+          9,
+          1,
+          10
+        ],
+        "fore_foot_upper_region": [
+          3,
+          0,
+          5,
+          3
+        ],
+        "fore_foot_lower_region": [
+          3,
+          8,
+          5,
+          11
+        ]
+      },
+      "candid_limitation": "Strong leg spread but little expressive face, broad hind toe pads and four legs may imply bug/crab instead of Skraun. No credibly readable open mouth.",
+      "A_left": [
+        "00110000",
+        "00011001",
+        "00010011",
+        "01110010",
+        "11111100",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01110010",
+        "00010011",
+        "00011001",
+        "00110000"
+      ],
+      "B_left": [
+        "00011000",
+        "00011010",
+        "00001011",
+        "01110010",
+        "11111100",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01110010",
+        "00001011",
+        "00011010",
+        "00011000"
+      ],
+      "changed_cells_AB_xy": [
+        [
+          3,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ],
+      "changes_AB_total": 12,
+      "changes_upper_rows_0_2": 6,
+      "changes_lower_rows_9_11": 6,
+      "vs_P1_A_pose_A_changed_bits": 19,
+      "vs_P1_A_pose_B_changed_bits": 27
+    }
+  },
+  "I1_v_I2_diff_pose_A": 23,
+  "source_art_limitations": [
+    "Each candidate has only one P0 monochrome 8x12 bitmask; no extra players or colors.",
+    "No P01 ART1 level3 render defect (#19) changed.",
+    "No claim of full sprite flicker/visual or original identity PASS.",
+    "Eyes and mouth can be logically encoded but may not be perceptible to a viewer at native 1x."
+  ]
+}
