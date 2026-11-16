@@ -4,7 +4,7 @@
 
 ## Project status (2026-11-16)
 
-**Design established; P01 builds and renders in Stella, with independent verification still pending.** Three sprite sizes and rightward joystick movement passed automated real-emulator screenshot checks. Stella debugger timing, complete control/animation test and real hardware remain unverified.
+**Design established; P01 baseline runs in Stella but independent verification remains open.** A new light-gray overhead sprite is being tested separately in draft PR #4. B1/B2 static halo experiments passed bounded Stella visual tests; the moving B3 halo, complete enemies and world backgrounds are not implemented.
 
 The project currently has 60 gameplay design decisions documented in the MAIN conversation and its exported design log. Those decisions govern implementation; this README is only an overview.
 
@@ -55,7 +55,9 @@ No license has been selected yet. Do not assume permission to reuse this project
 - [P02-B1 static playfield ring result](docs/P02_B1_PLAYFIELD_RESULT_2026-11-16.md) — real Stella PASS for static mirrored ring (96×84 screenshot pixels), not a moving halo.
 - [P02-B2 ring with three troll sizes](docs/P02_B2_PLAYFIELD_RESULT_2026-11-16.md) — real Stella PASS for static P0+PF ring with three sizes; no FIRE or movement.
 - [P02-B1/B2 experimental code (draft PR #3)](https://github.com/Odourman/the-skraun/pull/3) — evidence-only branch, not merged.
- — next research plan only, not implemented.
+- [Confirmed Skraun visual direction](docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md) — user's sketch, neutral light-gray color, true overhead camera, two short walking poses and horizontal mirroring.
+- [Gray overhead sprite experimental ROM report](docs/SKRAUN_GRAY_OVERHEAD_ROM_TEST_2026-11-16.md) — separate 4K NTSC Stella self-test, three sprite sizes, no independent approval.
+- [Draft PR #4: gray overhead Skraun](https://github.com/Odourman/the-skraun/pull/4) — source and tests; do not merge before appearance and timing review.
 - [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
 
 Regular CI verifies assembly and model-based logic. Separate Stella visual CI verifies three sprite sizes and one movement direction. **Neither is independent verification or proof of original-hardware timing.**
