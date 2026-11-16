@@ -27,7 +27,7 @@ for n in NAMES:
         p=Path("build")/(n+"-"+state+".png")
         assert p.exists() and p.stat().st_size>200,"MISSING genuine Stella screenshot: "+str(p)
         im=Image.open(p).convert("RGB")
-        assert im.size==(320,192),("not original x1 Stella NTSC image",n,state,im.size)
+        assert im.width==320 and im.height in (192,228),("not original x1 Stella NTSC image",n,state,im.size)
         images[n,state]=im
         gr=pixels(im,is_gray);au=pixels(im,is_gold);ge=pixels(im,is_green)
         bb=box(gr);gb=box(au)
@@ -59,10 +59,14 @@ for state in STATES:
     ge=pixels(im,is_green)
     left={(x,y) for x,y in ge if 95<=x<=151}
     right={(x,y) for x,y in ge if 228<=x<=278}
-    leftrow={yy:tuple(sorted(x-112 for x,y in left if y==yy)) for yy in range(90,135)}
-    rightrow={yy:tuple(sorted(x-240 for x,y in right if y==yy)) for yy in range(90,135)}
+    # Compare normalized bitmap shapes; do not mistake the copy's X offset
+    # for two independently authored sprites.
+    def local_shape(ps):
+        if not ps:return set()
+        x0=min(x for x,y in ps);y0=min(y for x,y in ps)
+        return {(x-x0,y-y0) for x,y in ps}
     present=len(left)>25 and len(right)>25
-    distinct=leftrow!=rightrow
+    distinct=local_shape(left)!=local_shape(right)
     dual_status.append({"state":state,"first_green_pixels":len(left),"second_green_pixels":len(right),"both_present":present,"different_bitmaps":distinct})
     print("SAME-Y P1 DUALCOPY",state,"left",len(left),"right",len(right),"BOTH",present,"DIFFERENT",distinct)
 # Interlace has intentionally sacrificed every other vertical halo/scene row.
@@ -72,9 +76,10 @@ for state in STATES:
     assert len(r2Gold)>100,("interlaced halo disappeared",state)
     print("INTERLACE RING DUTY",state,"gold rows/pixels",len(r2Gold),"baseline",len(baseGold),"ratio",round(len(r2Gold)/len(baseGold),3))
 hud=images["hud","centre80"]
-bar=[hud.getpixel((x,y)) for y in range(0,16) for x in range(0,320)]
+# Stella 320x228 output places first active visible HUD line at y=30.
+bar=[hud.getpixel((x,y)) for y in range(30,46) for x in range(0,320)]
 lit=sum(max(v)>70 for v in bar)
-print("SEPARATE HUD PLACEHOLDER first16 rows nonblack pixel count",lit)
+print("SEPARATE HUD PLACEHOLDER first 16 active display rows (y30..45) nonblack pixel count",lit)
 assert lit>100,("HUD region was not actually drawn",lit)
 with open("build/R2_GENUINE_IMAGE_GEOMETRY.json","w") as f:
     json.dump({"stella_pngs":rec,"two_enemy_copies":dual_status,"hud_nonblack_pixels":lit},f,indent=2)
