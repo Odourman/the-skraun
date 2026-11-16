@@ -1,0 +1,112 @@
+{
+  "player_differences": {
+    "Q1_splayed_quad": {
+      "total_bits": 10,
+      "forelimbs_bits": 6,
+      "rearlegs_bits": 4
+    },
+    "Q2_long_back": {
+      "total_bits": 12,
+      "forelimbs_bits": 4,
+      "rearlegs_bits": 8
+    }
+  },
+  "enemy_differences": {
+    "knight": 12,
+    "archer": 11
+  },
+  "halo_dimensions": {
+    "1": {
+      "cc_width": 40,
+      "scanline_height": 64,
+      "apparent_ratio_4_3": 1.0,
+      "aspect_deviation_percent": 0.0,
+      "bbox_pf_cells": [
+        15,
+        8,
+        24,
+        15
+      ],
+      "pf_cells_illuminated": 36,
+      "x_mirror": true,
+      "y_mirror": true
+    },
+    "2": {
+      "cc_width": 56,
+      "scanline_height": 80,
+      "apparent_ratio_4_3": 1.12,
+      "aspect_deviation_percent": 12.0,
+      "bbox_pf_cells": [
+        13,
+        7,
+        26,
+        16
+      ],
+      "pf_cells_illuminated": 64,
+      "x_mirror": true,
+      "y_mirror": true
+    },
+    "3": {
+      "cc_width": 72,
+      "scanline_height": 112,
+      "apparent_ratio_4_3": 1.029,
+      "aspect_deviation_percent": 2.9,
+      "bbox_pf_cells": [
+        11,
+        5,
+        28,
+        18
+      ],
+      "pf_cells_illuminated": 124,
+      "x_mirror": true,
+      "y_mirror": true
+    }
+  },
+  "halo_level3_edge_clipping": {
+    "center": {
+      "center": [
+        80,
+        96
+      ],
+      "total_mask_clock_scanline_pixels": 3968,
+      "visible_pixels": 3968,
+      "clipped_percent": 0.0
+    },
+    "upper_edge": {
+      "center": [
+        80,
+        12
+      ],
+      "total_mask_clock_scanline_pixels": 3968,
+      "visible_pixels": 2304,
+      "clipped_percent": 41.94
+    },
+    "lower_edge": {
+      "center": [
+        80,
+        180
+      ],
+      "total_mask_clock_scanline_pixels": 3968,
+      "visible_pixels": 2304,
+      "clipped_percent": 41.94
+    },
+    "left_edge": {
+      "center": [
+        8,
+        96
+      ],
+      "total_mask_clock_scanline_pixels": 3968,
+      "visible_pixels": 2368,
+      "clipped_percent": 40.32
+    },
+    "right_edge": {
+      "center": [
+        152,
+        96
+      ],
+      "total_mask_clock_scanline_pixels": 3968,
+      "visible_pixels": 2368,
+      "clipped_percent": 40.32
+    }
+  }
+}
