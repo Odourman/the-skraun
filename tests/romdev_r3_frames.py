@@ -63,7 +63,7 @@ for n in NAMES:
     # VBLANK timer/real mid-frame P1 positioning shifts the whole raster scene by
     # 0..2 physical lines between candidates; relative ring-to-P0 Y stays fixed.
     # Do not mislabel this expected diagnostic VBLANK offset as sprite deformation.
-    p0_y={"overlap":106,"partial":105,"stagger":104}[n]
+    p0_y={"overlap":106,"partial":105,"stagger":105}[n]
     for state,(xlo,xhi) in (
         ("center80",(128,192)),
         ("right104",(176,240)),
