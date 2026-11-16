@@ -40,6 +40,7 @@ def isgray(rgb):
 
 for level in (1,2,3):
     im,bb=bitmap(f"build/size_{level}.png")
+    print("SIZE",level,bb)
     assert (bb[2]-bb[0],bb[3]-bb[1])==(16*level,12*level)
     actual=sample(im,bb,level)
     print("SIZEMASK",level,"bbox",bb,"actual",[f"{v:08b}" for v in actual],"expected",[[f"{v:08b}" for v in pp] for pp in patterns.values()])
