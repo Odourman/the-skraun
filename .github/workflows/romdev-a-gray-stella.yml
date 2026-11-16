@@ -1,0 +1,92 @@
+name: ROMDEV A gray overhead frame and movement test
+on:
+  push:
+    branches: [experiment/romdev-a-gray-stella]
+    paths:
+      - 'experiments/p01_skraun_gray_topdown.asm'
+      - 'tests/romdev_a_stella_check.py'
+      - '.github/workflows/romdev-a-gray-stella.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gray-frames:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM, Stella and capture dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Build actual Atari 2600 NTSC ROM
+        run: |
+          mkdir -p build
+          dasm experiments/p01_skraun_gray_topdown.asm -f3 -obuild/romdev-a.bin -lbuild/romdev-a.lst -sbuild/romdev-a.sym
+          test "$(stat -c %s build/romdev-a.bin)" -eq 4096
+          sha256sum build/romdev-a.bin | tee build/ROM_SHA256.txt
+          stella -rominfo build/romdev-a.bin | tee build/rominfo.txt
+      - name: Capture 2 poses both directions, 8 movements, 3 sizes from Stella
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/romdev-a.bin" > build/stella.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 25); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              test -n "$wid" && break
+              sleep 1
+            done
+            test -n "$wid"
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            snap(){
+              xdotool key --window "$wid" F12
+              sleep 0.14
+              test -s build/romdev-a.png
+              cp build/romdev-a.png "build/$1.png"
+            }
+            press_select(){
+              xdotool keydown --window "$wid" F1
+              sleep 0.20
+              xdotool keyup --window "$wid" F1
+              sleep 0.30
+            }
+            snap size_1
+            press_select; snap size_2
+            press_select; snap size_3
+            press_select
+            for face in Right Left; do
+              xdotool keydown --window "$wid" "$face"
+              for i in $(seq -w 0 23); do snap "face_${face}_${i}"; sleep 0.07; done
+              xdotool keyup --window "$wid" "$face"
+            done
+            for dir in R L U D UR UL DR DL; do
+              xdotool key --window "$wid" F2
+              sleep 0.2
+              snap "move_${dir}_before"
+              case "$dir" in
+                R) keys="Right";; L) keys="Left";; U) keys="Up";; D) keys="Down";;
+                UR) keys="Up Right";; UL) keys="Up Left";;
+                DR) keys="Down Right";; DL) keys="Down Left";;
+              esac
+              for k in $keys; do xdotool keydown --window "$wid" "$k"; done
+              sleep 0.35
+              snap "move_${dir}_after"
+              for k in $keys; do xdotool keyup --window "$wid" "$k"; done
+            done
+            scrot -z build/desktop.png
+          '
+          /usr/bin/python3 tests/romdev_a_stella_check.py | tee build/A_FRAME_RESULTS.txt
+      - name: Archive evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-a-stella-frames-and-movement
+          path: build/
+          if-no-files-found: warn
