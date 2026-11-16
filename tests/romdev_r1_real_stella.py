@@ -55,7 +55,9 @@ def check(name):
             world={(x,y) for col in (14,22,27)
                    for x in range(col*8,col*8+8)
                    for y in range(97,125)}
-            expected=(FAST_SHAPES[k]|world)-graypix
+            # Source masks are translation invariant: construct unsampled centers from real captured x=56.
+            halo={(xx+2*(k-56),yy) for xx,yy in FAST_SHAPES[56]}
+            expected=(halo|world)-graypix
             assert gg==expected,("optimized precomposed scene not equal baseline OR fixed world",path,len(gg^expected))
         else:
             assert ring[2]-ring[0]==80 and ring[3]-ring[1]==64,("ring contour clipping",path,ring)
