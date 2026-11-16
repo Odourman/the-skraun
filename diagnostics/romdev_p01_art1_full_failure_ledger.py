@@ -75,7 +75,7 @@ assert all(w["exact_raster_match"] for w in walk)
 assert {int(s["different_scanline_y"].split(",")[0]) for s in data if s["status"]=="FAIL"}=={94}
 assert all(len(s["different_scanline_y"].split(","))==1 for s in data if s["status"]=="FAIL")
 assert all(s["missing_pixels"]==0 for s in data if s["status"]=="FAIL")
-assert sorted({s["extra_pixels"] for s in data if s["status"]=="FAIL"})==[48]*8+[64]*4
+assert sorted([s["extra_pixels"] for s in data if s["status"]=="FAIL"])==[48]*8+[64]*4
 assert all(s["top_first_observed"]=="11111111" for s in data if s["status"]=="FAIL")
 assert all(s["top_first_observed"]==s["top_first_expected"] for s in data if s["level"]<3)
 neg=p1["candidates"]["A_rounded_back"]["A"]
