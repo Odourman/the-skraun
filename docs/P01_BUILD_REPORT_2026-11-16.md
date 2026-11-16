@@ -60,3 +60,10 @@ No halo, obstacles, enemies, or collision engine has been implemented. P02, P03,
 - Level 3 rightward movement: capture x=124→210 (86 screenshot pixels) without vertical movement or scale change.
 - `tests/check_stella_images.py` is now the mandatory automated visual check. It prevents all-black screenshots and dimension regressions from being reported as a pass.
 - Full screenshots and GitHub Actions logs are archived in Drive under `P01 - Stella evidence - 2026-11-16`.
+
+## Stella Debugger direct scanline observation
+
+- Direct screenshot from https://github.com/Odourman/the-skraun/actions/runs/43864824100 displays frame 20 and `print _scanEnd` = **#262** (real Stella 6.7.1).
+- Full evidence: https://github.com/Odourman/the-skraun/blob/main/docs/P01_STELLA_TIMING_EVIDENCE_2026-11-16.md
+- This is a real emulator observation for a steady frame but **not** a complete CPU/kernel timing audit or independent PASS.
+- Attempts to export a machine-readable debugger session in Xvfb were unreliable; the timing workflow is now manual-only. Ordinary DASM/CPU-model CI and the separate Stella visual smoke CI remain automated.
