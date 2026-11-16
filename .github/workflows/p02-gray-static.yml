@@ -1,8 +1,8 @@
-name: Gray Skraun + Static Playfield Halo (diagnostic)
+name: Gray Skraun Upright Orientation Regression (diagnostic)
 
 on:
   push:
-    branches: [experiment/p02-gray-halo-static]
+    branches: [fix/p02-gray-halo-upright]
     paths:
       - 'experiments/p02_gray_static_halo.asm'
       - 'tests/check_gray_static_halo.py'
@@ -74,6 +74,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: the-skraun-gray-static-halo-evidence
+          name: the-skraun-gray-upright-stella-evidence
           path: build/
           if-no-files-found: warn

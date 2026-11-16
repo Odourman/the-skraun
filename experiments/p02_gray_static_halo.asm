@@ -1,5 +1,8 @@
-; THE SKRAUN — P02-B2 GRAY STATIC COMBINATION TEST (NTSC)
-; 3 sizes cycled by SELECT, gray hand-sketch-inspired P0, fixed PF halo.
+; THE SKRAUN — P02-B2 GRAY UPRIGHT STATIC COMBINATION TEST (NTSC)
+; 3 sizes cycled by SELECT, upright gray P0, fixed PF halo.
+; IMPORTANT: visible loop decrements X=191..0 while scanning top->bottom.
+; Troll1/2/3 tables are stored BOTTOM-FIRST for the descending index.
+; Pixel bits within each row are not vertically or horizontally flipped.
 ; Ring uses only PF2 because its x extents stay near screen center.
 ; Two TIA player objects are NOT consumed by ring, only P0 for troll.
 ; Separate 4 KiB NTSC research ROM. Never interpret this as final renderer.
@@ -91,7 +94,7 @@ VBlankPad:
         ldx #192
 VisibleLoop:
         sta WSYNC             ; one scanline
-        dex                   ; X: 191..0, index bottom-to-top ROM tables
+        dex                   ; X: 191..0 (screen top->bottom); ROM tables stored bottom-first
         txa
         tay
         lda (RingPtr),y
@@ -259,8 +262,8 @@ Troll1:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$00,$00,$00,$00,$00,$24,$7E,$7E,$5A,$7E,$FD
-        dc.b $9D,$3C,$7E,$64,$46,$C2,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$C2,$46,$64,$7E,$3C,$9D
+        dc.b $FD,$7E,$5A,$7E,$7E,$24,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -276,8 +279,8 @@ Troll2:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $24,$24,$7E,$7E,$7E,$7E,$5A,$5A,$7E,$7E,$FD,$FD
-        dc.b $9D,$9D,$3C,$3C,$7E,$7E,$64,$64,$46,$46,$C2,$C2
+        dc.b $C2,$C2,$46,$46,$64,$64,$7E,$7E,$3C,$3C,$9D,$9D
+        dc.b $FD,$FD,$7E,$7E,$5A,$5A,$7E,$7E,$7E,$7E,$24,$24
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -292,10 +295,10 @@ Troll3:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$00,$00,$00,$00,$00,$24,$24,$24,$7E,$7E,$7E
-        dc.b $7E,$7E,$7E,$5A,$5A,$5A,$7E,$7E,$7E,$FD,$FD,$FD
-        dc.b $9D,$9D,$9D,$3C,$3C,$3C,$7E,$7E,$7E,$64,$64,$64
-        dc.b $46,$46,$46,$C2,$C2,$C2,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$C2,$C2,$C2,$46,$46,$46
+        dc.b $64,$64,$64,$7E,$7E,$7E,$3C,$3C,$3C,$9D,$9D,$9D
+        dc.b $FD,$FD,$FD,$7E,$7E,$7E,$5A,$5A,$5A,$7E,$7E,$7E
+        dc.b $7E,$7E,$7E,$24,$24,$24,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
