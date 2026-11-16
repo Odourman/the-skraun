@@ -1,0 +1,51 @@
+name: ROMDEV ABC reproducible source and ROM handoff
+on:
+  push:
+    branches: [experiment/romdev-c-b3a]
+    paths:
+      - '.github/workflows/romdev-abc-bundle.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reproducible-handoff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Fetch exact source families and assemble three reproducible 4K ROMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/source delivery/rom delivery/tests delivery/engineering
+          git fetch --no-tags origin             '+refs/heads/experiment/romdev-a-gray-stella:refs/remotes/origin/experiment/romdev-a-gray-stella'             '+refs/heads/experiment/romdev-b-refp0:refs/remotes/origin/experiment/romdev-b-refp0'
+          git show origin/experiment/romdev-a-gray-stella:experiments/p01_skraun_gray_topdown.asm > delivery/source/romdev-a-gray.asm
+          git show origin/experiment/romdev-b-refp0:experiments/romdev_b_refp0.asm > delivery/source/romdev-b-refp0.asm
+          cp experiments/romdev_c_b3a.asm delivery/source/romdev-c-b3a.asm
+          git show origin/experiment/romdev-a-gray-stella:tests/romdev_a_stella_check.py > delivery/tests/romdev-a-check.py
+          git show origin/experiment/romdev-b-refp0:tests/romdev_b_refp0_check.py > delivery/tests/romdev-b-check.py
+          cp tests/romdev_c_b3a_check.py delivery/tests/romdev-c-check.py
+          for name in a-gray b-refp0 c-b3a; do
+            dasm "delivery/source/romdev-$name.asm" -f3 -o"delivery/rom/romdev-$name.bin" -l"delivery/engineering/romdev-$name.lst" -s"delivery/engineering/romdev-$name.sym"
+            test "$(stat -c %s "delivery/rom/romdev-$name.bin")" -eq 4096
+          done
+          (
+            cd delivery
+            sha256sum rom/*.bin > SHA256SUMS
+          )
+          cat delivery/SHA256SUMS
+          grep -q '^d1ef550504a97ebdadcd5c695752859400e103eb0812eb1bbacf46f4b1b61700  rom/romdev-a-gray.bin$' delivery/SHA256SUMS
+          grep -q '^2af7b2092c6bebf06bbe6211bbb0602988c19551b4d63a04eab1a6d303334b2b  rom/romdev-b-refp0.bin$' delivery/SHA256SUMS
+          grep -q '^31dfcb8034ed7c37d89918df8c0600bfa1159d94830189122240d225cb817479  rom/romdev-c-b3a.bin$' delivery/SHA256SUMS
+          printf 'A source %s\nB source %s\nC source %s\n'             "$(git rev-parse origin/experiment/romdev-a-gray-stella)"             "$(git rev-parse origin/experiment/romdev-b-refp0)"             "$(git rev-parse HEAD)" > delivery/COMMITS.txt
+      - name: Upload reproducible source ROM and listings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-abc-reproducible-source-roms
+          path: delivery/
+          if-no-files-found: warn
