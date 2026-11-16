@@ -130,6 +130,8 @@ PhaseReady:
         jsr PositionP1      ; 13 (routine owns WSYNC)
         sta WSYNC           ; 14
         sta HMOVE           ; apply both fine-motion offsets in HBLANK
+        lda #0
+        sta GRP1            ; clear stale P1 graphics between halo activations
 
         ldx #23
 VblankPad:
@@ -142,8 +144,16 @@ VblankPad:
         ldx #192
 VisibleLoop:
         sta WSYNC           ; one scanline per iteration
-        ; P1 magic ring: an independent 8-bit bitmap stretched 2x/4x.
-        ; Work first, before ring reaches its horizontal position.
+        ; Independent P02-A diagnostic kernel: when the halo is active,
+        ; alternate which graphic object gets updated on each scanline.
+        ; The other graphic register holds its previous line's pixels.
+        ; This avoids a 76-cycle overrun but halves vertical update rate.
+        lda HaloHeight
+        beq DrawTroll
+        txa
+        and #1
+        beq DrawTroll
+DrawHalo:
         txa
         sec
         sbc HaloBottom
@@ -155,13 +165,12 @@ VisibleLoop:
         tay
         lda HaloGfx,y
         sta GRP1
-        jmp HaloDrawn
+        jmp NextRow
 HideHalo:
         lda #0
         sta GRP1
-HaloDrawn:
-        ; P0 sprite update comes later on this scanline.
-        ; This is a constrained, experimental two-object TIA kernel.
+        jmp NextRow
+DrawTroll:
         txa
         sec
         sbc PlayerY
