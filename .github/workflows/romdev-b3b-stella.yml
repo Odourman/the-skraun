@@ -1,0 +1,85 @@
+name: P02-B3b real Stella 13-center joystick follow and scenery OR
+on:
+  push:
+    branches: [experiment/romdev-b3b-horizontal-follow]
+    paths:
+      - 'experiments/romdev_b3b_dynamic.asm'
+      - 'experiments/romdev_b3b_obstacles.asm'
+      - 'tests/romdev_b3b_stella_check.py'
+      - '.github/workflows/romdev-b3b-stella.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  b3b-real-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install assembler, Stella 6.7.1, Xvfb and PIL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Build both 4K NTSC candidate ROMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          dasm experiments/romdev_b3b_dynamic.asm -f3 -obuild/romdev-b3b-dynamic.bin -lbuild/romdev-b3b-dynamic.lst -sbuild/romdev-b3b-dynamic.sym
+          dasm experiments/romdev_b3b_obstacles.asm -f3 -obuild/romdev-b3b-obstacles.bin -lbuild/romdev-b3b-obstacles.lst -sbuild/romdev-b3b-obstacles.sym
+          test "$(wc -c < build/romdev-b3b-dynamic.bin)" -eq 4096
+          test "$(wc -c < build/romdev-b3b-obstacles.bin)" -eq 4096
+          sha256sum build/*.bin | tee build/SHA256SUMS
+          stella -rominfo build/romdev-b3b-dynamic.bin | tee build/rominfo_dynamic.txt
+          stella -rominfo build/romdev-b3b-obstacles.bin | tee build/rominfo_obstacles.txt
+      - name: Drive live Stella joystick through reversals while taking original screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            for name in ring obstacle; do
+              if [ "$name" = ring ]; then rom=romdev-b3b-dynamic; else rom=romdev-b3b-obstacles; fi
+              stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/$rom.bin" > "build/stella_$name.log" 2>&1 &
+              pid=$!
+              wid=""
+              for j in $(seq 1 25); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid" || { cat "build/stella_$name.log"; exit 9; }
+              xdotool windowfocus "$wid" || true
+              sleep 0.5
+              shot(){
+                local i="$1"
+                xdotool key --window "$wid" F12
+                sleep 0.10
+                test -s "build/$rom.png"
+                cp "build/$rom.png" "build/$(printf "%s_motion_%03d.png" "$name" "$i")"
+              }
+              shot 0
+              xdotool keydown --window "$wid" Right
+              for i in $(seq 1 15); do shot "$i"; sleep 0.10; done
+              xdotool keyup --window "$wid" Right
+              xdotool keydown --window "$wid" Left
+              for i in $(seq 16 45); do shot "$i"; sleep 0.10; done
+              xdotool keyup --window "$wid" Left
+              xdotool keydown --window "$wid" Right
+              for i in $(seq 46 76); do shot "$i"; sleep 0.10; done
+              xdotool keyup --window "$wid" Right
+              scrot -z "build/desktop_$name.png"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.6
+            done
+          '
+          /usr/bin/python3 tests/romdev_b3b_stella_check.py | tee build/B3B_STELLA_PIXELS_AND_MOTION.log
+      - name: Upload testable real evidence even when failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-b3b-real-stella-and-scenery
+          path: build/
+          if-no-files-found: warn
