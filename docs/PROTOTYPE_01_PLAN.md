@@ -1,8 +1,10 @@
 # Prototype 01 — Troll display and movement
 
-**Status:** Planned, not implemented or verified.
+**Status:** Implemented and built successfully with DASM on GitHub Actions (2026-11-16). Stella visuals, original hardware, and independent verification remain pending.
 **Target:** Stock Atari 2600 / NTSC, initially via an ordinary 4 KiB cartridge image unless a documented constraint forces a different mapping.
 **Design authority:** The Skraun MAIN design decisions 01–60 (2026-11-16).
+
+Build evidence: [P01 build report](P01_BUILD_REPORT_2026-11-16.md). Download the ROM from the linked GitHub Actions run or the project's Google Drive folder.
 
 ## Objective
 
