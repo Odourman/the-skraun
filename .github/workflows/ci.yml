@@ -83,6 +83,7 @@ jobs:
           dasm src/main.asm -f3 -obuild/the-skraun-p01.bin -lbuild/the-skraun-p01.lst -sbuild/the-skraun-p01.sym
           test "$(stat -c %s build/the-skraun-p01.bin)" -eq 4096
           sha256sum build/the-skraun-p01.bin | tee build/SHA256SUMS
+          python3 tests/p01_cpu_smoke.py build/the-skraun-p01.bin | tee build/P01_CPU_SMOKE.log
 
       - name: Upload build artifacts
         if: steps.source.outputs.present == 'true'
@@ -94,4 +95,5 @@ jobs:
             build/the-skraun-p01.lst
             build/the-skraun-p01.sym
             build/SHA256SUMS
+            build/P01_CPU_SMOKE.log
           if-no-files-found: error
