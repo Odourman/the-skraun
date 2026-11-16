@@ -1,10 +1,10 @@
 # Prototype 01 — Troll display and movement
 
-**Status:** Implemented and built successfully with DASM on GitHub Actions (2026-11-16). Stella visuals, original hardware, and independent verification remain pending.
+**Status:** Implemented and built with DASM; Stella 6.7.1 visual self-test passed for 3 sizes and rightward movement (2026-11-16). Full movement/animation, Stella Debugger timing, original hardware and independent verification remain pending.
 **Target:** Stock Atari 2600 / NTSC, initially via an ordinary 4 KiB cartridge image unless a documented constraint forces a different mapping.
 **Design authority:** The Skraun MAIN design decisions 01–60 (2026-11-16).
 
-Build evidence: [P01 build report](P01_BUILD_REPORT_2026-11-16.md). Download the ROM from the linked GitHub Actions run or the project's Google Drive folder.
+Build evidence: [P01 build report](P01_BUILD_REPORT_2026-11-16.md) and [real Stella screenshot evidence](P01_STELLA_VISUAL_EVIDENCE_2026-11-16.md). Download the ROM from the linked GitHub Actions run or the project's Google Drive folder.
 
 ## Objective
 
