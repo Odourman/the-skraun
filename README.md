@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Latest MAIN decision (2026-11-16):** ROM DEVELOPMENT's A/B/C developer self-tests are accepted as *bounded engineering evidence*, not independently verified or merged. A: gray walking Skraun. B: REFP0 horizontal hardware mirroring (24 source ROM bytes saved). C: three fixed asymmetric playfield ring centers with actual Stella screenshots and a sampled 262-line frame; **not** free joystick following. The C kernel's 64/76-cycle worst-case is currently a static calculation only. [Full A/B/C handoff](https://github.com/Odourman/the-skraun/blob/experiment/romdev-c-b3a/docs/ROMDEV_ABC_CONSOLIDATED_MAIN_HANDOFF_2026-11-16.md). [New MAIN-authorized P02-B3b task](handoff/MAIN_TO_ROM_DEV_B3B_AUTHORIZED_SCOPE_2026-11-16.md) tests horizontal joystick follow and bounded scenery competition. **No independent VERIFICATION now; no B3c authorization.**
+
+
 **Current MAIN-authorized ROM DEVELOPMENT sprint (2026-11-16):** [Combined scope: gray Skraun animation self-tests, REFP0 hardware mirror experiment, and P02-B3a three-position asymmetric playfield feasibility](handoff/MAIN_TO_ROM_DEV_AUTHORIZED_SCOPE_2026-11-16.md). This is not implementation completion, a verified release, or permission for B3b/B3c. Independent VERIFICATION is deferred until MAIN requests a substantial milestone package.
 
 
