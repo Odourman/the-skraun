@@ -19,7 +19,7 @@ jobs:
       - name: Install DASM and Stella dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y dasm stella xvfb xdotool scrot x11-utils
+          sudo apt-get install -y dasm stella xvfb xdotool scrot x11-utils python3-pil
       - name: Build ROM
         run: |
           mkdir -p build
@@ -31,11 +31,18 @@ jobs:
         run: |
           set -euo pipefail
           export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
             set -eu
-            stella -logtoconsole 1 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/the-skraun-p01.bin" > build/stella.log 2>&1 &
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/the-skraun-p01.bin" > build/stella.log 2>&1 &
             pid=$!
-            sleep 4
+            for i in $(seq 1 15); do
+              if xdotool search --all --name "." > build/all_window_ids.txt 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
             ps -p "$pid" -o pid,stat,args > build/stella_process.txt || true
             xwininfo -root -tree > build/xwininfo.txt || true
             xdotool search --all --name "." > build/all_window_ids.txt || true
@@ -53,6 +60,16 @@ jobs:
           find build -maxdepth 1 -type f -printf '%f %s bytes\n'
           find build -maxdepth 1 -type f -iname '*.png' | grep .
           test -s build/window_ids.txt || { echo 'Stella window missing; visual verification NOT achieved'; exit 1; }
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          im = Image.open('build/stella_desktop.png').convert('RGB')
+          pixels = im.getdata()
+          unique = len(set(pixels))
+          nonblack = sum(max(p)>20 for p in pixels)
+          print(f'Screenshot check: {im.size}, {unique} unique colours, {nonblack} non-black pixels')
+          if unique < 4 or nonblack < 200:
+              raise SystemExit('Stella screenshot blank/inconclusive; fail closed.')
+          PY
       - name: Upload visual evidence
         if: always()
         uses: actions/upload-artifact@v4
