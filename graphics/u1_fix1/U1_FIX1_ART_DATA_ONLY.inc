@@ -1,0 +1,117 @@
+; THE SKRAUN U1-FIX1 | GRAPHICS-ONLY 8x12 DATA | NOT ROM CODE
+; TOP_FIRST row0 = horns; BOTTOM_FIRST reverses row order
+; LEFT = exact horizontal per-row 8bit mirror; NO UP/DOWN FACING
+; NOTE: User-facing direction remains subject to aesthetic review
+
+Skraun_U1_FIX1_A_RIGHT_TOP_FIRST:
+dc.b %00100100
+dc.b %01111110
+dc.b %01011010
+dc.b %01100110
+dc.b %00111110
+dc.b %01111111
+dc.b %10111100
+dc.b %00111100
+dc.b %00111100
+dc.b %01100110
+dc.b %01000110
+dc.b %11000011
+
+Skraun_U1_FIX1_A_RIGHT_BOTTOM_FIRST:
+dc.b %11000011
+dc.b %01000110
+dc.b %01100110
+dc.b %00111100
+dc.b %00111100
+dc.b %10111100
+dc.b %01111111
+dc.b %00111110
+dc.b %01100110
+dc.b %01011010
+dc.b %01111110
+dc.b %00100100
+
+Skraun_U1_FIX1_A_LEFT_TOP_FIRST:
+dc.b %00100100
+dc.b %01111110
+dc.b %01011010
+dc.b %01100110
+dc.b %01111100
+dc.b %11111110
+dc.b %00111101
+dc.b %00111100
+dc.b %00111100
+dc.b %01100110
+dc.b %01100010
+dc.b %11000011
+
+Skraun_U1_FIX1_A_LEFT_BOTTOM_FIRST:
+dc.b %11000011
+dc.b %01100010
+dc.b %01100110
+dc.b %00111100
+dc.b %00111100
+dc.b %00111101
+dc.b %11111110
+dc.b %01111100
+dc.b %01100110
+dc.b %01011010
+dc.b %01111110
+dc.b %00100100
+
+Skraun_U1_FIX1_B_RIGHT_TOP_FIRST:
+dc.b %00100100
+dc.b %01111110
+dc.b %01011010
+dc.b %01100110
+dc.b %00111110
+dc.b %01111111
+dc.b %01111101
+dc.b %00111100
+dc.b %00111100
+dc.b %01100110
+dc.b %01100010
+dc.b %10000011
+
+Skraun_U1_FIX1_B_RIGHT_BOTTOM_FIRST:
+dc.b %10000011
+dc.b %01100010
+dc.b %01100110
+dc.b %00111100
+dc.b %00111100
+dc.b %01111101
+dc.b %01111111
+dc.b %00111110
+dc.b %01100110
+dc.b %01011010
+dc.b %01111110
+dc.b %00100100
+
+Skraun_U1_FIX1_B_LEFT_TOP_FIRST:
+dc.b %00100100
+dc.b %01111110
+dc.b %01011010
+dc.b %01100110
+dc.b %01111100
+dc.b %11111110
+dc.b %10111110
+dc.b %00111100
+dc.b %00111100
+dc.b %01100110
+dc.b %01000110
+dc.b %11000001
+
+Skraun_U1_FIX1_B_LEFT_BOTTOM_FIRST:
+dc.b %11000001
+dc.b %01000110
+dc.b %01100110
+dc.b %00111100
+dc.b %00111100
+dc.b %10111110
+dc.b %11111110
+dc.b %01111100
+dc.b %01100110
+dc.b %01011010
+dc.b %01111110
+dc.b %00100100
+
