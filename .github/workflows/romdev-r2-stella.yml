@@ -49,7 +49,7 @@ jobs:
           export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
             set -euo pipefail
-            for v in baseline twoline dual hud; do
+            for v in baseline twoline dual hud interlace; do
               rom="r2-$v"
               stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -speed 10 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/$rom.bin" > "build/stella_$v.log" 2>&1 &
               pid=$!
