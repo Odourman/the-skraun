@@ -40,3 +40,13 @@ Status: source implemented and compiled; hardware rendering not yet independentl
 ## Non-scope
 
 No halo, obstacles, enemies, or collision engine has been implemented. P02, P03, P04 and P05 remain separate later gates. The 60 design decisions are unchanged.
+
+## Follow-up automatic checks
+
+- `tests/p01_cpu_smoke.py` was added to GitHub and integrated into the regular CI build. It uses a limited 6502/WSYNC execution model and checks joystick motion, a two-out-of-three-frame diagonal update, one SELECT activation per press, and stable 262-line modeled frames. CI is a self-test, not independent acceptance.
+- Ubuntu Stella 6.7.1's `-rominfo` recognized the ROM as NTSC and 4K.
+- The first automated Xvfb Stella capture produced no screenshot. A second run saved a 1024×768 **all-black Xvfb desktop**, with no visible Stella window ID. This does *not* establish that the game renders black; it establishes that the headless screenshot check was inconclusive. Visual P01 verification remains OPEN.
+- Stella visual diagnostic workflow: https://github.com/Odourman/the-skraun/blob/main/.github/workflows/stella-smoke.yml
+- Manual test guide: https://github.com/Odourman/the-skraun/blob/main/docs/P01_PLAYTEST.md
+
+**P01 gate: NOT YET APPROVED**. A reproducible ROM exists, but visual Stella checks and separate independent verification are outstanding.
