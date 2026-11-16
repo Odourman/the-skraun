@@ -18,7 +18,7 @@ jobs:
       - name: Install Stella, DASM and Xvfb
         run: |
           sudo apt-get update
-          sudo apt-get install -y dasm stella xvfb xdotool scrot
+          sudo apt-get install -y dasm stella xvfb xdotool scrot x11-utils
       - name: Assemble ROM and create Stella debugger script
         shell: bash
         run: |
@@ -31,7 +31,6 @@ jobs:
           frame #10
           print _scanEnd
           print _fCount
-          saveSes
           SCRIPT
           mkdir -p "$HOME/.config/stella"
           cp build/the-skraun-p01.script "$HOME/.config/stella/autoexec.script"
@@ -44,29 +43,37 @@ jobs:
           export SDL_VIDEODRIVER=x11
           export SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
-            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/the-skraun-p01.bin" > build/stella_debugger.log 2>&1 &
+            stella -debug -confirmexit 0 -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/the-skraun-p01.bin" > build/stella_debugger.log 2>&1 &
             pid=$!
             sleep 5
             xdotool search --onlyvisible --name Stella > build/debugger_window_ids.txt || true
             wid=$(head -n1 build/debugger_window_ids.txt || true)
             if [ -n "$wid" ]; then
               xdotool windowfocus "$wid" || true
-              # The ROM autoexec script ran debugger commands before GUI startup.
-              # Keep the debugger window focused for the evidence screenshot.
+              # Type commands in the actual GUI so the session has readable output.
+              for cmd in "print _scanEnd" "frame #10" "print _scanEnd" "saveSes"; do
+                xdotool type --window "$wid" --clearmodifiers --delay 30 "$cmd"
+                xdotool key --window "$wid" Return
+                sleep 0.5
+              done
             fi
             xwininfo -root -tree > build/xwindows.txt || true
             scrot -z build/debugger_desktop.png || true
             ps -p "$pid" -o pid,stat,args > build/process.txt || true
+            if [ -n "$wid" ]; then
+              xdotool key --window "$wid" ctrl+q || true
+              sleep 1
+            fi
             kill "$pid" || true
             wait "$pid" || true
           '
           shopt -s nullglob
-          sessions=("$HOME"/session_*.txt)
+          sessions=(build/session_*.txt)
           if [ "${#sessions[@]}" -eq 0 ]; then
             echo "::error::Stella debugger did not create a CLI session."
             exit 1
           fi
-          cp "${sessions[@]}" build/
+          ls -l "${sessions[@]}"
           /usr/bin/python3 - <<'PY'
           import glob, re
           measurements = []
