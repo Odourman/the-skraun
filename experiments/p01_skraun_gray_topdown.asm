@@ -351,13 +351,13 @@ PositionLoop:
 PosePointerTable:
         dc.w GfxRightA, GfxRightB, GfxLeftA, GfxLeftB
 GfxRightA:
-        dc.b %11000011
-        dc.b %01000010
-        dc.b %01100110
+        dc.b %11000010
+        dc.b %01000110
+        dc.b %01100100
         dc.b %01111110
         dc.b %00111100
-        dc.b %10011001
-        dc.b %11111111
+        dc.b %10011101
+        dc.b %11111101
         dc.b %01111110
         dc.b %01011010
         dc.b %01111110
@@ -365,13 +365,13 @@ GfxRightA:
         dc.b %00100100
 
 GfxRightB:
-        dc.b %11000011
-        dc.b %01100110
-        dc.b %00100100
+        dc.b %10000011
+        dc.b %01100010
+        dc.b %00100110
         dc.b %01111110
         dc.b %10111101
-        dc.b %00111100
-        dc.b %10111101
+        dc.b %00111101
+        dc.b %10111011
         dc.b %11111111
         dc.b %01011010
         dc.b %01111110
@@ -379,13 +379,13 @@ GfxRightB:
         dc.b %00100100
 
 GfxLeftA:
-        dc.b %11000011
-        dc.b %01000010
-        dc.b %01100110
+        dc.b %01000011
+        dc.b %01100010
+        dc.b %00100110
         dc.b %01111110
         dc.b %00111100
-        dc.b %10011001
-        dc.b %11111111
+        dc.b %10111001
+        dc.b %10111111
         dc.b %01111110
         dc.b %01011010
         dc.b %01111110
@@ -393,19 +393,18 @@ GfxLeftA:
         dc.b %00100100
 
 GfxLeftB:
-        dc.b %11000011
-        dc.b %01100110
-        dc.b %00100100
+        dc.b %11000001
+        dc.b %01000110
+        dc.b %01100100
         dc.b %01111110
         dc.b %10111101
-        dc.b %00111100
-        dc.b %10111101
+        dc.b %10111100
+        dc.b %11011101
         dc.b %11111111
         dc.b %01011010
         dc.b %01111110
         dc.b %01111110
         dc.b %00100100
-
 ; Sub-index mapping: 1x, 2x or 3x vertical replication.
 MapSmall:
         dc.b 0,1,2,3,4,5,6,7,8,9,10,11
