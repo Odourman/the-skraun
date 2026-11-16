@@ -16,7 +16,7 @@ PAL={
 }
 ACTORS=("knight_1","knight_2","archer")
 NAMES=("overlap","partial","stagger")
-STATES=("center80","right104","left56","reverse80")
+STATES=("center80","right104","right104-next","left56","left56-next","reverse80","reverse80-next")
 EXPECTED_DUTY={
  "overlap":(4,4,4,6,6),
  "partial":(6,6,12,6,6),
@@ -63,12 +63,15 @@ for n in NAMES:
     for state,expected in (
         ("center80",(128,104,192,140)),
         ("right104",(176,104,240,140)),
+        ("right104-next",(176,104,240,140)),
         ("left56",(80,104,144,140)),
-        ("reverse80",(128,104,192,140))):
+        ("left56-next",(80,104,144,140)),
+        ("reverse80",(128,104,192,140)),
+        ("reverse80-next",(128,104,192,140))):
         actual=box(captures[state]["skraun"])
         assert actual==expected,(n,state,"CRITICAL P0 alignment/previous mid-HMOVE drift",actual,expected)
     base=captures["center80"]["skraun"]
-    for state,delta in (("right104",48),("left56",-48),("reverse80",0)):
+    for state,delta in (("right104",48),("right104-next",48),("left56",-48),("left56-next",-48),("reverse80",0),("reverse80-next",0)):
         translated={(x+delta,y) for x,y in base}
         assert captures[state]["skraun"]==translated,(n,state,"P0 sprite shape changed/occluded",len(translated^captures[state]["skraun"]))
     # True 12 consecutive emulated frames, not 12 host-time snapshots.
@@ -94,7 +97,16 @@ for n in NAMES:
         assert all(bool(s["halo_gold"]) != bool(s["obstacles_blue"]) for s in seq),(n,"alternating field vanished",)
         assert sum(s["halo_gold"]!=set() for s in seq)==6
         assert sum(s["obstacles_blue"]!=set() for s in seq)==6
-        assert any((x>=256 and y>=80) for state in ("right104","right104-next") if state in captures for x,y in captures[state]["halo_gold"]) or True
+        for key in ("right104","left56","reverse80"):
+            g1=captures[key]["halo_gold"];g2=captures[key+"-next"]["halo_gold"]
+            b1=captures[key]["obstacles_blue"];b2=captures[key+"-next"]["obstacles_blue"]
+            assert (len(g1)>100) != (len(g2)>100),(n,key,"gold ring not exactly every second original Stella frame")
+            assert (len(b1)>20) != (len(b2)>20),(n,key,"blue scene not exactly every second frame")
+            assert max(len(g1),len(g2))>1000,(n,key,"halo absent in both phases")
+            assert max(len(b1),len(b2))>300,(n,key,"scene absent in both phases")
+        assert any(x>=256 and 80<=y<=160 for key in ("right104","right104-next")
+                   for x,y in captures[key]["halo_gold"]),(
+              n,"real level3 halo did not reach right PF2 at x104")
     else:
         assert all(not s["obstacles_blue"] for s in seq)
         assert all(s["halo_gold"] for s in seq)
