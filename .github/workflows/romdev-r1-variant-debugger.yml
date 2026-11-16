@@ -1,0 +1,109 @@
+name: P02-R1 limiting-path Stella Debugger 262-line variant test
+on:
+  push:
+    branches: [experiment/romdev-r1-renderer-feasibility]
+    paths:
+      - '.github/workflows/romdev-r1-variant-debugger.yml'
+      - 'experiments/romdev_r1_p1_stress.asm'
+      - 'experiments/romdev_r1_optimized_pf.asm'
+      - 'experiments/romdev_r1_score_contrast.asm'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  limiting-raster:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original DASM and Stella 6.7.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Assemble P1-load, optimized-PF and SCORE candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          for name in p1 score opt; do
+            case "$name" in
+              p1) asm=romdev_r1_p1_stress.asm ;;
+              score) asm=romdev_r1_score_contrast.asm ;;
+              opt) asm=romdev_r1_optimized_pf.asm ;;
+            esac
+            dasm "experiments/$asm" -f3 -o"build/r1-$name.bin" -l"build/r1-$name.lst" -s"build/r1-$name.sym"
+            test "$(stat -c%s "build/r1-$name.bin")" -eq 4096
+          done
+          sha256sum build/*.bin | tee build/SHA256SUMS
+      - name: Direct measured debugger frames at center/moved right/moved left for all three
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            set -euo pipefail
+            for name in p1 score opt; do
+              stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/r1-$name.bin" > "build/debugger_$name.log" 2>&1 &
+              pid=$!
+              wid=""
+              for j in $(seq 1 28); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid" || exit 8
+              xdotool windowfocus "$wid" || true
+              sleep 1.6
+              cmd(){
+                xdotool type --window "$wid" --clearmodifiers --delay 8 "$1"
+                xdotool key --window "$wid" Return
+                sleep 0.22
+              }
+              cmd "base dec"
+              cmd "frame #30"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              scrot -z "build/dbg_$name-start.png"
+              cmd "joy0Right 0"
+              cmd "frame #24"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              scrot -z "build/dbg_$name-right.png"
+              cmd "joy0Right 1"
+              cmd "joy0Left 0"
+              cmd "frame #24"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              scrot -z "build/dbg_$name-left.png"
+              cmd "joy0Left 1"
+              cmd "saveSes $PWD/build/R1_$name-SESSION.txt"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.65
+            done
+          '
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re
+          for name in ('p1','score','opt'):
+              path=Path('build/R1_'+name+'-SESSION.txt')
+              assert path.exists() and path.stat().st_size>300,(name,'missing real debugger session')
+              s=path.read_text()
+              modes=[int(re.search(r'#(\d+)',row).group(1)) for row in re.findall(r'> print \*Mode\n([^\n]+)',s)]
+              scans=[int(re.search(r'#(\d+)',row).group(1)) for row in re.findall(r'> print _scanEnd\n([^\n]+)',s)]
+              print(name,'Stella actual Mode trajectory',modes,'scanlines',scans)
+              assert modes==[6,12,0],(name,modes)
+              assert scans==[262,262,262],(name,scans)
+              for state in ('start','right','left'):
+                  im=Image.open('build/dbg_'+name+'-'+state+'.png').convert('RGB')
+                  assert sum(max(p)>30 for p in im.getdata())>12000,('blank debugger image',name,state)
+          print('PASS: three limiting source variants measured at 262 NTSC scanlines in 3 joystick states each')
+          PY
+      - name: Archive original debugger snapshots, session text and exact ROMs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r1-three-variant-stella-debugger-262
+          path: build/
+          if-no-files-found: warn
