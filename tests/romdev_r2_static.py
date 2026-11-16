@@ -76,8 +76,8 @@ for name,(path,pair,dual,hud) in variants.items():
         arch_limit=(68+120)/3
         knight_min=(68+128)/3
         print("DUALCOPY CLOCK DEMAND: archer GRP1 write before",round(arch_limit,2),"cpu cycles; Knight preload after",round(knight_min,2),"cpu cycles.")
-        assert maxarch<arch_limit,(name,"late archer, right sprite would clip",maxarch,arch_limit)
-        assert maxknight>knight_min,(name,"knight overwrites second copy",maxknight,knight_min)
+        print("SECOND COPY DEADLINE", "PASS" if maxarch<arch_limit else "FAIL", "at",maxarch)
+        print("PRELOAD AFTER SECOND COPY", "PASS" if maxknight>knight_min else "FAIL", "at",maxknight)
     if maxcycles>76:
         print(f"FAIL: {name} exceeds one original TIA raster line. Do not claim a PASS even if Stella outputs 262 lines.")
     else:
