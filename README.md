@@ -60,6 +60,8 @@ No license has been selected yet. Do not assume permission to reuse this project
 - [Confirmed Skraun visual direction](docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md) — user's sketch, neutral light-gray color, true overhead camera, two short walking poses and horizontal mirroring.
 - [Gray overhead sprite experimental ROM report](docs/SKRAUN_GRAY_OVERHEAD_ROM_TEST_2026-11-16.md) — separate 4K NTSC Stella self-test, three sprite sizes, no independent approval.
 - [Draft PR #4: gray overhead Skraun](https://github.com/Odourman/the-skraun/pull/4) — source and tests; do not merge before appearance and timing review.
+- [Gray Skraun with a static gold PF ring](docs/GRAY_SKRAUN_STATIC_HALO_RESULT_2026-11-16.md) — Stella three-level combination PASS; **not** a moving ring.
+- [Draft PR #5: static gray halo combination](https://github.com/Odourman/the-skraun/pull/5) — isolated source, not merged.
 - [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
 
 Regular CI verifies assembly and model-based logic. Separate Stella visual CI verifies three sprite sizes and one movement direction. **Neither is independent verification or proof of original-hardware timing.**
