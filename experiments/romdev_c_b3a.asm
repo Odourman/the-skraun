@@ -116,6 +116,7 @@ Visible:
         tya
         bne Visible
 
+        sta WSYNC           ; overscan line 1: prevent last visible line cleanup overrun
         lda #2
         sta VBLANK
         lda #0
@@ -123,7 +124,7 @@ Visible:
         sta PF1
         sta PF2
         sta GRP0
-        ldx #30
+        ldx #29
 Overscan:
         sta WSYNC
         dex
