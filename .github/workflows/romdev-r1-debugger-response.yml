@@ -57,8 +57,9 @@ jobs:
             cmd "print *Mode"
             cmd "print _scanEnd"
             shot idle
-            cmd "joy0Right 1"
+            cmd "joy0Right 0"    # Stella debugger active-low: 0 means pressed
             cmd "print _joy0Right"
+            cmd "print *SWCHA"
             cmd "frame #1"
             cmd "print *Mode"
             shot right_f1
@@ -69,8 +70,8 @@ jobs:
             cmd "frame #4"
             cmd "print *Mode"
             shot right_f6
-            cmd "joy0Right 0"
-            cmd "joy0Left 1"
+            cmd "joy0Right 1"    # release
+            cmd "joy0Left 0"     # press
             cmd "frame #1"
             cmd "print *Mode"
             shot left_f1
@@ -81,7 +82,7 @@ jobs:
             cmd "frame #4"
             cmd "print *Mode"
             shot left_f6
-            cmd "joy0Left 0"
+            cmd "joy0Left 1"     # release
             cmd "saveSes $PWD/build/R1_DEBUGGER_RESPONSE_SESSION.txt"
             shot final
             sleep 0.4
@@ -98,10 +99,34 @@ jobs:
               n=sum(max(rgb)>30 for rgb in im.getdata())
               print(key, "debugger screenshot",im.size,"visible",n)
               assert n>90000,"missing actual Stella Debugger view: "+key
-          if Path('build/R1_DEBUGGER_RESPONSE_SESSION.txt').exists():
-              print("Console text session retained",Path('build/R1_DEBUGGER_RESPONSE_SESSION.txt').stat().st_size)
-          else:
-              print("Console text session missing: use original nonblank debugger screenshots, do not infer exact frame response")
+          import re
+          sess=Path('build/R1_DEBUGGER_RESPONSE_SESSION.txt')
+          assert sess.exists() and sess.stat().st_size>300, "No genuine debugger text session"
+          contents=sess.read_text()
+          values=[]
+          for row in re.findall(r'> print \\*Mode\\n([^\\n]+)', contents):
+              m=re.search(r'#(\\d+)',row)
+              assert m,("No decimal Mode after real frame",row)
+              values.append(int(m.group(1)))
+          print("Real Stella debugger Mode after frame sequences:",values)
+          assert len(values)==7,("Missing actual frame steps",values)
+          start,ra,rb,rc,la,lb,lc=values
+          assert start==6
+          assert ra in (start,start+1) and rb==start+1 and rc==start+3,(values,"right input latency >2 frames or wrong cadence")
+          assert la in (rc,rc-1) and lb==rc-1 and lc==rc-3,(values,"left reversal latency >2 frames or wrong cadence")
+          scan=[int(n) for n in re.findall(r'(?m)^.*#(\\d+)\\s*
+          PY
+      - name: Save exact ROM and debugger original images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r1-stella-debugger-frame-response
+          path: build/
+          if-no-files-found: warn
+, contents) if int(n)==262]
+          assert len(scan)>=2,("No 262 NTSC lines shown in debugger",scan)
+          assert 'print _joy0Right' in contents, "input injection not shown"
+          print("DIRECT DEBUGGER PASS: first response <=2 NTSC frames each direction; 4-clock step every 2 frames, 262 scanlines")
           PY
       - name: Save exact ROM and debugger original images
         if: always()
