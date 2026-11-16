@@ -23,11 +23,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build
-          for n in twoline dual hud; do
+          for n in twoline dual hud interlace; do
             case "$n" in
               twoline) source=experiments/romdev_r2_two_line_p1.asm ;;
               dual) source=experiments/romdev_r2_two_line_dualcopy.asm ;;
               hud) source=experiments/romdev_r2_multikernel_hud.asm ;;
+              interlace) source=experiments/romdev_r2_two_line_interlace.asm ;;
             esac
             dasm "$source" -f3 -o"build/$n.bin" -l"build/$n.lst" -s"build/$n.sym"
             test "$(stat -c%s "build/$n.bin")" -eq 4096
@@ -92,7 +93,7 @@ jobs:
           from PIL import Image
           import re,json
           results={}
-          for name in ("twoline","dual","hud"):
+          for name in ("twoline","dual","hud","interlace"):
               p=Path("build/R2_"+name+"-SESSION.txt")
               assert p.exists() and p.stat().st_size>300,"Missing genuine Stella debugger session "+name
               s=p.read_text()
@@ -120,6 +121,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: romdev-r2-direct-debugger-12-motion-states
+          name: romdev-r2-direct-debugger-16-motion-states
           path: build/
           if-no-files-found: warn
