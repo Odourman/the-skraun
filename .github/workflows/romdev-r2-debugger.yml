@@ -81,7 +81,7 @@ jobs:
               cmd "print _scanEnd"
               snap reversal80
               cmd "joy0Right 1"
-              cmd "saveSes $PWD/build/R2_$n_SESSION.txt"
+              cmd "saveSes $PWD/build/R2_$n-SESSION.txt"
               kill "$pid" 2>/dev/null || true
               wait "$pid" 2>/dev/null || true
               sleep 0.5
@@ -93,7 +93,7 @@ jobs:
           import re,json
           results={}
           for name in ("twoline","dual","hud"):
-              p=Path("build/R2_"+name+"_SESSION.txt")
+              p=Path("build/R2_"+name+"-SESSION.txt")
               assert p.exists() and p.stat().st_size>300,"Missing genuine Stella debugger session "+name
               s=p.read_text()
               mode=[]
