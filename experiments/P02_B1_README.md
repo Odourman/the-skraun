@@ -5,7 +5,7 @@
 The ROM builds as a plain 4 KiB NTSC cartridge:
 `dasm experiments/p02_playfield_b1.asm -f3 -obuild/p02-playfield-b1.bin -lbuild/p02-playfield-b1.lst -sbuild/p02-playfield-b1.sym`.
 
-The 52 scanline image uses 52×3=156 bytes of ROM table data, zero screen framebuffer bytes of RAM, and no player/missile/ball registers. `CTRLPF=1` reflects the 20 left playfield cells to the right. The nominal ring envelope is ~88×52 color clocks/scanlines, more than the level-3 32-clock-wide troll, but there is **no troll in this experiment**, so fitting both is not yet proven.
+The 84 scanline image uses 84×3=252 bytes of ROM table data, zero screen framebuffer bytes of RAM, and no player/missile/ball registers. `CTRLPF=1` reflects the 20 left playfield cells to the right. The nominal ring envelope is ~52×84 color clocks/scanlines, more than the level-3 32-clock-wide troll, but there is **no troll in this experiment**, so fitting both is not yet proven.
 
 **Important limitation:** A static centered ring is substantially easier than a halo following a moving troll, particularly horizontally, and the same playfield hardware will also be wanted for scenery. Passing B1 only authorizes further testing, not selecting playfield for the final game.
 
