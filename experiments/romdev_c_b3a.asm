@@ -210,7 +210,7 @@ Set104:
         rts
 
 XTable:
-        dc.b 40,64,88    ; tested P0 positioning calibration; centers 56/80/104
+        dc.b 50,74,98    ; actual Stella-calibrated P0 centers 56/80/104
 
 PositionP0:
         sta WSYNC
