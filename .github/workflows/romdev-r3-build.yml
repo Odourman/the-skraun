@@ -1,0 +1,45 @@
+name: P02-R3 bounded three original TIA 4K ROMs DASM build
+on:
+  push:
+    branches: [experiment/romdev-r3-decisive-scene-scheduler]
+    paths:
+      - 'experiments/romdev_r3_*.asm'
+      - '.github/workflows/romdev-r3-build.yml'
+      - 'tests/romdev_r3_*.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM and genuine Stella 6.7.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Compile three 4096-byte NTSC experiments, retain all evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/sources
+          for kind in overlap partial stagger; do
+            asm="experiments/romdev_r3_${kind}.asm"
+            dasm "$asm" -f3 -o"build/r3-$kind.bin" -l"build/r3-$kind.lst" -s"build/r3-$kind.sym" >"build/build_$kind.log" 2>&1 || { cat "build/build_$kind.log"; exit 1; }
+            test "$(stat -c%s "build/r3-$kind.bin")" -eq 4096
+            stella -rominfo "build/r3-$kind.bin" > "build/rominfo_$kind.txt"
+            cp "$asm" build/sources/
+          done
+          sha256sum build/*.bin | tee build/SHA256SUMS
+          if test -f tests/romdev_r3_static.py; then
+            /usr/bin/python3 tests/romdev_r3_static.py | tee build/R3_STATIC_CYCLE_LEDGER.txt
+          fi
+          echo "SUCCESS: three real DASM-built 4K NTSC ROMs"
+      - name: Upload ROM, source, symbolic listing and any failed build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r3-actual-4k-dasm-build
+          path: build/
+          if-no-files-found: warn
