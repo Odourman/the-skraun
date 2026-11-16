@@ -79,7 +79,9 @@ world={(x,y) for col in (14,22,27) for x in range(8*col,8*col+8) for y in range(
 obstacle_by_center={}
 for f in scenery:
     k=f["center"];g=f["ring"]
-    exp=shapes[k]|world
+    # A solid P0 foreground pixel legitimately occludes PF pixels.
+    # The obstacle mask is visible behind P0 only where P0 bitmap is transparent.
+    exp=(shapes[k]|world)-f["p0"]
     overlap=shapes[k]&world
     obstruction=world-shapes[k]
     assert g==exp,(k,f["path"].name,"wrong OR-composition",len(g^exp),bbox(g),bbox(exp))
@@ -88,6 +90,7 @@ assert any(x>0 for x,y in obstacle_by_center.values())
 assert all(y>0 for x,y in obstacle_by_center.values())
 print("OBSTACLES: actual Stella pixels equal ring OR fixed-scene pixels for all 13 centers")
 print("OBSTACLES: overlap/intersection (indistinguishable same-color pixels):",obstacle_by_center)
+print("OBSTACLES: composition respects P0 foreground occlusion; PF picture is NOT collision truth")
 for filename in ("romdev-b3b-dynamic.bin","romdev-b3b-obstacles.bin"):
     data=Path("build",filename).read_bytes()
     assert len(data)==4096,(filename,len(data))
