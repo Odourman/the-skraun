@@ -53,9 +53,9 @@ jobs:
             }
             press_select(){
               xdotool keydown --window "$wid" F1
-              sleep 0.20
+              sleep 0.32
               xdotool keyup --window "$wid" F1
-              sleep 0.30
+              sleep 0.70
             }
             snap size_1
             press_select; snap size_2
