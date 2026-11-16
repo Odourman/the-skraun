@@ -1,7 +1,7 @@
 name: ROMDEV B Stella Debugger frame timing capture
 on:
   push:
-    branches: [experiment/romdev-b-gray-stella]
+    branches: [experiment/romdev-b-refp0]
     paths:
       - '.github/workflows/romdev-b-debugger.yml'
       - 'experiments/romdev_b_refp0.asm'
@@ -18,7 +18,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
-      - name: Build A ROM and prepare debugger
+      - name: Build B ROM and prepare debugger
         shell: bash
         run: |
           mkdir -p build "$HOME/.config/stella"
