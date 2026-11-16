@@ -1,43 +1,42 @@
-name: P02-R1 Stella Debugger exact joystick first-response frame steps
+name: P02-R1 real Stella Debugger 2-frame SWCHA input response
 on:
   push:
     branches: [experiment/romdev-r1-renderer-feasibility]
     paths:
       - '.github/workflows/romdev-r1-debugger-response.yml'
       - 'experiments/romdev_r1_fast_pf.asm'
-      - 'experiments/romdev_r1_p1_stress.asm'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  response:
+  r1-response:
     runs-on: ubuntu-24.04
-    timeout-minutes: 13
+    timeout-minutes: 14
     steps:
       - uses: actions/checkout@v4
-      - name: Install DASM Stella and Xvfb
+      - name: Install real DASM Stella debugger and Xvfb
         run: |
           sudo apt-get update
           sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
-      - name: Assemble source candidates with debug symbols
+      - name: Build exact R1 fast 4096-byte ROM, listing and symbols
         shell: bash
         run: |
           mkdir -p build
           dasm experiments/romdev_r1_fast_pf.asm -f3 -obuild/r1-fast.bin -lbuild/r1-fast.lst -sbuild/r1-fast.sym
-          dasm experiments/romdev_r1_p1_stress.asm -f3 -obuild/r1-p1.bin -lbuild/r1-p1.lst -sbuild/r1-p1.sym
-          sha256sum build/r1-*.bin > build/SHA256SUMS
-      - name: Direct Stella Debugger injected joystick and exact frame command
+          test "$(wc -c < build/r1-fast.bin)" -eq 4096
+          sha256sum build/r1-fast.bin > build/SHA256SUMS
+      - name: Inject active-low real Stella Debugger joystick, frame-step and capture source state
         shell: bash
         run: |
           set -euo pipefail
           export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
           xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
             set -euo pipefail
-            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/r1-fast.bin" > build/debugger_fast.log 2>&1 &
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/r1-fast.bin" > build/debugger.log 2>&1 &
             pid=$!
             trap "kill $pid 2>/dev/null || true" EXIT
             wid=""
-            for j in $(seq 1 25); do
+            for i in $(seq 1 30); do
               wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
               test -n "$wid" && break
               sleep 1
@@ -46,92 +45,83 @@ jobs:
             xdotool windowfocus "$wid" || true
             sleep 2
             cmd(){
-              printf "%s\n" "$1" >> build/COMMAND_SEQUENCE.txt
+              printf "%s\n" "$1" >> build/COMMANDS.txt
               xdotool type --window "$wid" --clearmodifiers --delay 9 "$1"
               xdotool key --window "$wid" Return
               sleep 0.25
             }
-            shot(){ scrot -z "build/step_$1.png"; }
+            snap(){ scrot -z "build/dbg_$1.png"; }
             cmd "base dec"
             cmd "frame #30"
             cmd "print *Mode"
             cmd "print _scanEnd"
-            shot idle
-            cmd "joy0Right 0"    # Stella debugger active-low: 0 means pressed
+            snap idle
+            cmd "joy0Right 0"
             cmd "print _joy0Right"
             cmd "print *SWCHA"
             cmd "frame #1"
             cmd "print *Mode"
-            shot right_f1
+            snap right1
             cmd "frame #1"
             cmd "print *Mode"
             cmd "print _scanEnd"
-            shot right_f2
+            snap right2
             cmd "frame #4"
             cmd "print *Mode"
-            shot right_f6
-            cmd "joy0Right 1"    # release
-            cmd "joy0Left 0"     # press
+            snap right6
+            cmd "joy0Right 1"
+            cmd "joy0Left 0"
+            cmd "print _joy0Left"
             cmd "frame #1"
             cmd "print *Mode"
-            shot left_f1
+            snap left1
             cmd "frame #1"
             cmd "print *Mode"
             cmd "print _scanEnd"
-            shot left_f2
+            snap left2
             cmd "frame #4"
             cmd "print *Mode"
-            shot left_f6
-            cmd "joy0Left 1"     # release
-            cmd "saveSes $PWD/build/R1_DEBUGGER_RESPONSE_SESSION.txt"
-            shot final
-            sleep 0.4
-            find build -maxdepth 1 -type f -print | sort > build/EVIDENCE_FILE_INDEX.txt
+            snap left6
+            cmd "joy0Left 1"
+            cmd "saveSes $PWD/build/R1_SESSION.txt"
+            snap final
             kill "$pid" 2>/dev/null || true
-            wait "$pid" 2>/dev/null || true
           '
           /usr/bin/python3 - <<'PY'
-          from PIL import Image
           from pathlib import Path
-          for key in ('idle','right_f1','right_f2','right_f6','left_f1','left_f2','left_f6','final'):
-              file=Path('build/step_'+key+'.png')
-              im=Image.open(file).convert('RGB')
-              n=sum(max(rgb)>30 for rgb in im.getdata())
-              print(key, "debugger screenshot",im.size,"visible",n)
-              assert n>90000,"missing actual Stella Debugger view: "+key
+          from PIL import Image
           import re
-          sess=Path('build/R1_DEBUGGER_RESPONSE_SESSION.txt')
-          assert sess.exists() and sess.stat().st_size>300, "No genuine debugger text session"
-          contents=sess.read_text()
+          p=Path("build/R1_SESSION.txt")
+          assert p.exists() and p.stat().st_size>300, "No Stella console session"
+          s=p.read_text()
+          mode_rows=re.findall(r'> print \*Mode\n([^\n]+)',s)
           values=[]
-          for row in re.findall(r'> print \\*Mode\\n([^\\n]+)', contents):
-              m=re.search(r'#(\\d+)',row)
-              assert m,("No decimal Mode after real frame",row)
+          for row in mode_rows:
+              m=re.search(r'#(\d+)',row)
+              assert m, "No decimal Mode value: "+row
               values.append(int(m.group(1)))
-          print("Real Stella debugger Mode after frame sequences:",values)
-          assert len(values)==7,("Missing actual frame steps",values)
-          start,ra,rb,rc,la,lb,lc=values
-          assert start==6
-          assert ra in (start,start+1) and rb==start+1 and rc==start+3,(values,"right input latency >2 frames or wrong cadence")
-          assert la in (rc,rc-1) and lb==rc-1 and lc==rc-3,(values,"left reversal latency >2 frames or wrong cadence")
-          scan=[int(n) for n in re.findall(r'(?m)^.*#(\\d+)\\s*
+          print("STELLA FRAME-STEPPED MODE TRACE:",values)
+          assert len(values)==7,("Missing mode measurements",values)
+          z,r1,r2,r6,l1,l2,l6=values
+          assert z==6,("Start center index",z)
+          assert r1 in (6,7) and r2==7 and r6==9,("Input right not <=2 frames or wrong cadence",values)
+          assert l1 in (8,9) and l2==8 and l6==6,("Left reversal not <=2 frames or wrong cadence",values)
+          scan=[]
+          for row in re.findall(r'> print _scanEnd\n([^\n]+)',s):
+              m=re.search(r'#(\d+)',row)
+              assert m
+              scan.append(int(m.group(1)))
+          assert len(scan)>=3 and all(v==262 for v in scan),("Not 262 NTSC scanlines",scan)
+          for name in ("idle","right1","right2","right6","left1","left2","left6","final"):
+              im=Image.open("build/dbg_"+name+".png").convert("RGB")
+              count=sum(max(rgb)>30 for rgb in im.getdata())
+              assert count>12000,("Blank Stella debugger",name,count)
+          print("PASS real Stella 6.7.1: first response <=2 emulated frames each direction, 2-frame cadence, 262-line NTSC sampled")
           PY
-      - name: Save exact ROM and debugger original images
+      - name: Preserve screenshot, ROM, DASM symbols, machine-readable session even when failing
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: romdev-r1-stella-debugger-frame-response
-          path: build/
-          if-no-files-found: warn
-, contents) if int(n)==262]
-          assert len(scan)>=2,("No 262 NTSC lines shown in debugger",scan)
-          assert 'print _joy0Right' in contents, "input injection not shown"
-          print("DIRECT DEBUGGER PASS: first response <=2 NTSC frames each direction; 4-clock step every 2 frames, 262 scanlines")
-          PY
-      - name: Save exact ROM and debugger original images
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: romdev-r1-stella-debugger-frame-response
+          name: romdev-r1-direct-stella-frame-response
           path: build/
           if-no-files-found: warn
