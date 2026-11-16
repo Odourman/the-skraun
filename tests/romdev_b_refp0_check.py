@@ -54,6 +54,9 @@ for face in ("Right","Left"):
     found=set()
     for path in sorted(Path("build").glob(f"face_{face}_*.png")):
         im,bb=bitmap(path)
+        if (bb[2]-bb[0],bb[3]-bb[1])!=(16,12):
+            print("INCONCLUSIVE capture",path.name,"cropped frame",bb)
+            continue
         bits=sample(im,bb,1)
         for pose in ("A","B"):
             if bits==tuple(patterns[face,pose]):
