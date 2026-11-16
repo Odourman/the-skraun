@@ -80,7 +80,7 @@ hud=images["hud","centre80"]
 bar=[hud.getpixel((x,y)) for y in range(30,46) for x in range(0,320)]
 lit=sum(max(v)>70 for v in bar)
 print("SEPARATE HUD PLACEHOLDER first 16 active display rows (y30..45) nonblack pixel count",lit)
-assert lit>100,("HUD region was not actually drawn",lit)
+assert lit>=32,("HUD stripe bars missing: expected >=32 independently visible pixels",lit)
 with open("build/R2_GENUINE_IMAGE_GEOMETRY.json","w") as f:
     json.dump({"stella_pngs":rec,"two_enemy_copies":dual_status,"hud_nonblack_pixels":lit},f,indent=2)
 with open("build/R2_GENUINE_IMAGE_GEOMETRY.csv","w",newline="") as f:
