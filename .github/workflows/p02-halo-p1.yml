@@ -49,7 +49,6 @@ jobs:
               [ -n "$wid" ] && break
               sleep 1
             done
-            ps -p "$pid" -o pid,stat,args > build/stella_process.txt || true
             if [ -z "$wid" ]; then
               scrot -z build/stella_failed_desktop.png || true
               echo "No visible Stella window after startup"
@@ -57,45 +56,60 @@ jobs:
             fi
             xdotool windowfocus "$wid" || true
             sleep 1
-            xdotool key --window "$wid" F12
-            sleep 0.4
-            cp build/p02-halo-p1.png build/p02_level1_idle.png
+            shot(){
+              xdotool key --window "$wid" F12
+              sleep 0.8
+              test -s build/p02-halo-p1.png
+              cp build/p02-halo-p1.png "build/$1.png"
+            }
+            shot p02_level1_idle
             xdotool keydown --window "$wid" space
             sleep 0.15
-            xdotool key --window "$wid" F12
-            sleep 0.3
-            cp build/p02-halo-p1.png build/p02_level1_fire.png
+            shot p02_level1_fire
             xdotool keyup --window "$wid" space
-            sleep 1.9
+            sleep 2.0
             xdotool key --window "$wid" F1
-            sleep 0.4
+            sleep 1.0
+            shot p02_level2_idle
             xdotool keydown --window "$wid" space
             sleep 0.15
-            xdotool key --window "$wid" F12
-            sleep 0.3
-            cp build/p02-halo-p1.png build/p02_level2_fire.png
+            shot p02_level2_fire
             xdotool keyup --window "$wid" space
             sleep 1.6
             xdotool key --window "$wid" F1
-            sleep 0.4
+            sleep 1.0
+            shot p02_level3_idle
             xdotool keydown --window "$wid" space
             sleep 0.15
-            xdotool key --window "$wid" F12
-            sleep 0.3
-            cp build/p02-halo-p1.png build/p02_level3_fire.png
+            shot p02_level3_fire
             xdotool keyup --window "$wid" space
+            sleep 1.2
+            xdotool keydown --window "$wid" Right
+            xdotool keydown --window "$wid" space
+            sleep 0.20
+            shot p02_level3_move_fire
+            xdotool keyup --window "$wid" space
+            xdotool keyup --window "$wid" Right
             scrot -z build/stella_desktop.png
           '
           /usr/bin/python3 - <<'PY'
           from PIL import Image
           from pathlib import Path
-          for f in sorted(Path("build").glob("p02_level*.png")):
+          expected_sizes={1:16,2:32,3:64}
+          for level,width in expected_sizes.items():
+              f=Path(f"build/p02_level{level}_idle.png")
+              im=Image.open(f).convert("RGB")
+              green=[x for y in range(im.height) for x in range(im.width) if (lambda p: p[1]>p[0]*1.5 and p[1]>p[2]*1.5 and p[1]>60)(im.getpixel((x,y)))]
+              if not green or max(green)-min(green)+1 != width:
+                  raise SystemExit(f"SELECT did not produce level {level} width {width}: {f}")
+              print(f.name, "green sprite width",max(green)-min(green)+1)
+          for f in sorted(Path("build").glob("p02_level*fire.png")):
               im=Image.open(f).convert("RGB")
               pixels=list(im.getdata())
               distinct=len(set(pixels))
               print(f.name, im.size, "distinct colors",distinct)
-              if distinct < 2:
-                  raise SystemExit(f"Black/blank Stella screenshot: {f}")
+              if distinct < 3:
+                  raise SystemExit(f"No visible halo (green/gold/black expected): {f}")
           PY
       - name: Upload P02 experiment evidence
         if: always()
