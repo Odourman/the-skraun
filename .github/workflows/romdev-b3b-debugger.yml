@@ -56,24 +56,24 @@ jobs:
             cmd "base dec"
             cmd "frame #32"
             cmd "print _scanEnd"
-            cmd "print *$80"
+            cmd "print *\\$80"
             snap center80
             cmd "joy0Right 1"
             cmd "frame #192"
             cmd "print _scanEnd"
-            cmd "print *$80"
+            cmd "print *\\$80"
             snap right_edge
             cmd "joy0Right 0"
             cmd "joy0Left 1"
             cmd "frame #192"
             cmd "print _scanEnd"
-            cmd "print *$80"
+            cmd "print *\\$80"
             snap left_edge
             cmd "joy0Left 0"
             cmd "joy0Right 1"
             cmd "frame #96"
             cmd "print _scanEnd"
-            cmd "print *$80"
+            cmd "print *\\$80"
             snap right_reversal
             cmd "joy0Right 0"
             cmd "saveSes"
