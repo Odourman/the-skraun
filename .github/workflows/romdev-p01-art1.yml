@@ -1,0 +1,148 @@
+name: P01-ART1 actual Stella 36-state A B Q1 P0 visual readout
+on:
+  push:
+    branches: [experiment/romdev-p01-art1-p0-stella-readout]
+    paths:
+      - 'experiments/romdev_p01_art1_*'
+      - 'tests/romdev_p01_art1_*.py'
+      - '.github/workflows/romdev-p01-art1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM Stella 6.7.1 Xvfb and PNG analysis
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Assemble exactly three unchanged-source P0 original-compatible ROMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/sources
+          for n in A_rounded_back B_low_long_back Q1_splayed_quad; do
+            dasm "experiments/romdev_p01_art1_$n.asm" -f3 -o"build/ART1_$n.bin" -l"build/ART1_$n.lst" -s"build/ART1_$n.sym" >"build/DASM_$n.log" 2>&1 || { cat "build/DASM_$n.log"; exit 3; }
+            test "$(stat -c%s "build/ART1_$n.bin")" -eq 4096
+            cp "experiments/romdev_p01_art1_$n.asm" build/sources/
+          done
+          cp experiments/romdev_p01_art1_exact_*.json build/sources/
+          sha256sum build/*.bin >build/THREE_ART1_ROM_SHA256SUMS
+          cat build/THREE_ART1_ROM_SHA256SUMS
+      - name: 36 exact Stella states and 72 direct consecutive animation frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            set -euo pipefail
+            for n in A_rounded_back B_low_long_back Q1_splayed_quad; do
+              mkdir -p "build/frames_$n"
+              stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -ss1x 1 -sssingle 1 -snapsavedir "$PWD/build" "$PWD/build/ART1_$n.bin" >"build/stella_debugger_$n.log" 2>&1 &
+              pid=$!
+              trap "kill $pid 2>/dev/null || true" EXIT
+              wid=""
+              for j in $(seq 1 35); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid" || { cat "build/stella_debugger_$n.log"; exit 8; }
+              sleep 2
+              cmd(){
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+                test -n "$wid" || { echo "Stella window vanished"; exit 11; }
+                printf "%s\n" "$1" >>"build/COMMANDS_$n.txt"
+                xdotool windowfocus "$wid" || true
+                xdotool type --window "$wid" --clearmodifiers --delay 7 "$1"
+                xdotool key --window "$wid" Return
+                sleep 0.10
+              }
+              snap(){
+                local tag="$1"
+                local img
+                cmd "saveSnap"
+                img=$(find build -maxdepth 1 -name "*.png" -type f -printf "%T@ %p\n" | sort -nr | head -1 | cut -d" " -f2-)
+                test -s "$img" || exit 9
+                cp "$img" "build/frames_$n/$tag.png"
+              }
+              observe(){
+                cmd "print *Stage"
+                cmd "print *StageFrame"
+                cmd "print *Level"
+                cmd "print *Facing"
+                cmd "print *Pose"
+                cmd "print _scanEnd"
+              }
+              cmd "base dec"
+              cmd "frame #3"
+              observe
+              snap state_0_A
+              for i in $(seq 0 23); do
+                cmd "frame #1"
+                snap "walk_$(printf "%02d" "$i")"
+                if test "$i" -eq 7; then
+                  observe
+                  snap state_0_B
+                fi
+              done
+              cmd "frame #24"
+              for stage in $(seq 1 5); do
+                observe
+                snap "state_${stage}_A"
+                cmd "frame #8"
+                observe
+                snap "state_${stage}_B"
+                if test "$stage" -lt 5; then cmd "frame #40"; fi
+              done
+              cmd "saveSes $PWD/build/ART1_${n}_REAL_STELLA_DEBUGGER_SESSION.txt"
+              scrot -z "build/ART1_${n}_DEBUGGER_GUI.png"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.5
+            done
+          '
+      - name: Fail closed on wrong debugger 262 timing, stage and A B controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 - <<'PY'
+          import json,re,pathlib
+          traces={}
+          for n in ("A_rounded_back","B_low_long_back","Q1_splayed_quad"):
+              s=(pathlib.Path("build")/("ART1_"+n+"_REAL_STELLA_DEBUGGER_SESSION.txt")).read_text()
+              def val(k):
+                  out=[]
+                  for line in re.findall(r"> print "+re.escape(k)+r"\n([^\n]+)",s):
+                      m=re.search(r"#(\d+)",line)
+                      assert m,(n,k,line)
+                      out.append(int(m.group(1)))
+                  return out
+              r={k:val(k) for k in ("*Stage","*StageFrame","*Level","*Facing","*Pose","_scanEnd")}
+              assert r["*Stage"]==[0,0,1,1,2,2,3,3,4,4,5,5],(n,r)
+              assert r["*StageFrame"]==[2,10]*6,(n,r)
+              assert r["*Level"]==[1,1,1,1,2,2,2,2,3,3,3,3],(n,r)
+              assert r["*Facing"]==[0,0,1,1,0,0,1,1,0,0,1,1],(n,r)
+              assert r["*Pose"]==[0,1]*6,(n,r)
+              assert len(r["_scanEnd"])==12 and all(v==262 for v in r["_scanEnd"]),(n,r)
+              assert len(list((pathlib.Path("build")/("frames_"+n)).glob("*.png")))==36
+              traces[n]=r
+              print("DIRECT STELLA 262 NTSC / 12 STATES",n,r)
+          pathlib.Path("build/P01_ART1_DIRECT_STELLA_262_STATES.json").write_text(json.dumps(traces,indent=2))
+          PY
+      - name: Validate all 36 native Stella P0 bitmaps, left-right and 24 original gait frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/romdev_p01_art1_stella.py | tee build/P01_ART1_STELLA_36_EXACT_P0_PIXEL_TEST.log
+          sha256sum build/frames_*/*.png >build/P01_ART1_108_ORIGINAL_STELLA_SCREENSHOT_SHA256SUMS
+      - name: Archive original 4K ROMs symbols DASM pixel and debugger evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-p01-art1-real-3rom-36states-108original-stella-pngs
+          path: build/
+          if-no-files-found: warn
