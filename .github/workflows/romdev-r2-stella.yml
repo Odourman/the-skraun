@@ -40,6 +40,7 @@ jobs:
           sha256sum build/*.bin | tee build/SHA256SUMS
           /usr/bin/python3 -m py_compile tests/romdev_r2_*.py
           /usr/bin/python3 tests/romdev_r2_static.py | tee build/R2_STATIC_CYCLE_LEDGER.txt
+          /usr/bin/python3 tests/romdev_r2_level3_bounds.py | tee build/R2_LEVEL3_HYPOTHETICAL_CAPACITY_LIMITS.txt
           cp tests/romdev_r2_*.py build/
           cp .github/workflows/romdev-r2-stella.yml build/
       - name: Genuine Stella image capture, 3 centres + reversals, all variants
