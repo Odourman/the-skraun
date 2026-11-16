@@ -101,3 +101,11 @@ Genuine technical failure: the first blue/gold interlace attempt had a missed th
 4. **NOT A CHOSEN SOLUTION:** Banker ROM, DPC/ARM, or nonstandard cartridge hardware; storage is not extra 6507 raster time, and R2 has no mandate to change physical platform.
 
 MAIN alone decides whether to authorize a further bounded scheduler/scene-architecture test or resolve a genuine hardware/design conflict. No unilateral change to Decisions 01–60 or later gray-overhead visual direction. **No R3, no B3c, no B3d, no B3e, no main merge, no independent VERIFICATION.**
+
+## 10. Final packaged delivery, hashes and status
+Final distribution [GitHub Actions #43913077850](https://github.com/Odourman/the-skraun/actions/runs/43913077850) completed SUCCESS. It rehydrated the two frozen successful engineering runs (actual ROM/Stella #43912037744, direct debugger #43911806707), included this report and source, validated all five ROM SHA-256 values, and generated a relative-path manifest for the 119 contents prior to adding the manifest and check log (121 total ZIP entries). The inner ZIP was downloaded, unpacked, and its 119 manifest entries were checked again successfully.
+
+- **Complete standalone inner package:** THE_SKRAUN_P02_R2_COMPLETE_MAIN_DELIVERY_2026-11-16.zip, SHA-256: **1f7fd26f3009d70b83813544092504f03c8ebc9a89cbe5b80d9d60a9864eca80**.
+- **Package includes:** five exact 4096-byte NTSC ROMs, sources/listings/symbols, twenty original Stella game PNGs, sixteen original Stella Debugger PNGs, all state/session logs, actual-symbol 6507 raster-cycle CSVs, level3 advisory limits, test scripts, complete MAIN report, a per-file SHA manifest and an internal integrity check log.
+- **Google Drive package:** https://drive.google.com/file/d/1zlMpV3X09EnFG6xnF8M8pmi1dTDb3Lbo/view?usp=drivesdk. The Drive version is the **outer GitHub Actions ZIP** containing the complete inner ZIP plus its PACKAGE_SHA256.txt. Unzip the wrapper before reading the standalone complete delivery.
+- **Draft PR #13:** https://github.com/Odourman/the-skraun/pull/13, targets the preceding experimental R1 branch, not main. **Not merged. No B3c, R3, AI, gameplay or independent VERIFICATION.**
