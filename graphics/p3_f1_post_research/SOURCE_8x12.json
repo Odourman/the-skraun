@@ -1,0 +1,355 @@
+{
+  "project": "THE SKRAUN",
+  "study": "P3-F1 research-release identity-first deliverable",
+  "date": "2026-11-16",
+  "status": "GRAPHICS ONLY. NOT STELLA. NOT FINAL ART.",
+  "authority": "https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_GRAPHICS_P3_F1_UPRIGHT_FACING_READABILITY_AUTHORIZED_2026-11-16.md",
+  "research": "https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_II_P3_TIA_VISUAL_MECHANISMS_CONCEPT_PROOF_AND_DECISION_2026-11-16.md",
+  "source_p3_sha256": "72ebc4dc58200f2761e942b5d6c21ac8e0308fba368d15d976715c850056450f",
+  "prior_p3f1_package_sha256": "53adadae16e9698cc38a6083abc62101455ded8438e1e0d9b02d530452d47ef6",
+  "note": "Prior pre-research P3-F1 remains a frozen historical trial. This package is the one post-research submission containing exactly two candidate families.",
+  "private_original": "Read privately from Google Drive; DO NOT include original photograph in outputs.",
+  "pixels": {
+    "width": 8,
+    "height": 12,
+    "gray": [
+      210,
+      210,
+      209
+    ],
+    "background": [
+      20,
+      41,
+      33
+    ],
+    "night": [
+      11,
+      20,
+      37
+    ],
+    "off": [
+      17,
+      25,
+      35
+    ],
+    "screen_native": [
+      160,
+      192
+    ],
+    "screen_tv_approx": [
+      640,
+      480
+    ],
+    "level_dimensions": {
+      "1": [
+        8,
+        12
+      ],
+      "2": [
+        16,
+        24
+      ],
+      "3": [
+        32,
+        36
+      ]
+    },
+    "level_x_repeat": {
+      "1": 1,
+      "2": 2,
+      "3": 4
+    },
+    "level_y_repeat": {
+      "1": 1,
+      "2": 2,
+      "3": 3
+    },
+    "gif_frame_ms": 140,
+    "blind_seed": 2026111621
+  },
+  "bit_convention": "bit7=left image pixel; top-first row0=horns, row11=feet; LEFT is exact per-row horizontal mirror RIGHT. No up/down bitmap.",
+  "baseline": {
+    "U1_frozen": {
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111110",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000001"
+      ],
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "01111111",
+        "00111101",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "01111100",
+        "11111110",
+        "10111100",
+        "00111100",
+        "00111100",
+        "01100110",
+        "01000110",
+        "10000011"
+      ],
+      "pose_changed_cells": [
+        [
+          0,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          11
+        ]
+      ]
+    }
+  },
+  "new_candidates": {
+    "D1_head_expression": {
+      "design": "Oversized original-inspired head, off-center horn pair, negative large eyes, 2x2 mouth opening, swaying arms and separated feet.",
+      "concern": "Huge square head and mouth may read like a mask/ghost; wide head can overpower limbs; direction may remain ambiguous at L1.",
+      "A": [
+        "01000001",
+        "11111111",
+        "11011011",
+        "11100111",
+        "01100111",
+        "01111110",
+        "11011001",
+        "10011110",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "01000001",
+        "11111111",
+        "11011011",
+        "11100111",
+        "01100111",
+        "01111110",
+        "01111011",
+        "11011100",
+        "00111100",
+        "01100110",
+        "01100010",
+        "10000111"
+      ],
+      "A_left": [
+        "10000010",
+        "11111111",
+        "11011011",
+        "11100111",
+        "11100110",
+        "01111110",
+        "10011011",
+        "01111001",
+        "00111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "10000010",
+        "11111111",
+        "11011011",
+        "11100111",
+        "11100110",
+        "01111110",
+        "11011110",
+        "00111011",
+        "00111100",
+        "01100110",
+        "01000110",
+        "11100001"
+      ],
+      "pose_changed_cells": [
+        [
+          0,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ]
+    },
+    "D2_swaying_arms": {
+      "design": "Closer to U1 face with strongly lifted bent arms, right-heavy shoulder/torso, narrower figure and large split feet.",
+      "concern": "Smaller original U1 mouth and busy arms may still be generic; the right-heavy shoulder can resemble a weapon.",
+      "A": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111111",
+        "10011011",
+        "11011101",
+        "01111111",
+        "00111110",
+        "01100110",
+        "01000110",
+        "11000011"
+      ],
+      "B": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "01100111",
+        "00111111",
+        "11011001",
+        "10011111",
+        "01111111",
+        "00111110",
+        "01100110",
+        "01100010",
+        "10000111"
+      ],
+      "A_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "11111100",
+        "11011001",
+        "10111011",
+        "11111110",
+        "01111100",
+        "01100110",
+        "01100010",
+        "11000011"
+      ],
+      "B_left": [
+        "00100100",
+        "01111110",
+        "01011010",
+        "11100110",
+        "11111100",
+        "10011011",
+        "11111001",
+        "11111110",
+        "01111100",
+        "01100110",
+        "01000110",
+        "11100001"
+      ],
+      "pose_changed_cells": [
+        [
+          1,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ]
+    }
+  }
+}
