@@ -42,3 +42,13 @@ Beslut 46 (åtta rörelseriktningar), 47 (tre nivåstorlekar), och 49 (intryckt 
 - Visuell referens: https://drive.google.com/file/d/1c5denehs2Cd3TT64enzj5Uq32zCTNPh-/view
 - Projektets tecknings-/spritesamling: https://drive.google.com/drive/folders/1udBPud9jpVzvMevcgKL8duib94GyV_yJ
 - P01 oberoende verifiering: https://github.com/Odourman/the-skraun/issues/1
+
+## MAIN II — SENARE ANVÄNDARKORRIGERING: SPELPLAN UPPIFRÅN, TROLL UPPRÄTT (2026-11-16)
+
+**Högre prioritet än tidigare P1/P2-anatomitolkning:** Användaren har explicit korrigerat att **spelbilden är uppifrån men Skraun ska alltid stå UPPRÄTT, aldrig ligga ner med horisontell kropp**. Det råder ingen automatisk skillnad i joystickrörelser: bara två visuella facing-varianter (höger och dess exakta vänsterspegel); upp/ned-förflyttning behåller en av dessa och roterar aldrig figuren. Trollets huvud/horn, ögon/mun längst upp; armar från överkroppen åt sidorna och ben/fötter nedåt i spritebilden. Ett **stiliskt läsbart framåtriktat ansikte är förenligt med overhead-spelplanen**, och behöver inte avvisas med krav på fotorealistiskt uppifrånperspektiv på trollets ansiktsplan. Detta är ingen ändring till sidokamera eller liggande sprite.
+
+Tidigare formuleringen "fyrfotat"/fyrbent kan inte längre användas för att kräva fyra tassar kring en horisontell rygg. Användarens nya klargörande gäller **figurens visuella anatomi**, utan att ändra ursprungligt beslut 01:s haloattack eller övriga beslut 01–60. De gamla dokumenten/experimenten förblir historiskt intakta; ändringar av själva spelregler kräver separat beslut. Originalteckningen är fortfarande privat i Google Drive.
+
+**GRAPHICS P3:** Två nya upprätta 8×12-kandidater U1/U2 är granskade som reproducerbara **designförhandsvisningar**, ej Stella. **U1 är preliminär visuellt föredragen referens** eftersom den bevarar horn/ögon/mun bättre; dess spegelvändningar har dokumenterade bitmässiga skillnader men uppfattningsbar höger/vänster-vändning i faktisk spelstorlek är ännu inte godkänd. U2 har mer detaljerade armar/ben men svagare ansikte. Varken U1, U2 eller äldre Q1 är slutgodkänd. P1-A/P2:s liggande/horisontella kropp får bara användas som **negativ kontroll** för anatomisk feltolkning. Inga nya sprites, ROM, spritedimensioner eller verifieringssteg auktoriseras genom denna statusändring.
+
+[MAIN II:s fullständiga P3-beslut](MAIN_II_GRAPHICS_P3_UPRIGHT_USER_CLARIFICATION_REVIEW_AND_DECISION_2026-11-16.md). [P3-designkälla](https://github.com/Odourman/the-skraun/tree/graphics/p3-upright-overhead-character-proof-20261116/graphics/skraun_p3_upright_overhead). Visuell grind [#15](https://github.com/Odourman/the-skraun/issues/15) kvarstår OPEN.
