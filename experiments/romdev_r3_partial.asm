@@ -98,7 +98,7 @@ Frame:
         sta WSYNC
         lda #0
         sta VSYNC
-        lda #44
+        lda #43
         sta TIM64T
         jsr UpdateMotion
         inc Slot

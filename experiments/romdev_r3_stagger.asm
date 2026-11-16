@@ -98,7 +98,7 @@ Frame:
         sta WSYNC
         lda #0
         sta VSYNC
-        lda #44
+        lda #42
         sta TIM64T
         jsr UpdateMotion
         lda #0
