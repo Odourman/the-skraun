@@ -17,6 +17,17 @@ def bbox(points):
     xs=[p[0] for p in points];ys=[p[1] for p in points]
     return min(xs),min(ys),max(xs)+1,max(ys)+1
 
+def actual_sprite_mask():
+    # Exact 6502-accessed source bytes from the assembled ROM and DASM symbol,
+    # rather than trusting a vertically-flipped source illustration.
+    sym=Path("build/romdev-b3b-dynamic.sym").read_text()
+    address=int(re.search(r"^Troll2\\s+([0-9a-fA-F]{4})", sym, re.M).group(1),16)
+    data=Path("build/romdev-b3b-dynamic.bin").read_bytes()
+    offset=address-0xF000
+    assert 0<=offset<4096-193
+    return data[offset:offset+193]
+TROLL=actual_sprite_mask()
+
 def process(name):
     files=sorted(Path("build").glob(f"{name}_motion_*.png"))
     assert len(files)>=50,(name,len(files),"Stella frames unavailable")
@@ -30,6 +41,13 @@ def process(name):
         assert pb[3]-pb[1]==24,(path.name,"vertical sprite row cropping",pb)
         assert pb[2]-pb[0]==32,(path.name,"sprite width",pb)
         assert pb[1]==99,(path.name,"P0 Y changed",pb)
+        # Pixel-exact 8x24 P0 orientation from assembled cartridge bytes,
+        # and GRP0 bitmap sequence for display rows 84..107.
+        predicted={(pb[0]+4*bit+dx,pb[1]+j)
+                   for j in range(24) for bit in range(8) for dx in range(4)
+                   if TROLL[192-(84+j)] & (0x80>>bit)}
+        assert p==predicted, (path.name,"P0 row order, pose or bitmap corrupted",
+                              len(p^predicted),pb)
         if name=="ring":
             # all rings should be identical shifted masks
             ring_center=(gb[0]+gb[2])/4
