@@ -50,9 +50,18 @@ def check(name):
         assert ctr in CENTERS,("center outside diagnostic quantization",path,ctr,pb)
         k=int(ctr)
         ring=bbox(gg)
-        assert ring[2]-ring[0]==80 and ring[3]-ring[1]==64,("ring contour clipping",path,ring)
-        assert abs((ring[0]+ring[2])/4-ctr)<=2,("P0/ring not centered",path,ring,pb)
-        assert ring[1]==79,("ring Y drift",path,ring)
+        if name=="opt":
+            assert FAST_SHAPES is not None, "fast ring reference required"
+            world={(x,y) for col in (14,22,27)
+                   for x in range(col*8,col*8+8)
+                   for y in range(97,125)}
+            expected=(FAST_SHAPES[k]|world)-graypix
+            assert gg==expected,("optimized precomposed scene not equal baseline OR fixed world",path,len(gg^expected))
+        else:
+            assert ring[2]-ring[0]==80 and ring[3]-ring[1]==64,("ring contour clipping",path,ring)
+        if name!="opt":
+            assert abs((ring[0]+ring[2])/4-ctr)<=2,("P0/ring not centered",path,ring,pb)
+            assert ring[1]==79,("ring Y drift",path,ring)
         pred={(pb[0]+bit*4+dx,pb[1]+j)
               for j in range(24) for bit in range(8) for dx in range(4)
               if TROLL[192-(84+j)] & (0x80>>bit)}
@@ -78,14 +87,18 @@ def check(name):
         else: assert all(d>=0 for d in delta),(name,key,seq)
         assert max(abs(d) for d in delta)<=8,("capture jumps >2 increments",name,key,seq)
         print(name,key,"centers sampled",seq)
-    first=shapes[56]
-    for center,mask in shapes.items():
-        assert {(x+(center-56)*2,y) for x,y in first}==mask,("PF ring was distorted by joystick",center)
+    if name!="opt":
+        first=shapes[56]
+        for center,mask in shapes.items():
+            assert {(x+(center-56)*2,y) for x,y in first}==mask,("PF ring was distorted by joystick",center)
     assert min(centers)==56 and max(centers)==104
-    print(name,"PASS all 13 centers, fixed Y, pixel-exact upright P0, genuine slow-motion joystick, ring geometry",len(files))
+    print(name,"PASS all 13 centers, fixed Y, pixel-exact upright P0, genuine slow-motion joystick",len(files))
+    return shapes
 
-for kind in ("fast","score","p1"):
-    check(kind)
+FAST_SHAPES=None
+for kind in ("fast","score","p1","opt"):
+    shapes=check(kind)
+    if kind=="fast":FAST_SHAPES=shapes
     b=Path("build/romdev-r1-"+kind+".bin").read_bytes()
     assert len(b)==4096
     print(kind,"ROM SHA256",sha256(b).hexdigest())
