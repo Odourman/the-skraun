@@ -4,6 +4,9 @@
 
 ## Project status (2026-11-16)
 
+**Latest MAIN graphics review (2026-11-16):** [GRAPHICS v0.1 on separate graphics branch](https://github.com/Odourman/the-skraun/tree/graphics/skraun-pixel-candidates-v0-1-20261116) is accepted as **exploratory 8×12 graphics source data only**, NOT final art or Stella-verified. Candidate C is a **provisional design baseline**; it still reads too front-facing versus the binding top-down direction. Current static 40×24 halo masks occupy 80/128/**176** visible scanlines at levels 1/2/3 (8 lines per band); gameplay reach not decided. [MAIN GRAPHICS v0.2 refinement handoff](handoff/MAIN_TO_GRAPHICS_V0_2_VISUAL_REFINEMENT_2026-11-16.md) asks for genuinely overhead silhouette comparisons, recognizable knight and green archer, real PF-world art, proportional halo study and an accessible versioned ZIP. **No R4, B3c, ROM implementation, merging, artistic acceptance or independent verification.**
+
+
 **New MAIN visual DESIGN PROPOSAL (advisory only, 2026-11-16):** [Post-R3-VFIX visual identity/readability review](docs/SKRAUN_POST_R3_VISUAL_DESIGN_REVIEW_PROPOSAL_2026-11-16.md) compares the user's original gray overhead Skraun, real Stella A/B sprites, the R3 placeholder knights/archer and synthetic scenery; proposes visually recognizable enemies and forest/mountain/dream/night world silhouettes, with exact criteria for later original-TIA art testing. **No graphic asset, renderer, B3c/R4, or production merge is approved by this proposal.** R3-VFIX passed developer tests but final art and full-game feasibility remain open.
 
 
