@@ -1,0 +1,99 @@
+{
+  "project": "THE SKRAUN",
+  "study": "U1-LEG1 caprine/hock two-frame leg gait source-only",
+  "status": "GRAPHICS DESIGN TRIAL, NOT STELLA, NOT FINAL ART",
+  "date": "2026-11-16",
+  "authority": "https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_GRAPHICS_U1_LEG1_CAPRINE_GAIT_SOURCE_ONLY_AUTHORIZED_2026-11-16.md",
+  "frozen_baseline_url": "https://github.com/Odourman/the-skraun/blob/graphics/u1-fix1-facing-headpixel-20261116/graphics/u1_fix1/U1_FIX1_BITMAPS.json",
+  "frozen_baseline_github_blob_sha": "811bd1f7da51d1003174423f30e6b8d0ebe77b1c",
+  "freeze": "Rows y=0..8 inclusive are exactly identical to U1-FIX1 for EACH A and B pose. Only y=9,10,11 may change.",
+  "bit_convention": "8 cols x 12 rows, top first, bit7 left pixel, 1 gray; LEFT=exact per-row reverse of RIGHT; no up/down sprites",
+  "native_screen": [
+    160,
+    192
+  ],
+  "tv_approx": [
+    640,
+    480
+  ],
+  "colors": {
+    "gray": [
+      210,
+      210,
+      209
+    ],
+    "forest": [
+      20,
+      41,
+      33
+    ],
+    "night": [
+      11,
+      20,
+      37
+    ]
+  },
+  "gif_frame_duration_ms": 180,
+  "frozen_U1_FIX1": {
+    "A": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "10111100",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01000110",
+      "11000011"
+    ],
+    "B": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "01111101",
+      "00111100",
+      "00111100",
+      "01100110",
+      "01100010",
+      "10000011"
+    ]
+  },
+  "one_candidate_U1_LEG1": {
+    "A": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "10111100",
+      "00111100",
+      "00111100",
+      "00100110",
+      "00100011",
+      "01100000"
+    ],
+    "B": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "01100110",
+      "00111110",
+      "01111111",
+      "01111101",
+      "00111100",
+      "00111100",
+      "01100100",
+      "11000100",
+      "00000110"
+    ]
+  },
+  "animation_intent": "A left hoof planted at ground row y11 while right hoof raised y10; B mirrored action alternates left lifted / right planted, with a single bent hock contour. Upper animation is entirely frozen, no fake translation.",
+  "perceptual_limit": "At L1 8x12 only three leg source rows exist. Alternating planted and raised hooves are measurable, but goat hock/cloven anatomy and perceived travel direction are NOT proven. Treat as negative caprine-anatomy result pending user aesthetic judgement, not accepted art."
+}
