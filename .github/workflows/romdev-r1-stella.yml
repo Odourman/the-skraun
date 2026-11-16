@@ -39,6 +39,7 @@ jobs:
           done
           sha256sum build/*.bin | tee build/SHA256SUMS
           /usr/bin/python3 tests/romdev_r1_static_ledger.py | tee build/R1_STATIC_RESOURCE_BUDGET.txt
+          /usr/bin/python3 tests/romdev_r1_object_headroom.py | tee build/R1_ACTOR_HUD_HEADROOM_LOWER_BOUNDS.txt
           /usr/bin/python3 tests/romdev_r1_mask_aliases.py | tee build/R1_ROM_MASK_ALIAS_EXACTNESS.txt
           cp tests/romdev_r1_*.py build/test_scripts/
           cp .github/workflows/romdev-r1-stella.yml build/
