@@ -28,8 +28,9 @@ jobs:
           base dec
           frame #10
           print _scanEnd
+          frame #10
+          print _scanEnd
           print _fCount
-          print _fCycles
           saveSes
           SCRIPT
           mkdir -p "$HOME/.config/stella"
@@ -50,11 +51,8 @@ jobs:
             wid=$(head -n1 build/debugger_window_ids.txt || true)
             if [ -n "$wid" ]; then
               xdotool windowfocus "$wid" || true
-              for cmd in "base dec" "frame #10" "print _scanEnd" "print _fCount" "print _fCycles" "saveSes"; do
-                xdotool type --window "$wid" --clearmodifiers --delay 25 "$cmd" || true
-                xdotool key --window "$wid" Return || true
-                sleep 0.6
-              done
+              # The ROM's autoexec.script ran the debugger commands before GUI startup.
+              # Keep the debugger window focused for the evidence screenshot.
             fi
             xwininfo -root -tree > build/xwindows.txt || true
             scrot -z build/debugger_desktop.png || true
@@ -62,6 +60,27 @@ jobs:
             kill "$pid" || true
             wait "$pid" || true
           '
+          shopt -s nullglob
+          sessions=("$HOME"/session_*.txt)
+          if [ "${#sessions[@]}" -eq 0 ]; then
+            echo "::error::Stella debugger did not create a CLI session."
+            exit 1
+          fi
+          cp "${sessions[@]}" build/
+          /usr/bin/python3 - <<'PY'
+          import glob, re
+          measurements = []
+          for filename in glob.glob('build/session_*.txt'):
+              lines = open(filename, encoding='utf-8').read().splitlines()
+              for i, line in enumerate(lines):
+                  if 'print _scanEnd' in line and i + 1 < len(lines):
+                      m = re.search(r'#(\d+)\b', lines[i + 1])
+                      if m:
+                          measurements.append(int(m.group(1)))
+          print('Stella debugger previous-frame scanline measurements:', measurements)
+          if len(measurements) < 2 or any(n != 262 for n in measurements):
+              raise SystemExit('Missing or non-262 Stella debugger scanline measurements')
+          PY
           find . "$HOME/.config/stella" -type f \( -name '*.txt' -o -name '*.script' \) -printf '%p %s bytes\n' | head -n 100 | tee build/session_files.txt || true
           cat build/stella_debugger.log
           test -s build/debugger_desktop.png
