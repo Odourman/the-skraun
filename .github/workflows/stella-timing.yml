@@ -51,7 +51,7 @@ jobs:
             wid=$(head -n1 build/debugger_window_ids.txt || true)
             if [ -n "$wid" ]; then
               xdotool windowfocus "$wid" || true
-              # The ROM's autoexec.script ran the debugger commands before GUI startup.
+              # The ROM autoexec script ran debugger commands before GUI startup.
               # Keep the debugger window focused for the evidence screenshot.
             fi
             xwininfo -root -tree > build/xwindows.txt || true
