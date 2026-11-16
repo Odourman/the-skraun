@@ -6,6 +6,7 @@ on:
       - 'experiments/romdev_b3b_dynamic.asm'
       - 'experiments/romdev_b3b_obstacles.asm'
       - 'tests/romdev_b3b_stella_check.py'
+      - 'tests/romdev_b3b_cycle_ledger.py'
       - '.github/workflows/romdev-b3b-stella.yml'
   workflow_dispatch:
 permissions:
@@ -32,6 +33,7 @@ jobs:
           sha256sum build/*.bin | tee build/SHA256SUMS
           stella -rominfo build/romdev-b3b-dynamic.bin | tee build/rominfo_dynamic.txt
           stella -rominfo build/romdev-b3b-obstacles.bin | tee build/rominfo_obstacles.txt
+          /usr/bin/python3 tests/romdev_b3b_cycle_ledger.py | tee build/B3B_STATIC_CYCLE_SUMMARY.txt
       - name: Drive live Stella joystick through reversals while taking original screenshots
         shell: bash
         run: |
