@@ -4,7 +4,7 @@
 
 ## Project status (2026-11-16)
 
-**Design established; P01 source compiled successfully but runtime feasibility remains unverified.** The first NTSC prototype is assembled automatically by GitHub Actions. It has not yet passed visual tests in Stella or independent verification.
+**Design established; P01 builds and renders in Stella, with independent verification still pending.** Three sprite sizes and rightward joystick movement passed automated real-emulator screenshot checks. Stella debugger timing, complete control/animation test and real hardware remain unverified.
 
 The project currently has 60 gameplay design decisions documented in the MAIN conversation and its exported design log. Those decisions govern implementation; this README is only an overview.
 
@@ -46,8 +46,9 @@ No license has been selected yet. Do not assume permission to reuse this project
 - [P01 prototype plan](docs/PROTOTYPE_01_PLAN.md) — source implemented; independent runtime approval pending.
 - [P01 source code](src/main.asm) — 6502 / DASM movement, three sizes and two leg poses.
 - [P01 build report](docs/P01_BUILD_REPORT_2026-11-16.md) — CI evidence, SHA-256 and still-open tests.
+- [P01 Stella screenshot evidence](docs/P01_STELLA_VISUAL_EVIDENCE_2026-11-16.md) — actual emulator PNGs, three sizes, rightward motion and test limitations.
 - [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
 
-A green CI status means the source assembled and the document checks passed, **not** that Stella / real hardware has verified the graphics and timings.
+Regular CI verifies assembly and model-based logic. Separate Stella visual CI verifies three sprite sizes and one movement direction. **Neither is independent verification or proof of original-hardware timing.**
 
 Google Drive retains a separate project folder named **THE SKRAUN - Atari 2600**, including historic decisions 01–19 and exported decisions 01–60. GitHub provides the tracked code, CI and revisioned engineering documents.
