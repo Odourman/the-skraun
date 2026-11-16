@@ -1,0 +1,328 @@
+{
+  "project": "THE SKRAUN",
+  "status": "DESIGN CANDIDATE DATA INDEX ONLY, NOT CANONICAL MAPS OR ROM",
+  "date": "2026-11-16",
+  "source_authority": "https://drive.google.com/file/d/1MePHLlCFKRD07kibk9qoUKmw8Ea9jTQC/view",
+  "source_complete_zip_sha256": "686ff1f22298ccac812d0b526869707e2661649c9f6fb7e8e4ac93cd00b517ee",
+  "geometry": {
+    "arena": [
+      160,
+      176
+    ],
+    "hud_diagnostic_scanlines": 16,
+    "obstacle_rect_xywh": "x multiples of 4 TIA clocks, y and heights multiples of 8 scanlines",
+    "actor_center": [
+      80,
+      88
+    ],
+    "body_L1": [
+      8,
+      12
+    ],
+    "body_L2": [
+      16,
+      24
+    ],
+    "body_L3": [
+      32,
+      36
+    ],
+    "margin_each_side": 4,
+    "source_status": "ALL ASSUMED UNTIL ACTUAL FINAL MAP AND HITBOX DESIGNED"
+  },
+  "note": "The complete exact source and reproducible Python tests, every 40x22 PF-aligned bitmask and PNG render are in Drive ZIP. Every map has two ALTERNATIVE orb centers; only one orb per visit. No runtime graphics or collision implementation.",
+  "maps": [
+    {
+      "id": "F01",
+      "world": "SKOG",
+      "name": "Öppen glänta",
+      "obstacles": [
+        [
+          12,
+          24,
+          16,
+          24
+        ],
+        [
+          132,
+          32,
+          16,
+          24
+        ],
+        [
+          24,
+          136,
+          20,
+          16
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          80,
+          56
+        ],
+        [
+          80,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "F02",
+      "world": "SKOG",
+      "name": "Skogsbryn",
+      "obstacles": [
+        [
+          28,
+          16,
+          16,
+          16
+        ],
+        [
+          136,
+          16,
+          16,
+          16
+        ],
+        [
+          12,
+          136,
+          16,
+          16
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          80,
+          120
+        ],
+        [
+          80,
+          56
+        ]
+      ]
+    },
+    {
+      "id": "M03",
+      "world": "BERG",
+      "name": "Stenfält",
+      "obstacles": [
+        [
+          4,
+          56,
+          16,
+          16
+        ],
+        [
+          140,
+          72,
+          16,
+          16
+        ],
+        [
+          72,
+          8,
+          16,
+          16
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          108,
+          88
+        ],
+        [
+          80,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "M04",
+      "world": "BERG",
+      "name": "Bruten mur",
+      "obstacles": [
+        [
+          20,
+          8,
+          20,
+          16
+        ],
+        [
+          140,
+          56,
+          16,
+          16
+        ],
+        [
+          12,
+          144,
+          20,
+          16
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          108,
+          88
+        ],
+        [
+          80,
+          56
+        ]
+      ]
+    },
+    {
+      "id": "D05",
+      "world": "DRÖM",
+      "name": "Fyra ruiner",
+      "obstacles": [
+        [
+          8,
+          16,
+          20,
+          24
+        ],
+        [
+          128,
+          16,
+          20,
+          24
+        ],
+        [
+          8,
+          136,
+          20,
+          24
+        ],
+        [
+          132,
+          136,
+          16,
+          24
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          60,
+          56
+        ],
+        [
+          80,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "D06",
+      "world": "DRÖM",
+      "name": "Drömport",
+      "obstacles": [
+        [
+          72,
+          8,
+          16,
+          16
+        ],
+        [
+          4,
+          80,
+          16,
+          24
+        ],
+        [
+          140,
+          80,
+          16,
+          24
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          52,
+          64
+        ],
+        [
+          80,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "N07",
+      "world": "NATT",
+      "name": "Skuggmurar",
+      "obstacles": [
+        [
+          12,
+          40,
+          16,
+          32
+        ],
+        [
+          136,
+          8,
+          16,
+          24
+        ],
+        [
+          116,
+          136,
+          24,
+          24
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          52,
+          112
+        ],
+        [
+          80,
+          56
+        ]
+      ]
+    },
+    {
+      "id": "N08",
+      "world": "NATT",
+      "name": "Nattglänta",
+      "obstacles": [
+        [
+          12,
+          8,
+          20,
+          16
+        ],
+        [
+          128,
+          32,
+          20,
+          24
+        ],
+        [
+          8,
+          136,
+          20,
+          24
+        ],
+        [
+          136,
+          136,
+          16,
+          24
+        ]
+      ],
+      "orb_candidate_centers": [
+        [
+          80,
+          120
+        ],
+        [
+          80,
+          56
+        ]
+      ]
+    }
+  ]
+}
