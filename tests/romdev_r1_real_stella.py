@@ -13,7 +13,7 @@ def gold(p):
     return r>175 and g>120 and 32<b<155 and r>g>b
 def gray(p):
     r,g,b=p
-    return min(p)>105 and max(p)-min(p<28
+    return min(p)>105 and max(p)-min(p)<28
 def green(p):
     r,g,b=p
     return g>65 and g>r*1.15 and g>b*1.07
