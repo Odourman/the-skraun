@@ -1,5 +1,7 @@
 # THE SKRAUN — P02-B2 Centered playfield halo + troll
 
+**ERRATUM: earlier B2 sprite orientation (2026-11-16).** The 192-row troll tables used top-first ordering but the raster indexed them 191→0. A prior CI PASS confirmed sizes and ring containment only; it did **not** confirm the top/bottom anatomical orientation, which was later found incorrect in the gray combination. See [the corrected gray ROM](https://github.com/Odourman/the-skraun/pull/6) and [the technical audit](ATARI2600_SPRITE_ROW_ORDER_AUDIT_2026-11-16.md). The original B2 screenshots remain historical artifacts, **not proof of upright sprite art**. This erratum does not negate the static playfield ring proof.
+
 Date: 2026-11-16
 Status: **PASS, bounded Stella visual developer self-test**. Not a production halo, independent verification or completed P02 gate.
 Experimental branch: `experiment/p02-playfield-b2`.
