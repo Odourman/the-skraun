@@ -49,5 +49,5 @@ assert "sta CTRLPF" in asm and "lda (R0Ptr),y" in asm and "lda (L2Ptr),y" in asm
 print("ROM footprint: 9 * 192 = 1728 table bytes including static P0 and reusable zero row-table.")
 print("RAM symbols: $80..$8B = 12 bytes, 116 of 128 bytes remain in this isolated diagnostic.")
 print("TIA: 6 PF writes (PF0/PF1/PF2 in each half) + GRP0 and WSYNC per visible line.")
-print("Static estimated worst path: ~61 CPU cycles after WSYNC, including indexed page crossings; margin ~15/76.")
+print("Static instruction bound: <=64 CPU cycles/scanline including the WSYNC write, four (zp),Y page crossings and abs,Y crossing; >=12 cycles margin to 76 (not directly measured by Debugger).")
 print("PASS: real Stella pixels align across exactly three x centers; developer self-test.")
