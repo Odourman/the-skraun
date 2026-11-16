@@ -23,6 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          /usr/bin/python3 -m py_compile tests/romdev_r1_*.py
           mkdir -p build/exact_sources build/test_scripts
           for name in fast score p1 opt; do
             case "$name" in
