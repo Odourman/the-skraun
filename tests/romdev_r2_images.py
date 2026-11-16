@@ -4,7 +4,7 @@ Candidate failures are faithfully recorded, never turned into a success.
 from PIL import Image
 from pathlib import Path
 import json,csv,collections
-NAMES=("baseline","twoline","dual","hud")
+NAMES=("baseline","twoline","dual","hud","interlace")
 STATES=("centre80","centre104","centre56","reverse")
 def is_gray(p):
     r,g,b=p
@@ -35,10 +35,9 @@ for n in NAMES:
         assert bb[2]-bb[0]==32 and bb[3]-bb[1]==24,("P0 visible geometry corrupted",n,state,bb)
         # True two-line P0 order does not depend on P1.
         row=[len([x for x,y in gr if y==yy]) for yy in range(bb[1],bb[3])]
-        if n in ("baseline","twoline","dual"):
+        if n in ("baseline","twoline","dual","interlace","hud"):
             assert bb[1]==99,("P0 dropped or shifted",n,state,bb)
-        else:
-            assert bb[1]==115,("R2 HUD+arena reservation shifted player unexpectedly",n,state,bb)
+        # HUD consumes the original empty top 16 scanlines; arena sprite Y stays fixed.
         rec.append({"candidate":n,"state":state,"gray_count":len(gr),"gray_bbox":bb,"gold_count":len(au),"gold_bbox":gb,"p1_green_count":len(ge),"p1_green_bbox":box(ge),"P0_shape_each_line":row})
         print(f"GENUINE STELLA {n:8s} {state:9s}: P0{bb}, PF gold {gb} {len(au)}pix, P1 green {box(ge)} {len(ge)}pix")
 # Pixel error against one-line original, ring+scene same center.
@@ -48,6 +47,9 @@ for state in STATES:
     assert ga==gb,("two-line P0 must retain ALL 24 individual physical sprite rows",state,len(ga^gb))
     ua=pixels(a,is_gold);ub=pixels(b,is_gold)
     delta=len(ua^ub);jaccard=len(ua&ub)/max(1,len(ua|ub))
+    # Compare P0 exactness across both altered PF schedules, not just the first.
+    gl=pixels(images["interlace",state],is_gray)
+    assert ga==gl,("two-line interlace must preserve every P0 pixel row",state,len(ga^gl))
     print("TWO-LINE QUALITY",state,"gold symmetric diff",delta,"union",len(ua|ub),"IoU",round(jaccard,5))
     assert jaccard>0.70,("two-line PF ring/synthetic scene badly deformed",state,jaccard)
 # R2 dualcopy: two actual green P1 copies with distinct row silhouettes.
@@ -63,6 +65,12 @@ for state in STATES:
     distinct=leftrow!=rightrow
     dual_status.append({"state":state,"first_green_pixels":len(left),"second_green_pixels":len(right),"both_present":present,"different_bitmaps":distinct})
     print("SAME-Y P1 DUALCOPY",state,"left",len(left),"right",len(right),"BOTH",present,"DIFFERENT",distinct)
+# Interlace has intentionally sacrificed every other vertical halo/scene row.
+for state in STATES:
+    baseGold=pixels(images["baseline",state],is_gold)
+    r2Gold=pixels(images["interlace",state],is_gold)
+    assert len(r2Gold)>100,("interlaced halo disappeared",state)
+    print("INTERLACE RING DUTY",state,"gold rows/pixels",len(r2Gold),"baseline",len(baseGold),"ratio",round(len(r2Gold)/len(baseGold),3))
 hud=images["hud","centre80"]
 bar=[hud.getpixel((x,y)) for y in range(0,16) for x in range(0,320)]
 lit=sum(max(v)>70 for v in bar)
