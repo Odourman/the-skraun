@@ -47,6 +47,7 @@ No license has been selected yet. Do not assume permission to reuse this project
 - [P01 source code](src/main.asm) — 6502 / DASM movement, three sizes and two leg poses.
 - [P01 build report](docs/P01_BUILD_REPORT_2026-11-16.md) — CI evidence, SHA-256 and still-open tests.
 - [P01 Stella screenshot evidence](docs/P01_STELLA_VISUAL_EVIDENCE_2026-11-16.md) — actual emulator PNGs, three sizes, rightward motion and test limitations.
+- [P01 Stella scanline observation](docs/P01_STELLA_TIMING_EVIDENCE_2026-11-16.md) — direct 262-line debugger screenshot; not yet a full CPU timing audit.
 - [P01 independent verification](https://github.com/Odourman/the-skraun/issues/1) — still open; no independent approval yet.
 - [P02 halo feasibility plan](docs/P02_HALO_FEASIBILITY_PLAN.md) — proposed technical experiments only; P02 not implemented.
 - [GitHub Actions CI](.github/workflows/ci.yml) — checks document completeness on pushes and pull requests. With `src/main.asm` present, also assembles a 4 KiB NTSC prototype with DASM and publishes its ROM, listing, symbols and SHA-256 as a workflow artifact.
