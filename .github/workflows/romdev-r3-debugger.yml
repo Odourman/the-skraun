@@ -1,0 +1,165 @@
+name: P02-R3 real Stella Debugger exact-frame 3-enemy and level3-layer visibility
+on:
+  push:
+    branches: [experiment/romdev-r3-decisive-scene-scheduler]
+    paths:
+      - 'experiments/romdev_r3_*.asm'
+      - '.github/workflows/romdev-r3-debugger.yml'
+      - 'tests/romdev_r3_frames.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM, original Stella 6.7.1, Xvfb and PIL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Assemble 3 exact ROMs and preserve build symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/sources
+          for name in overlap partial stagger; do
+            dasm "experiments/romdev_r3_$name.asm" -f3 -o"build/r3-$name.bin" -l"build/r3-$name.lst" -s"build/r3-$name.sym" >"build/build_$name.log" 2>&1 || { cat "build/build_$name.log"; exit 1; }
+            test "$(stat -c%s "build/r3-$name.bin")" -eq 4096
+            cp "experiments/romdev_r3_$name.asm" build/sources/
+          done
+          sha256sum build/*.bin >build/SHA256SUMS
+          /usr/bin/python3 tests/romdev_r3_static.py >build/R3_STATIC_REPORT.txt
+      - name: Direct exactly one-emulated-frame Stella snapshots, authentic 262 scanlines
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            set -euo pipefail
+            for n in overlap partial stagger; do
+              mkdir -p "build/frames_$n"
+              stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -ss1x 1 -sssingle 1 -snapsavedir "$PWD/build" "$PWD/build/r3-$n.bin" > "build/debugger_$n.log" 2>&1 &
+              pid=$!
+              trap "kill $pid 2>/dev/null || true" EXIT
+              wid=""
+              for j in $(seq 1 30); do
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+                test -n "$wid" && break
+                sleep 1
+              done
+              test -n "$wid" || { cat "build/debugger_$n.log"; exit 8; }
+              sleep 2.7
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+              test -n "$wid" && xdotool getwindowname "$wid"
+              xdotool windowfocus "$wid" || true
+              sleep 0.7
+              cmd(){
+                wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | tail -1 || true)
+                test -n "$wid" || { echo "Stella debugger window vanished"; exit 11; }
+                printf "%s\n" "$1" >> "build/COMMANDS_$n.txt"
+                xdotool windowfocus "$wid" || true
+                xdotool type --window "$wid" --clearmodifiers --delay 7 "$1"
+                xdotool key --window "$wid" Return
+                sleep 0.13
+              }
+              snap(){
+                local tag="$1"
+                local f
+                cmd "saveSnap"
+                f=$(find build -maxdepth 1 -type f -name "*.png" -printf "%T@ %p\n" | sort -nr | head -1 | cut -d" " -f2-)
+                test -n "$f" && test -s "$f" || exit 9
+                cp "$f" "build/frames_$n/$tag.png"
+              }
+              cmd "base dec"
+              cmd "frame #30"
+              cmd "print *Mode"
+              cmd "print *Frames"
+              cmd "print _scanEnd"
+              snap center80
+              for i in $(seq 0 11); do
+                cmd "frame #1"
+                cmd "print *Frames"
+                cmd "print _scanEnd"
+                snap "seq_$(printf "%02d" "$i")"
+              done
+              cmd "joy0Right 0"
+              cmd "frame #12"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap right104
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap right104-next
+              cmd "joy0Right 1"
+              cmd "joy0Left 0"
+              cmd "frame #24"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap left56
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap left56-next
+              cmd "joy0Left 1"
+              cmd "joy0Right 0"
+              cmd "frame #12"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap reverse80
+              cmd "frame #1"
+              cmd "print *Mode"
+              cmd "print _scanEnd"
+              snap reverse80-next
+              cmd "joy0Right 1"
+              cmd "saveSes $PWD/build/R3_$n-SESSION.txt"
+              scrot -z "build/DBG_GUI_$n.png"
+              kill "$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              sleep 0.6
+            done
+          '
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re,json
+          results={}
+          for n in ('overlap','partial','stagger'):
+              p=Path("build/R3_"+n+"-SESSION.txt")
+              assert p.exists() and p.stat().st_size>300,("missing original debug console",n)
+              s=p.read_text()
+              def values(cmd):
+                  out=[]
+                  for row in re.findall(r'> print '+re.escape(cmd)+r'\n([^\n]+)',s):
+                      m=re.search(r'#(\d+)',row)
+                      assert m,(cmd,row)
+                      out.append(int(m.group(1)))
+                  return out
+              modes=values('*Mode')
+              scans=values('_scanEnd')
+              frames=values('*Frames')
+              print(n,"GENUINE STELLA MODES",modes,"_scanEnd",scans,"Frames",frames)
+              assert modes==[6,12,12,0,0,6,7],(n,modes)
+              assert len(scans)==19 and all(v==262 for v in scans),(n,scans)
+              seq=list(Path("build/frames_"+n).glob("seq_*.png"))
+              assert len(seq)==12,(n,len(seq),"missing exact-frame snapshots")
+              for p in seq+[Path("build/frames_"+n)/(label+".png") for label in ("center80","right104","right104-next","left56","left56-next","reverse80","reverse80-next")]:
+                  im=Image.open(p).convert("RGB")
+                  assert im.width==320 and im.height in (192,228),(p,im.size)
+                  assert sum(max(v)>70 for v in im.getdata())>1000,("blank screenshot",p)
+              results[n]={"Mode":modes,"scanlines":scans,"frame_count_trace":frames,"snapshots":len(seq)}
+          Path("build/R3_DIRECT_DEBUGGER_TRACE.json").write_text(json.dumps(results,indent=2))
+          print("PASS: real Stella 6.7.1 262-line NTSC, 3 ROMs, 57 genuine exact-frame screenshots incl both visual phases at each edge")
+          PY
+          if test -f tests/romdev_r3_frames.py; then
+            /usr/bin/python3 tests/romdev_r3_frames.py | tee build/R3_EXACT_FRAME_VISIBILITY.txt
+          fi
+      - name: Archive direct original Stella snapshots, debugger sessions, exact code/ROM and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-r3-exact-60hz-stella-frames
+          path: build/
+          if-no-files-found: warn
