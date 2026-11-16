@@ -134,3 +134,20 @@ assert diag[0]>idle[0] and diag[1]>idle[1]
 assert diag[0]-idle[0] < right[0]-idle[0]
 assert select[2]==2 # edge detection: held button increments only once
 print('PASS: ROM movement, diagonals, SELECT edge, frames (model; not Stella)')
+# Extended movement and edge checks.
+# These are model-only regression tests, not Stella/TIA evidence.
+left=scenario('left',0xbf,0xff)
+down=scenario('down',0xdf,0xff)
+assert left[0]<idle[0] and left[1]==idle[1]
+assert down[1]<idle[1] and down[0]==idle[0]
+right_bound=scenario('right boundary',0x7f,0xff,130)
+left_bound=scenario('left boundary',0xbf,0xff,130)
+up_bound=scenario('upper boundary',0xef,0xff,210)
+down_bound=scenario('lower boundary',0xdf,0xff,180)
+assert right_bound==(118,80,1),right_bound
+assert left_bound==(12,80,1),left_bound
+assert up_bound==(64,150,1),up_bound
+assert down_bound==(64,10,1),down_bound
+right_down_bound=scenario('diagonal lower-right',0x5f,0xff,140)
+assert right_down_bound==(118,10,1),right_down_bound
+print('PASS: model boundaries left/right/up/down, diagonal, stable 262-line frames')
