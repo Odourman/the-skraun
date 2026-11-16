@@ -68,16 +68,20 @@ jobs:
             shot p02_level1_fire
             xdotool keyup --window "$wid" space
             sleep 2.0
-            xdotool key --window "$wid" F1
-            sleep 1.0
+            xdotool keydown --window "$wid" F1
+            sleep 0.3
+            xdotool keyup --window "$wid" F1
+            sleep 0.7
             shot p02_level2_idle
             xdotool keydown --window "$wid" space
             sleep 0.15
             shot p02_level2_fire
             xdotool keyup --window "$wid" space
             sleep 1.6
-            xdotool key --window "$wid" F1
-            sleep 1.0
+            xdotool keydown --window "$wid" F1
+            sleep 0.3
+            xdotool keyup --window "$wid" F1
+            sleep 0.7
             shot p02_level3_idle
             xdotool keydown --window "$wid" space
             sleep 0.15
