@@ -4,6 +4,8 @@
 
 ## A. Bindande huvudkällor (MAIN + användare)
 
+**Aktuell huvudroll 2026-11-17 är MAIN III, inte längre MAIN II**. Börja med [MAIN III:s aktuella start/status-snapshot](https://github.com/Odourman/the-skraun/blob/main/docs/CURRENT_MAIN_STATE_2026-11-17.md), [MAIN II→III full migration](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_MAIN_III_MIGRATION_2026-11-17.md) och [MAIN III:s startprompt](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_III_STARTPROMPT_2026-11-17.md). Nuvarande projektstatus kan ändras igen: kontrollera live `main`, issues och appar.
+
 1. [Aktuell visuell riktning – senare U1-LEG1- och L1/L2/L3-beslut inskrivna](https://github.com/Odourman/the-skraun/blob/main/docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md). Läs **HELA**, särskilt sista avsnitten om användargodkännande, riktningsomvändning och identisk grafikkälla på tre levels.
 2. [Designbeslut 01–60 med senare korrektionsnotering](https://github.com/Odourman/the-skraun/blob/main/docs/DESIGN_DECISIONS_01-60_2026-11-16.md). Skilj ursprungligt 'fyrfotat'-ordval från senare överordnad direkt användarkorrigering att spritekroppen står upprätt.
 3. [Öppen visuell gate #15 + MAIN II:s senaste kommentarer](https://github.com/Odourman/the-skraun/issues/15). Här dokumenteras explicit L1-acceptans, omvända display-R/L-etiketter och identisk source art för alla tre levels.
@@ -36,5 +38,7 @@
 
 - [Gemensamma GRAPHICS-artifakter i Google Drive](https://drive.google.com/drive/folders/1udBPud9jpVzvMevcgKL8duib94GyV_yJ).
 - [GitHub-repository `Odourman/the-skraun`](https://github.com/Odourman/the-skraun).
+
+**Övriga levande, men inte GRAPHICS-auktoriserade ärenden:** [#23 – L3 navigation/åtta arenor](https://github.com/Odourman/the-skraun/issues/23) OPEN; [#24 – P01-COL1 ROM draft PR#27](https://github.com/Odourman/the-skraun/issues/24) OPEN; [#25 – PF-REP1 source-only research draft PR#26](https://github.com/Odourman/the-skraun/issues/25) OPEN. MAIN III ansvarar för projektsamordning; GRAPHICS tar inte över.
 
 **Publiceringsdisciplin:** Befintliga leveranser är frysta. Denna migrationsgren innehåller **bara markdown-underlag**, inget nytt godkännande, inga bitmapdataomskrivningar, ingen originalbild, ingen ROM, ingen merge till main.
