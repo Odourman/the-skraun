@@ -1,0 +1,62 @@
+name: ROMDEV A Stella Debugger frame timing capture
+on:
+  push:
+    branches: [experiment/romdev-a-gray-stella]
+    paths:
+      - '.github/workflows/romdev-a-debugger.yml'
+      - 'experiments/p01_skraun_gray_topdown.asm'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debugger:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot
+      - name: Build A ROM and prepare debugger
+        shell: bash
+        run: |
+          mkdir -p build "$HOME/.config/stella"
+          dasm experiments/p01_skraun_gray_topdown.asm -f3 -obuild/romdev-a.bin -lbuild/romdev-a.lst -sbuild/romdev-a.sym
+          sha256sum build/romdev-a.bin | tee build/SHA256.txt
+          cat > "$HOME/.config/stella/autoexec.script" <<'SCRIPT'
+          base dec
+          frame #30
+          print _scanEnd
+          print _fCount
+          print _fCycles
+          SCRIPT
+      - name: Inspect genuine debugger screen after 30 frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 "$PWD/build/romdev-a.bin" > build/debugger.log 2>&1 &
+            pid=$!
+            sleep 5
+            wid=$(xdotool search --onlyvisible --name Stella | head -1 || true)
+            if [ -n "$wid" ]; then
+              xdotool windowfocus "$wid" || true
+              for cmd in "base dec" "frame #30" "print _scanEnd" "print _fCount" "print _fCycles"; do
+                xdotool type --window "$wid" --clearmodifiers --delay 12 "$cmd" || true
+                xdotool key --window "$wid" Return || true
+                sleep 0.5
+              done
+            fi
+            scrot -z build/debugger_desktop.png
+            kill "$pid" 2>/dev/null || true
+          '
+          test -s build/debugger_desktop.png
+      - name: Archive actual debugger diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-a-stella-debugger-evidence
+          path: build/
+          if-no-files-found: warn
