@@ -8,7 +8,8 @@
     "x": "0..159 TIA color-clocks; screen snapshot 320 RGB columns = 2 per clock in R3 tool captures",
     "y": "0..175 diagnostic arena coordinates where R3 16-line HUD +176 arena; per-kernel exact region to be measured",
     "physical": "262 NTSC scanlines nominal; 76 6507 cycles each; 192 visible rows (R3 diagnostic 16 HUD +176 arena), 3 VSYNC+37 VBLANK+30 overscan guideline, not universal forced code architecture",
-    "source_status": "all scenario coordinates not sourced directly from existing R3 or COL1 are synthetic test candidates, never canonical level maps"
+    "source_status": "all scenario coordinates not sourced directly from existing R3 or COL1 are synthetic test candidates, never canonical level maps",
+    "source_row_warning": "R3/PF-REP1B row98 is the historical source/model mask-row identifier; a candidate kernel must explicitly translate it to absolute physical screen scanline and beam time before claiming a deadline."
   },
   "hard_constants": {
     "active_knights_max": 2,
@@ -22,23 +23,6 @@
     "halo_seconds_approx": 0.5,
     "telegraph_seconds_approx": 0.4,
     "knight_recovery_seconds_approx": 1,
-    "render_player_sizes": [
-      {
-        "level": 1,
-        "width": 8,
-        "height": 12
-      },
-      {
-        "level": 2,
-        "width": 16,
-        "height": 24
-      },
-      {
-        "level": 3,
-        "width": 32,
-        "height": 36
-      }
-    ],
     "score_knight": 100,
     "score_archer": 250,
     "extra_life_per_points": 2000,
@@ -302,7 +286,7 @@
     },
     {
       "id": "S4",
-      "title": "PF gold halo vs contrasting solids, actual high-risk mask row 98",
+      "title": "PF gold halo vs contrasting solids, R3 source mask row 98",
       "phase": "PF_COLOR",
       "owner": "N4/N7/N8",
       "purpose": "Ask whether time-varying PF masks and COLUPF events can draw two visibly different spatial functions in same frame and physical scanline.",
@@ -312,16 +296,18 @@
             "x": 80,
             "level": 3
           },
-          "row": 98,
-          "geometry_source": "R3 halo L1/L2/R0/R1/R2 source masks, PF-REP1B"
+          "geometry_source": "R3 halo L1/L2/R0/R1/R2 source masks, PF-REP1B",
+          "source_mask_row": 98,
+          "row_semantics": "R3 source/model mask row, NOT an independently established physical TV scanline"
         },
         {
           "halo": {
             "x": 84,
             "level": 3
           },
-          "row": 98,
-          "geometry_source": "R3 mask second exact case"
+          "geometry_source": "R3 mask second exact case",
+          "source_mask_row": 98,
+          "row_semantics": "R3 source/model mask row, NOT an independently established physical TV scanline"
         }
       ],
       "inputs": [
@@ -506,31 +492,35 @@
       "states": [
         {
           "world": "forest",
-          "levels": [
+          "stage_ids": [
             1,
             2
-          ]
+          ],
+          "stage_semantics": "game stage IDs 1..8, NOT player size levels 1..3"
         },
         {
           "world": "mountain",
-          "levels": [
+          "stage_ids": [
             3,
             4
-          ]
+          ],
+          "stage_semantics": "game stage IDs 1..8, NOT player size levels 1..3"
         },
         {
           "world": "dream",
-          "levels": [
+          "stage_ids": [
             5,
             6
-          ]
+          ],
+          "stage_semantics": "game stage IDs 1..8, NOT player size levels 1..3"
         },
         {
           "world": "night",
-          "levels": [
+          "stage_ids": [
             7,
             8
-          ]
+          ],
+          "stage_semantics": "game stage IDs 1..8, NOT player size levels 1..3"
         }
       ],
       "inputs": [
@@ -600,5 +590,25 @@
     "colors": "PF and Ball share COLUPF; M0=P0 shares COLUP0; M1=P1 shares COLUP1; background uses COLUBK; all color owners may change only by correct per-line/per-pixel deadlines.",
     "unresolved_user_choice": "If distinct required scene geographies share an identical PF 4-color-clock pixel but request different visible colors, each candidate reports gold-priority, obstacle-priority or other option. No implicit aesthetic canon is created.",
     "qualifier": "Human perceptual flicker/readability and X/Y collision priority thresholds remain to be confirmed; do not invent blanket 60Hz requirement or a user-approved screen effect."
+  },
+  "technical_probe_assumptions": {
+    "render_sizes_pixels": [
+      {
+        "level": 1,
+        "width": 8,
+        "height": 12
+      },
+      {
+        "level": 2,
+        "width": 16,
+        "height": 24
+      },
+      {
+        "level": 3,
+        "width": 32,
+        "height": 36
+      }
+    ],
+    "status": "Diagnostic scaling currently used in COL1/R3 source; level 2/3 final aesthetic approval and possible nonuniform x/y scaling issue remain open."
   }
 }
