@@ -5,6 +5,7 @@ on:
     paths:
       - 'experiments/p01_col1_single_arena.asm'
       - 'tests/col1_source_oracle.py'
+      - 'tests/col1_cpu_runtime.py'
       - '.github/workflows/p01-col1-stella.yml'
   workflow_dispatch:
 
@@ -38,6 +39,11 @@ jobs:
           test "$(stat -c %s build/col1/p01-col1.bin)" -eq 4096
           sha256sum build/col1/p01-col1.bin | tee build/col1/ROM_SHA256.txt
           stella -rominfo build/col1/p01-col1.bin > build/col1/STELLA_ROM_INFO.txt 2>&1 || true
+      - name: Compiled ROM 6502 instruction, RIOT timer and joystick self-test (model)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/col1_cpu_runtime.py build/col1/p01-col1.bin | tee build/col1/COL1_6502_ROM_MODEL.log
       - name: Real Stella screenshot and debugger spotcheck in Xvfb
         shell: bash
         run: |
@@ -149,4 +155,5 @@ jobs:
             build/col1/
             experiments/p01_col1_single_arena.asm
             tests/col1_source_oracle.py
+            tests/col1_cpu_runtime.py
           if-no-files-found: warn
