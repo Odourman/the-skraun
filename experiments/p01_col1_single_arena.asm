@@ -157,6 +157,14 @@ Visible:
         sta GRP0
         jmp NextLine
 BlankP0:
+        ; GRP0 can change AFTER the beam passes a centred P0.
+        ; Preserve last glyph byte through one extra physical scanline
+        ; so its low (source bottom) row is not blanked prematurely.
+        txa
+        clc
+        adc #1
+        cmp RenderBottom
+        beq NextLine
         lda #0
         sta GRP0
 NextLine:
