@@ -16,3 +16,5 @@
 **Caveat:** The role's older handoff/ROM_DEVELOPMENT_START.md and the multi-section docs/PROJECT_STATUS_2026-11-16.md are not necessarily the latest effective work order. The new chat must read the newest concrete MAIN II issue/authorization and the active PR/CI before touching code.
 
 **Delivery to user:** open a new chat and paste the exact start prompt file. A new chat cannot be created/moved programmatically by this migration package.
+
+**This migration handoff (draft PR #29):** https://github.com/Odourman/the-skraun/pull/29 . **Google Drive dedicated migration folder:** https://drive.google.com/drive/folders/1gTO3pmZMnFCHVtlgHi2_gY5bDTODigpR .
