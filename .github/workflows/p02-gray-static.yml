@@ -1,0 +1,79 @@
+name: Gray Skraun + Static Playfield Halo (diagnostic)
+
+on:
+  push:
+    branches: [experiment/p02-gray-halo-static]
+    paths:
+      - 'experiments/p02_gray_static_halo.asm'
+      - 'tests/check_gray_static_halo.py'
+      - '.github/workflows/p02-gray-static.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Build NTSC cartridge
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm experiments/p02_gray_static_halo.asm -f3 -obuild/gray-static-halo.bin -lbuild/gray-static-halo.lst -sbuild/gray-static-halo.sym
+          test "$(stat -c %s build/gray-static-halo.bin)" -eq 4096
+          sha256sum build/gray-static-halo.bin | tee build/SHA256SUMS
+          stella -rominfo build/gray-static-halo.bin | tee build/stella_rominfo.txt
+      - name: Capture Stella levels 1 2 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/gray-static-halo.bin" > build/stella.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 15); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              [ -n "$wid" ] && break
+              sleep 1
+            done
+            test -n "$wid"
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            snap(){
+              xdotool key --window "$wid" F12
+              sleep 0.8
+              cp build/gray-static-halo.png "build/$1.png"
+            }
+            levelnext(){
+              xdotool keydown --window "$wid" F1
+              sleep 0.3
+              xdotool keyup --window "$wid" F1
+              sleep 0.7
+            }
+            snap gray_halo_level1
+            levelnext
+            snap gray_halo_level2
+            levelnext
+            snap gray_halo_level3
+            scrot -z build/stella_desktop.png
+          '
+          /usr/bin/python3 tests/check_gray_static_halo.py | tee build/integration_metrics.txt
+      - name: Archive build and real Stella evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-skraun-gray-static-halo-evidence
+          path: build/
+          if-no-files-found: warn
