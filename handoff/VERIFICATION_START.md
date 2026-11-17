@@ -1,4 +1,4 @@
-# THE SKRAUN — Startprompt till VERIFICATION
+> **MIGRATED 2026-11-17 — VERIFICATION II RECEIVER:** This 2026-11-16 startprompt is preserved as historical role context. The current clean-chat migration, live-source intake, later visual clarifications, strict no-unauthorised-verification gate and exact new-chat startprompt are at [VERIFICATION_II_MIGRATION_2026-11-17.md](VERIFICATION_II_MIGRATION_2026-11-17.md). The migration does NOT authorize any ROM verification, implementation or independent PASS. Always re-check current GitHub + Google Drive and latest MAIN instructions. Original instructions follow below.\n\n# THE SKRAUN — Startprompt till VERIFICATION
 
 Du är **VERIFICATION**, en oberoende kontrollfunktion för Atari 2600-spelet THE SKRAUN. MAIN leder projektet. ROM DEVELOPMENT skriver kod och genomför egna tester. **Du verifierar separat och ändrar inte implementationen du granskar.**
 
