@@ -16,7 +16,7 @@
 
 ## 2. Fysiska spel- och bildkoordinater
 - X i denna testkatalog = **TIA color clocks 0–159**. R3:s sparade 320-pixelbilder visar normalt två screenshot-pixlar per färgklocka; en faktisk PF-celldel är fyra färgklockor. Y i scenobjekt = preliminär **arena-ankare 0–175** där befintlig diagnostik har 16-raders HUD inom 192 synliga rader. **Kandidatens egen exakta top/bottom, P0 start/slut, spegel/row-order, sprite height och Y-ankare måste deklareras innan resultat jämförs.** Blandade R3 EnemyY (special 2-line output) och COL1 PlayerY får aldrig tolkas automatiskt som identiskt raster-origo.
-- R3:s kända enemy stress-cells är (32,78), (101,78), (147,78). Originalets halo-mask omfattar X=56,60,…,104 i 13 positioner; den svåra **source**-situationen är X80/X84 row98. De är förankrade i fryst R3-data. Övriga X/Y i fixture är markerade syntetiska. En P0 på (104,80) är **syntetisk stressposition** informerad av tidigare partiell skymning, inte en påstådd R3 spelar-variabel.
+- R3:s kända enemy stress-cells är (32,78), (101,78), (147,78). Originalets halo-mask omfattar X=56,60,…,104 i 13 positioner; den svåra **source**-situationen är X80/X84 **R3/PF-REP1B källmaskrad 98**. Det är INTE utan särskild koordinatöversättning den fysiska TV-scanlinen 98; nästa forskningsrapport måste visa faktisk rasterrad + beam-klocka. De är förankrade i fryst R3-data. Övriga X/Y i fixture är markerade syntetiska. En P0 på (104,80) är **syntetisk stressposition** informerad av tidigare partiell skymning, inte en påstådd R3 spelar-variabel.
 - Enkel 262-raders NTSC-kontroll: ungefär 3 VSYNC +37 VBLANK +192 synligt +30 overscan. **Detta är referenssegmentering, inte en ny bindande exakt linjefördelning för varje kernel.** Per verklig fysisk linje högst 76 CPU-cykler inklusive WSYNC/beamfönster; en 2-/3-line kernel får ALDRIG spendera 152/228 cykler före en registerdeadline på den första linjen. Alla faktiska PF-cell-deadlines, RESP/GRP/HMOVE och färgändringar måste räknas mot färgstrålens tidpunkt.
 - Tider för NTSC diagnostic: ~0,4s riddarvarning ≈24 bildrutor vid 60Hz, 0,5s halo ≈30 rutor, ~1,0s återhämtning ≈60. Dessa är **testkonverteringar**, inte nya kanoniskt låsta frameantal; balanseringsvärden och verklig FPS testas senare.
 
@@ -121,12 +121,12 @@
 
 **Bevis som KRÄVS senare:** 24 raw frames plus per-actor bbox/mask/visible-pixel accounting; 4:3 video inspection; strike direction locked at telegraph start.
 
-### S4 — PF gold halo vs contrasting solids, actual high-risk mask row 98
+### S4 — PF gold halo vs contrasting solids, R3 source mask row 98
 **Prioritet:** PF_COLOR; **vidare grind:** N4/N7/N8. **Aktuell evidens:** SOURCE-ONLY FAIL for tested naive methods; N4 unstarted.
 
 **Testsyfte:** Ask whether time-varying PF masks and COLUPF events can draw two visibly different spatial functions in same frame and physical scanline.
 
-**Fryst indata:** [{"halo":{"x":80,"level":3},"row":98,"geometry_source":"R3 halo L1/L2/R0/R1/R2 source masks, PF-REP1B"},{"halo":{"x":84,"level":3},"row":98,"geometry_source":"R3 mask second exact case"}].
+**Fryst indata:** [{"halo":{"x":80,"level":3},"source_mask_row":98,"geometry_source":"R3 halo L1/L2/R0/R1/R2 source masks, PF-REP1B"},{"halo":{"x":84,"level":3},"source_mask_row":98,"geometry_source":"R3 mask second exact case"}].
 
 **Testhändelser:** (1) gold ring ON with independently solid contrasting obstacles on same physical scanline; (2) test left PF and right asymmetry; isolate each source mask before composite; (3) preloaded X=gold/Y=solid STX/STY hypothesis with original R3 X/Y liveness conflict.
 
@@ -186,7 +186,7 @@
 
 **Testsyfte:** Screen readability for approved sprite, green archer, gold active halo, contrasting solids and strike cue must survive all four environments.
 
-**Fryst indata:** [{"world":"forest","levels":[1,2]},{"world":"mountain","levels":[3,4]},{"world":"dream","levels":[5,6]},{"world":"night","levels":[7,8]}].
+**Fryst indata:** [{"world":"forest","stage_ids":[1,2]},{"world":"mountain","stage_ids":[3,4]},{"world":"dream","stage_ids":[5,6]},{"world":"night","stage_ids":[7,8]}].
 
 **Testhändelser:** (1) same R3-problematic same-Y scene in each world palette candidate; (2) 12 and 24 consecutive 4:3 native original-Stella captures under movement; (3) night lowest expected luminance, include orb and active sword.
 
@@ -232,7 +232,7 @@
 ## 8. Nästa tekniska handoff – INGEN ny ROM-order
 
 **Till RESEARCH II för N4 (source-only):**
-1. Extrahera exakt R3 PF mask-data för X80/X84, fysisk row98, samt X56/104 och syntetisk S6. Returnera en CSV rad/event: physical row, beam color clock, PF bitmap request, COLUPF value, instruction opcode, start/end CPU cycle, X/Y/A register live, pagecross, color-owner, pass/fail, mask mismatch och minimal negativ reproduktion.
+1. Extrahera exakt R3 PF mask-data för X80/X84, **källmaskrad 98**, uttryckligen översatt till riktig fysisk rasterrad, samt X56/104 och syntetisk S6. Returnera en CSV rad/event: physical row, beam color clock, PF bitmap request, COLUPF value, instruction opcode, start/end CPU cycle, X/Y/A register live, pagecross, color-owner, pass/fail, mask mismatch och minimal negativ reproduktion.
 2. Varje 3-cykel STX/STY COLUPF-förslag måste visa varifrån X/Y-värden kommer och vad som händer med R3:s X=rowdown/Y=PF index. Utvärdera 5-cykel-FAIL-klass explicit, inte glömma.
 3. Ingen allmän 2-line/3-stream-konklusion från dokumenterad historisk kernel. Returnera EN komplett minimum-schemakandidat ELLER ett tydligt NEGATIVT källbevis; metadata/hashes.
 
