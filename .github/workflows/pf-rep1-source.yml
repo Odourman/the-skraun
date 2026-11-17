@@ -49,12 +49,19 @@ jobs:
           print('PASS: Python 3 reproduced all 13 original-R3 mask/phase/colour findings of separate JS analysis.')
           print('SOURCE ONLY. No 6507 build, Stella, physical scanline timing or independent game VERIFICATION.')
           PY
+          {
+            echo "PF-REP1 SOURCE-ONLY cross-language GitHub Actions replay: PASS"
+            echo "Run URL: https://github.com/Odourman/the-skraun/actions/runs/$GITHUB_RUN_ID"
+            echo "Head SHA: $GITHUB_SHA"
+            echo "Original frozen R3 blob: 3c9ed79078eee6a0c63100614a593f92e240b5e8"
+            echo "All thirteen R3 positions × seven independent data metrics matched."
+            echo "No ROM, Stella, TIA-cycle deadline, production game or Verification PASS."
+            sha256sum "$folder/R3_SOURCE_EXACT_MASKS.json" "$folder/PF_REP1_REPRODUCE.py" "$folder/PF_REP1_RESULTS.json" "$folder/README.md"
+          } > "$folder/REPLAY_RUN_EVIDENCE.txt"
       - name: Upload reproducibility evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pf-rep1-source-only-replay
-          path: |
-            research/pf_rep1_20261117/PF_REP1_RESULTS.json
-            research/pf_rep1_20261117/R3_SOURCE_EXACT_MASKS.json
-          if-no-files-found: warn
+          path: research/pf_rep1_20261117/
+          if-no-files-found: error
