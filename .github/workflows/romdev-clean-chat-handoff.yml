@@ -1,0 +1,50 @@
+name: ROM DEVELOPMENT clean-chat migration package (documentation only)
+on:
+  push:
+    branches: [handoff/rom-development-new-chat-migration-20261117]
+    paths:
+      - 'handoff/ROMDEV_MIGRATION_*.md'
+      - 'handoff/ROM_DEVELOPMENT_NEW_CHAT_START_2026-11-17.md'
+      - '.github/workflows/romdev-clean-chat-handoff.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  manifest-and-archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy exact committed handoff texts; seal manifest and reproducible ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          cp handoff/ROMDEV_MIGRATION_READ_ME_FIRST_2026-11-17.md output/00_READ_ME_FIRST.md
+          cp handoff/ROM_DEVELOPMENT_NEW_CHAT_START_2026-11-17.md output/01_NEW_CHAT_STARTPROMPT.md
+          cp handoff/ROMDEV_MIGRATION_STATUS_AND_GATES_2026-11-17.md output/02_CURRENT_STATUS_SCOPE_GATES.md
+          cat >output/03_MIGRATION_AUDIT_TRAIL.txt <<'EOF'
+          THE SKRAUN - ROM DEVELOPMENT CLEAN CHAT MIGRATION - 2026-11-17
+          Role only: ROM DEVELOPMENT; does not become MAIN/GRAPHICS/RESEARCH/VERIFICATION.
+          This is a documentation-only handoff, NOT new ROM authorization.
+          MAIN decisions and exact current GitHub/Drive source outrank this snapshot.
+          Next existing permitted gate only: read P01-COL1 binding scope from main,
+          live issue24 and in-progress draft PR27; DO NOT duplicate active writer.
+          P01-ART1 issue17 CLOSED as diagnostic, 24/36 native pixel PASS, 12/36 L3 FAIL.
+          R3 full-scene NO-GO remains. NO R4/B3c/ART2/unauthorized fixes.
+          Handoff draft PR29 remains UNMERGED.
+          EOF
+          git rev-parse HEAD >output/04_GITHUB_MIGRATION_SOURCE_HEAD.txt
+          (cd output && sha256sum 00_READ_ME_FIRST.md 01_NEW_CHAT_STARTPROMPT.md 02_CURRENT_STATUS_SCOPE_GATES.md 03_MIGRATION_AUDIT_TRAIL.txt 04_GITHUB_MIGRATION_SOURCE_HEAD.txt > FILE_SHA256_MANIFEST.txt && sha256sum -c FILE_SHA256_MANIFEST.txt)
+          (cd output && zip -q -r ../THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17.zip .)
+          unzip -t THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17.zip | tail -2
+          sha256sum THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17.zip > PACKAGE_SHA256.txt
+          wc -c THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17.zip
+      - name: Publish SHA-256 verified original migration handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17
+          path: |
+            THE_SKRAUN_ROM_DEVELOPMENT_NEW_CHAT_MIGRATION_2026-11-17.zip
+            PACKAGE_SHA256.txt
+          if-no-files-found: error
