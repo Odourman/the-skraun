@@ -1,0 +1,16 @@
+# THE SKRAUN – exakta historiska assemblerreferenser
+
+**Källstatus:** Följande assemblerfiler öppnades och relevanta rader lästes. Länkarna pekar på publika reproducerade/disassemblerade källor, inte nödvändigtvis utvecklarnas original. Teknikerna har inte körts eller verifierats i The Skraun av RESEARCH.
+
+| Källa | Kontrollerade kodrader | Betydelse och begränsning |
+|---|---|---|
+| Cyloid | [game.asm #L10-L35](https://github.com/keithadler/cyloid/blob/main/game.asm#L10-L35) | Källan deklarerar P0=tank, P1=växlande mål, M0=skott och PF=hinder; praktiskt resursägarskap men P1-flimmer, inte oberoende tre samtidiga fiender. |
+| Cyloid | [#L122-L125](https://github.com/keithadler/cyloid/blob/main/game.asm#L122-L125), [#L1679-L1757](https://github.com/keithadler/cyloid/blob/main/game.asm#L1679-L1757) | Förberäknad spelarsprite/färg och verklig tvålinjers kernel. Den förmodade spelcykelmarginalen måste omräknas för halon och fienderna i Skraun. |
+| Pacman4K | [#L36-L55](https://github.com/DNSDEBRO/Pacman4K/blob/main/source/pacman4K.asm#L36-L55) | Upphovsmannen beskriver uttryckligen 20 Hz-flimmer som ett valt kompromissbeslut; utmärkt negativ jämförelse för läsbarhet, inget bevis för att den kompromissen passar Skraun. |
+| River Raid | [#L24-L42](https://github.com/johnidm/asm-atari-2600/blob/master/riverraid.asm#L24-L42), [#L517-L596](https://github.com/johnidm/asm-atari-2600/blob/master/riverraid.asm#L517-L596) | Kommenterad tvålinjerskernel med specialbehandling per 32-radersblock och VDEL. Här finns verkliga kontrollflödesexempel på att flytta dataförberedelse mellan rastersegment. |
+| Pitfall! | [#L480-L529](https://github.com/johnidm/asm-atari-2600/blob/master/pitfall.asm#L480-L529), [#L562-L663](https://github.com/johnidm/asm-atari-2600/blob/master/pitfall.asm#L562-L663) | Nio specialiserade kernelstråk, registerbyte och förberedda grafikzoner. Fungerar för arrangemanget i Pitfall!, inte automatiskt för valfria Skraun-fiendekoordinater. |
+| Combat | [#L255-L395](https://github.com/johnidm/asm-atari-2600/blob/master/combat.asm#L255-L395), [#L1110-L1197](https://github.com/johnidm/asm-atari-2600/blob/master/combat.asm#L1110-L1197) | Playfield-/sprite-register och hårdvarukollisionshantering; lämplig negativ kontrast för logisk kollisionssanning när PF är både halo och hinder. |
+| Adventure | [#L195-L220](https://github.com/johnidm/asm-atari-2600/blob/master/adventure.asm#L195-L220), [#L270-L293](https://github.com/johnidm/asm-atari-2600/blob/master/adventure.asm#L270-L293) | Grov-/finpositionering av sprite samt PF/M0/M1-kanaler som enkla väggkomplement. Ger ingen ytterligare fritt formbar färgkanal. |
+| Raiders of the Lost Ark | [#L164-L215](https://github.com/halkuncode/Raiders2600/blob/main/src/raiders.asm#L164-L215) | Uppdelat runtime-tillstånd för rumstyper, grafikpekare och kernelzoner; minnesanvändningen är specifik för denna återimplementation. |
+
+**Metodvarning:** Källradnumren är för läst HEAD i respektive publikt repo under 2026-11-17. Framtida ändringar i repos kan flytta raderna. Kommenterad disassembly är inte automatiskt upphovsmannens ursprungliga utvecklarkällkod. Varje överföring kräver licensgranskning.
