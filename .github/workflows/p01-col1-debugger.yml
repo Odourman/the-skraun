@@ -62,12 +62,20 @@ jobs:
             done
             xwininfo -root -tree > build/col1-debug/XWINDOWS.txt || true
             ps -p "$pid" -o pid,stat,etime,args > build/col1-debug/PROCESS.txt || true
+            if [ -n "$win" ]; then
+              xdotool windowfocus "$win" || true
+              for cmd in "base dec" "print _scanEnd" "print _fCount" "print _fCycles" "print _fWsyncCycles" "saveSes"; do
+                xdotool type --window "$win" --clearmodifiers --delay 30 "$cmd" || true
+                xdotool key --window "$win" Return || true
+                sleep 0.6
+              done
+            fi
             scrot -z build/col1-debug/DEBUGGER_DESKTOP.png || true
             sleep 2
             kill "$pid" || true
             wait "$pid" || true
           '
-          find "$HOME/.config/stella" -maxdepth 3 -type f -printf '%p %s bytes\n' > build/col1-debug/STELLA_FILES.txt
+          find "$HOME/.config/stella" "$PWD" -maxdepth 4 -type f -name '*.txt' -printf '%p %s bytes\n' > build/col1-debug/STELLA_FILES.txt
           find "$HOME/.config/stella" -type f -name '*.txt' -print -exec cp '{}' build/col1-debug/ \; || true
           test -s build/col1-debug/DEBUGGER_DESKTOP.png
           echo "=== debugger console extract ==="
