@@ -55,10 +55,25 @@ jobs:
             set -eu
             stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build/col1" -sssingle 1 -ss1x 1 "$PWD/build/col1/p01-col1.bin" > build/col1/STELLA_RUNTIME.log 2>&1 &
             pid=$!
-            sleep 4
-            xdotool search --onlyvisible --name Stella > build/col1/STELLA_WINDOWS.txt || true
-            wid=$(head -n1 build/col1/STELLA_WINDOWS.txt || true)
-            test -n "$wid" || { echo "NO real Stella window"; cat build/col1/STELLA_RUNTIME.log; exit 1; }
+            # Stella's own Linux FAQ documents up to 5-10s ROM launch delays.
+            # Keep diagnostic results FAIL-CLOSED, but wait up to 30s.
+            wid=""
+            for attempt in $(seq 1 30); do
+              xdotool search --onlyvisible --name Stella > build/col1/STELLA_WINDOWS.txt 2>/dev/null || true
+              wid=$(head -n1 build/col1/STELLA_WINDOWS.txt || true)
+              if [ -n "$wid" ]; then
+                printf "Stella window %s visible on attempt %s\n" "$wid" "$attempt" > build/col1/STELLA_LAUNCH_STATUS.txt
+                break
+              fi
+              if ! kill -0 "$pid" 2>/dev/null; then
+                printf "Stella process died before a window appeared at attempt %s\n" "$attempt" > build/col1/STELLA_LAUNCH_STATUS.txt
+                break
+              fi
+              sleep 1
+            done
+            ps -p "$pid" -o pid,stat,etime,args > build/col1/STELLA_PROCESS.txt || true
+            xwininfo -root -tree > build/col1/STELLA_XWINDOWS.txt || true
+            test -n "$wid" || { echo "NO real Stella window after polling"; cat build/col1/STELLA_LAUNCH_STATUS.txt || true; cat build/col1/STELLA_RUNTIME.log; exit 1; }
             xdotool windowfocus "$wid" || true
             sleep 1
             xdotool key --window "$wid" F12
