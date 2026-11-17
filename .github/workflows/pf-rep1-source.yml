@@ -1,0 +1,60 @@
+name: PF-REP1 Source-Only Cross-Language Reproduction
+
+on:
+  pull_request:
+    paths:
+      - 'research/pf_rep1_20261117/**'
+      - '.github/workflows/pf-rep1-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pf-rep1-data-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout submitted source-only research branch
+        uses: actions/checkout@v4
+      - name: Reproduce R3 masks and compare independent analyses
+        shell: bash
+        run: |
+          set -euo pipefail
+          folder='research/pf_rep1_20261117'
+          cp "$folder/PF_REP1_RESULTS.json" /tmp/pf-rep1-independent-js-expected.json
+          python3 "$folder/PF_REP1_REPRODUCE.py"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          old=json.loads(Path('/tmp/pf-rep1-independent-js-expected.json').read_text())
+          new=json.loads(Path('research/pf_rep1_20261117/PF_REP1_RESULTS.json').read_text())
+          assert len(old['by_x'])==len(new['results'])==13
+          mapping={
+              'source_double_or_triple_change_pairs':'source_fields_changed_gt1',
+              'minimum_PF_register_stores_in_176_line_reference':'minimum_PF_zero_page_store_events_in_original_asymmetric_phase_model',
+              'mixed_colours_same_rows':'halo_and_scenery_both_nonempty_pairs',
+              'mixed_colours_same_half':'both_within_same_half_pairs',
+              'overlap_pixel_cell_pairs':'same_PF_pixel_cell_overlap_pairs',
+              'min_colour_switches_hist_halo_priority':'colour_switch_lower_bound_HaloPriority',
+              'min_colour_switches_hist_scenery_priority':'colour_switch_lower_bound_SceneryPriority',
+          }
+          for a,b in zip(old['by_x'],new['results']):
+              assert a['x']==b['x'], (a['x'],b['x'])
+              for ka,kb in mapping.items():
+                  x=a[ka];y=b[kb]
+                  if isinstance(x,dict): x={int(k):v for k,v in x.items()}
+                  if isinstance(y,dict): y={int(k):v for k,v in y.items()}
+                  assert x==y, (a['x'],ka,kb,x,y)
+          print('PASS: Python 3 reproduced all 13 original-R3 mask/phase/colour findings of separate JS analysis.')
+          print('SOURCE ONLY. No 6507 build, Stella, physical scanline timing or independent game VERIFICATION.')
+          PY
+      - name: Upload reproducibility evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pf-rep1-source-only-replay
+          path: |
+            research/pf_rep1_20261117/PF_REP1_RESULTS.json
+            research/pf_rep1_20261117/R3_SOURCE_EXACT_MASKS.json
+          if-no-files-found: warn
