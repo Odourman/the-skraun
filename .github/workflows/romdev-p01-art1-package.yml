@@ -1,0 +1,141 @@
+name: P01-ART1 frozen honest FAIL MAIN II evidence package
+on:
+  push:
+    branches: [experiment/romdev-p01-art1-p0-stella-readout]
+    paths:
+      - '.github/workflows/romdev-p01-art1-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  freeze-art1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact native screenshot analysis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pil
+      - name: Retrieve red original 3-ROM 108-Stella-PNG run WITHOUT hiding failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          state=$(gh run view 43947105697 --repo "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)
+          test "$state" = failure || { echo "expected strict pixel oracle to remain RED; observed $state"; exit 11; }
+          mkdir -p package/STELLA_ORIGINAL package/SOURCE_CURRENT package/VISUALS
+          gh run download 43947105697 --repo "$GITHUB_REPOSITORY" --name romdev-p01-art1-real-3rom-36states-108original-stella-pngs --dir package/STELLA_ORIGINAL
+          cp docs/ROMDEV_P01_ART1_MAIN_II_STELLA_VISUAL_READOUT_2026-11-16.md package/MAIN_II_TECHNICAL_FINAL_READOUT.md
+          cp experiments/romdev_p01_art1_*.asm experiments/romdev_p01_art1_exact_*.json package/SOURCE_CURRENT/
+          cp tests/romdev_p01_art1_stella.py diagnostics/romdev_p01_art1_full_failure_ledger.py .github/workflows/romdev-p01-art1.yml .github/workflows/romdev-p01-art1-package.yml package/SOURCE_CURRENT/
+          cp package/STELLA_ORIGINAL/THREE_ART1_ROM_SHA256SUMS package/ROM_SHA256SUMS_ORIGINAL.txt
+          ln -s package/STELLA_ORIGINAL build
+          mkdir -p package/STELLA_ORIGINAL/experiments
+          cp experiments/romdev_p01_art1_exact_*.json package/STELLA_ORIGINAL/experiments/
+          for n in A_rounded_back B_low_long_back Q1_splayed_quad; do
+            cmp "experiments/romdev_p01_art1_$n.asm" "package/STELLA_ORIGINAL/sources/romdev_p01_art1_$n.asm"
+            test "$(stat -c%s "package/STELLA_ORIGINAL/ART1_$n.bin")" -eq 4096
+            test "$(find "package/STELLA_ORIGINAL/frames_$n" -type f -name '*.png' | wc -l)" -eq 36
+          done
+          (cd package/STELLA_ORIGINAL && sha256sum -c <(sed 's#build/##g' THREE_ART1_ROM_SHA256SUMS))
+          /usr/bin/python3 diagnostics/romdev_p01_art1_full_failure_ledger.py | tee package/STELLA_ORIGINAL/P01_ART1_FULL_DIAGNOSTIC_LEDGER_LOG.txt
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image,ImageDraw,ImageFont
+          import csv,hashlib,json
+          base=Path("package/STELLA_ORIGINAL")
+          gallery=Path("package/VISUALS")
+          names=("A_rounded_back","B_low_long_back","Q1_splayed_quad")
+          sha={
+              "A_rounded_back":"13894728fb9a4804ced1954e49d3ba9b70c366b2dd254a545a14e6e1a641127c",
+              "B_low_long_back":"b307bcce4e0301304057e00d489be8f8aabf9ca7f9d34006bf4d05ff67a669b9",
+              "Q1_splayed_quad":"f80069acf7d8aa183d135aa25aa0d506ea4d90d8fba4395bf100245c0d58b82f"
+          }
+          traces=json.loads((base/"P01_ART1_DIRECT_STELLA_262_STATES.json").read_text())
+          for name in names:
+              data=(base/("ART1_"+name+".bin")).read_bytes()
+              assert len(data)==4096 and hashlib.sha256(data).hexdigest()==sha[name]
+              assert len(list((base/("frames_"+name)).glob("*.png")))==36
+              assert traces[name]["*Stage"]==[0,0,1,1,2,2,3,3,4,4,5,5]
+              assert traces[name]["*StageFrame"]==[1,9]*6
+              assert len(traces[name]["_scanEnd"])==12 and all(x==262 for x in traces[name]["_scanEnd"])
+              for p in (base/("frames_"+name)).glob("*.png"):
+                  with Image.open(p) as im:
+                      im.verify()
+              for ext in (".lst",".sym"):
+                  assert (base/("ART1_"+name+ext)).is_file()
+          rows=list(csv.DictReader((base/"P01_ART1_ALL_36_GENUINE_STELLA_PIXEL_STATUS.csv").open()))
+          assert len(rows)==36 and sum(r["status"]=="PASS" for r in rows)==24
+          assert sum(r["status"]=="FAIL" for r in rows)==12
+          assert all(r["level"]=="3" for r in rows if r["status"]=="FAIL")
+          gait=list(csv.DictReader((base/"P01_ART1_72_GENUINE_STELLA_GAIT_FRAMES.csv").open()))
+          assert len(gait)==72 and all(r["exact_raster_match"]=="True" for r in gait)
+          try:font=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",15)
+          except:font=ImageFont.load_default()
+          sheet=Image.new("RGB",(1260,1790),(14,21,29));d=ImageDraw.Draw(sheet)
+          d.text((15,10),"P01-ART1: ALL 36 ORIGINAL STELLA P0 STATES / nearest-neighbor enlarged crops",font=font,fill="white")
+          d.text((15,36),"Actual Stella 6.7.1 screen captures. Level 3: FAIL (one erroneous full-width top raster row).",font=font,fill=(248,167,108))
+          for ci,name in enumerate(names):
+              for level in (1,2,3):
+                  ry=65+(ci*3+level-1)*190
+                  d.text((15,ry),name+"  / LEVEL "+str(level),font=font,fill="white")
+                  for side in (0,1):
+                      stage=(level-1)*2+side
+                      for posei,pose in enumerate(("A","B")):
+                          idx=side*2+posei;xb=10+idx*310
+                          im=Image.open(base/("frames_"+name)/("state_"+str(stage)+"_"+pose+".png")).convert("RGB")
+                          x0={1:146,2:140,3:124}[level];y0={1:106,2:100,3:94}[level]
+                          width={1:16,2:32,3:64}[level];height=12*level if level<3 else 36
+                          crop=im.crop((x0-10,y0-8,x0+width+10,y0+height+8))
+                          scale=min(6,160//crop.height,295//crop.width)
+                          bigger=crop.resize((crop.width*scale,crop.height*scale),Image.Resampling.NEAREST)
+                          sheet.paste(bigger,(xb+(300-bigger.width)//2,ry+35))
+                          d.text((xb+15,ry+20),pose+(" LEFT" if side else " RIGHT"),font=font,fill=(195,219,230))
+                          if level==3:d.text((xb+14,ry+155),"FAIL: top scanline",font=font,fill=(252,185,116))
+          sheet.save(gallery/"P01_ART1_36_REAL_STELLA_CROPS.png")
+          view=Image.new("RGB",(1980,525),(10,17,25));vd=ImageDraw.Draw(view)
+          for i,name in enumerate(names):
+              image=Image.open(base/("frames_"+name)/"state_0_A.png").convert("RGB").resize((640,480),Image.Resampling.NEAREST)
+              view.paste(image,(i*660+10,35))
+              vd.text((i*660+14,10),name+" / level1 / 4:3 nearest-neighbor from Stella",font=font,fill="white")
+          view.save(gallery/"P01_ART1_L1_STELLA_NN_4_TO_3.png")
+          for name in names:
+              frames=[]
+              for i in range(24):
+                  image=Image.open(base/("frames_"+name)/("walk_"+format(i,"02d")+".png")).convert("RGB")
+                  crop=image.crop((138,101,170,130))
+                  frames.append(crop.resize((320,290),Image.Resampling.NEAREST))
+              frames[0].save(gallery/("P01_ART1_"+name+"_24_ACTUAL_STELLA_FRAMES_60HZ.apng"),
+                  save_all=True,append_images=frames[1:],duration=1000/60,loop=0,disposal=0,blend=0)
+              frames[0].save(gallery/("P01_ART1_"+name+"_24_STELLA_FRAMES_SLOWED.gif"),
+                  save_all=True,append_images=frames[1:],duration=50,loop=0,optimize=False)
+          (gallery/"README_IMAGE_PROVENANCE.txt").write_text(
+              "Source: 108 original 320x228 Stella 6.7.1 Debugger saveSnap PNGs, no mocked artwork. "
+              "Montage panels are nearest-neighbor CROP, display aspect nearest-neighbor 640x480, APNG ~60Hz actual frame order, GIF slowed 3x. "
+              "First full-width level3 top row is a genuine TECHNICAL FAIL; never label all 36 as exact PASS.\\n")
+          print("FROZEN VERIFIED",list(sha.values()),"36 states (24 pass/12 fail), 72 gait captures, 36 direct 262 scanlines")
+          PY
+          printf '%s\n' \
+            'P01-ART1 MAIN II DECISIVE VISUAL READOUT – 2026-11-16' \
+            'STRICT TEST IS RED BY DESIGN: 24/36 exact raster PASS, 12/36 level3 first-scanline FAIL.' \
+            'All three 4K real NTSC ROMs have 262 actual Stella scanlines in 36 traced frames.' \
+            'Source exact P1 A/B and historical Q1, original bitmaps unmodified.' \
+            '72 additional genuine consecutive gait frames; no AI/halo/enemies/objects.' \
+            'ART IDENTITY NOT APPROVED; R3 full-scene NO-GO unchanged. See MAIN_II_TECHNICAL_FINAL_READOUT.md.' \
+            >package/README_FIRST_MAIN_II.txt
+          rm build
+          (cd package && find . -type f ! -name FILE_SHA256_MANIFEST.txt -print0 | sort -z | xargs -0 sha256sum >FILE_SHA256_MANIFEST.txt && sha256sum -c FILE_SHA256_MANIFEST.txt >SHA256_CHECK_LOG.txt)
+          (cd package && zip -qr ../THE_SKRAUN_P01_ART1_COMPLETE_MAIN_II_DELIVERY_2026-11-16.zip .)
+          sha256sum THE_SKRAUN_P01_ART1_COMPLETE_MAIN_II_DELIVERY_2026-11-16.zip > PACKAGE_SHA256.txt
+          echo "Frozen package members: $(find package -type f | wc -l)"
+      - name: Publish self-contained reproducible MAIN II evidence with explicit red gates
+        uses: actions/upload-artifact@v4
+        with:
+          name: THE_SKRAUN_P01_ART1_COMPLETE_MAIN_II_DELIVERY_2026-11-16
+          path: |
+            THE_SKRAUN_P01_ART1_COMPLETE_MAIN_II_DELIVERY_2026-11-16.zip
+            PACKAGE_SHA256.txt
+          if-no-files-found: error

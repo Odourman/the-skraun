@@ -1,0 +1,416 @@
+{
+  "project": "The Skraun",
+  "study": "GRAPHICS P1 – Horizontal Axis Perspective Proof",
+  "date": "2026-11-16",
+  "authority": "https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_TO_GRAPHICS_P1_HORIZONTAL_AXIS_PERSPECTIVE_PROOF_2026-11-16.md",
+  "status": "CANDIDATE GRAPHICS ONLY; NOT MAIN-APPROVED, NOT STELLA, NOT ROM, NO MERGE",
+  "source_baseline": "v0.3 Q1 sourced exactly from graphics/skraun_v0_3/SKRAUN_V03.json on graphics/skraun-v0-3-final-readability-20261116",
+  "dimensions": {
+    "width_bits": 8,
+    "height_rows": 12,
+    "bit7": "left",
+    "bit0": "right",
+    "logical_row0": "upper anatomy not head",
+    "logical_row11": "lower anatomy not hind feet",
+    "rightward_head": "towards bit0/right picture edge",
+    "left_mirror": "per-row bit reversal, no vertical reversal"
+  },
+  "display_assumption": {
+    "ntsc_color_clocks": 160,
+    "visible_scanlines": 192,
+    "approx_output_aspect": "4:3",
+    "display_px_per_cc_at_640_width": 4,
+    "display_px_per_scanline_at_480_height": 2.5,
+    "level_width_multiplier": [
+      1,
+      2,
+      4
+    ],
+    "level_row_repeat": [
+      1,
+      2,
+      3
+    ]
+  },
+  "palette": {
+    "player_RBG": [
+      202,
+      210,
+      213
+    ],
+    "status": "provisional light gray, NOT measured NTSC COLUP0"
+  },
+  "baseline_Q1": {
+    "A": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "00111100",
+      "00111100",
+      "11111100",
+      "10111111",
+      "00111100",
+      "00111100",
+      "01111110",
+      "11011011",
+      "10000010"
+    ],
+    "B": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "00111100",
+      "00111100",
+      "00111111",
+      "11111101",
+      "00111100",
+      "00111100",
+      "01111110",
+      "11011011",
+      "01000001"
+    ],
+    "A_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "00111100",
+      "00111100",
+      "00111111",
+      "11111101",
+      "00111100",
+      "00111100",
+      "01111110",
+      "11011011",
+      "01000001"
+    ],
+    "B_left": [
+      "00100100",
+      "01111110",
+      "01011010",
+      "00111100",
+      "00111100",
+      "11111100",
+      "10111111",
+      "00111100",
+      "00111100",
+      "01111110",
+      "11011011",
+      "10000010"
+    ],
+    "note": "historical upright axis; orientation validator from old art must NOT be reused for this new concept"
+  },
+  "candidates": {
+    "A_rounded_back": {
+      "A": [
+        "01000100",
+        "11001100",
+        "01001100",
+        "01111110",
+        "01111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01111110",
+        "01001100",
+        "11001100",
+        "01000100"
+      ],
+      "B": [
+        "00101000",
+        "01101100",
+        "01001100",
+        "01111110",
+        "01111111",
+        "11111101",
+        "11111111",
+        "01111101",
+        "01111110",
+        "01001100",
+        "11000110",
+        "10000010"
+      ],
+      "description": "Rounded and broad back; two paddle-like rear/fore feet, head/snouthorns on the right; higher risk of turtle/beetle reading.",
+      "anchors": {
+        "rear_upper_body": [
+          1,
+          3
+        ],
+        "fore_upper_body": [
+          4,
+          3
+        ],
+        "rear_lower_body": [
+          1,
+          8
+        ],
+        "fore_lower_body": [
+          4,
+          8
+        ],
+        "head_right_zone": [
+          6,
+          4,
+          7,
+          8
+        ],
+        "eyes_negative": [
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            7
+          ]
+        ],
+        "horns_or_ears": [
+          [
+            6,
+            3
+          ],
+          [
+            6,
+            8
+          ]
+        ]
+      },
+      "left_A": [
+        "00100010",
+        "00110011",
+        "00110010",
+        "01111110",
+        "11111110",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01111110",
+        "00110010",
+        "00110011",
+        "00100010"
+      ],
+      "left_B": [
+        "00010100",
+        "00110110",
+        "00110010",
+        "01111110",
+        "11111110",
+        "10111111",
+        "11111111",
+        "10111110",
+        "01111110",
+        "00110010",
+        "01100011",
+        "01000001"
+      ],
+      "pose_diff_pixels": 12,
+      "changed_pixel_coordinates_xy": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "upper_feet_changes": 6,
+      "lower_feet_changes": 6
+    },
+    "B_low_long_back": {
+      "A": [
+        "00000000",
+        "01000100",
+        "11000110",
+        "01000100",
+        "01111110",
+        "11111101",
+        "11111111",
+        "11111101",
+        "01111110",
+        "01000100",
+        "11000110",
+        "01000100"
+      ],
+      "B": [
+        "00000000",
+        "00101000",
+        "01101100",
+        "01000100",
+        "01111110",
+        "11111101",
+        "11111111",
+        "11111101",
+        "01111110",
+        "01000100",
+        "11000110",
+        "10000010"
+      ],
+      "description": "Narrower low back with more visible right snout; longer individual legs; slightly stronger risk of beetle/insect silhouette.",
+      "anchors": {
+        "rear_upper_body": [
+          1,
+          4
+        ],
+        "fore_upper_body": [
+          5,
+          4
+        ],
+        "rear_lower_body": [
+          1,
+          8
+        ],
+        "fore_lower_body": [
+          5,
+          8
+        ],
+        "head_right_zone": [
+          6,
+          4,
+          7,
+          8
+        ],
+        "eyes_negative": [
+          [
+            6,
+            5
+          ],
+          [
+            6,
+            7
+          ]
+        ],
+        "horns_or_ears": [
+          [
+            6,
+            4
+          ],
+          [
+            6,
+            8
+          ]
+        ]
+      },
+      "left_A": [
+        "00000000",
+        "00100010",
+        "01100011",
+        "00100010",
+        "01111110",
+        "10111111",
+        "11111111",
+        "10111111",
+        "01111110",
+        "00100010",
+        "01100011",
+        "00100010"
+      ],
+      "left_B": [
+        "00000000",
+        "00010100",
+        "00110110",
+        "00100010",
+        "01111110",
+        "10111111",
+        "11111111",
+        "10111111",
+        "01111110",
+        "00100010",
+        "01100011",
+        "01000001"
+      ],
+      "pose_diff_pixels": 12,
+      "changed_pixel_coordinates_xy": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "upper_feet_changes": 8,
+      "lower_feet_changes": 4
+    }
+  }
+}
