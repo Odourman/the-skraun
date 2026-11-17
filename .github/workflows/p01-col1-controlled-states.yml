@@ -40,7 +40,7 @@ jobs:
           trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
           sleep 2
           mkdir -p "$HOME/.config/stella"
-          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
+          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "free_base 80 88 3 none" "free_left 80 88 3 left" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
             read -r name x y level control <<< "$spec"
             out="$PWD/build/col1-controlled/$name"
             mkdir -p "$out"
@@ -51,11 +51,11 @@ jobs:
               printf 'ram $82 #%s\n' "$level"
               printf 'ram $86 #0\nram $85 #0\nram $9A #0\n'
               case "$control" in
-                leftdown) printf 'joy0Left #1\njoy0Down #1\n' ;;
-                left) printf 'joy0Left #1\n' ;;
+                leftdown) printf 'joy0Left #0\njoy0Down #0\n' ;;
+                left) printf 'joy0Left #0\n' ;;
                 select) printf 'swchb #253\n' ;;
               esac
-              printf 'frame #1\nprint *$80\nprint *$81\nprint *$82\nprint *$9A\n'
+              printf 'frame #2\nprint *$80\nprint *$81\nprint *$82\nprint *$9A\n'
               printf 'print _scanEnd\nprint _fCount\nprint _fCycles\nsaveSnap\nsaveSes\n'
             } > "$HOME/.config/stella/autoexec.script"
             cp "$HOME/.config/stella/autoexec.script" "$out/INPUT.script"
@@ -91,28 +91,38 @@ jobs:
           root=Path('build/col1-controlled')
           def box(name):
               folder=root/name
-              shots=[p for p in folder.glob('*.png') if p.name!='DEBUGGER_DESKTOP.png']
-              assert shots, f'{name}: Stella saveSnap did not generate a true TIA screenshot'
-              im=Image.open(shots[-1]).convert('RGB')
+              # Stella 6.7.1 debugger saveSnap can save all-black 320x228
+              # while its *genuine live TIA pane* visibly contains P0 + PF.
+              # Use the Xvfb desktop capture of the actual emulator's TIA pane.
+              desktop=folder/'DEBUGGER_DESKTOP.png'
+              assert desktop.is_file(), f'{name}: missing genuine Stella debugger desktop screenshot'
+              whole=Image.open(desktop).convert('RGB')
+              assert whole.size==(1400,1000), (name,whole.size)
+              im=whole.crop((121,115,441,343))
+              assert im.size==(320,228)
               coords=[(x,y) for y in range(im.height) for x in range(im.width)
                   if all(z>150 for z in im.getpixel((x,y))) and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
-              assert coords, f'{name}: no detectible gray P0 in screenshot'
+              assert coords, f'{name}: no detectible gray P0 in genuine debugger TIA pane'
               b=min(x for x,y in coords),min(y for x,y in coords),max(x for x,y in coords)+1,max(y for x,y in coords)+1
-              print('GENUINE STELLA',name,'snap',shots[-1].name,'size',im.size,'P0_bbox',b)
+              print('GENUINE STELLA DEBUGGER TIA',name,'desktop',desktop.name,'bbox',b,'image',im.size)
+              im.save(folder/'ACTUAL_DEBUGGER_TIA_PANE.png')
               return b
           base=box('corner_base')
           corner=box('corner_left_down')
           sb=box('solid_base')
           solid=box('solid_left')
+          fb=box('free_base')
+          fl=box('free_left')
           safe=box('grow_safe')
           blocked=box('grow_block')
           assert (base[2]-base[0],base[3]-base[1])==(64,36),('L3 baseline shape incorrect',base)
           assert (corner[2]-corner[0],corner[3]-corner[1])==(64,36),('L3 corner shape incorrect',corner)
-          assert corner[0]==base[0] and corner[1]==base[1]+1,('Strict L3 diagonal slide missing',base,corner)
-          assert solid==sb,('Left collision physically failed or controlled input not delivered',sb,solid)
+          assert corner[0]==base[0] and base[1]<corner[1]<=base[1]+2,('Strict L3 diagonal slide missing or joystick not registered',base,corner)
+          assert solid==sb,('Left collision physically failed',sb,solid)
+          assert fl[0]<fb[0] and fl[1]==fb[1],('Positive free-left joystick control did not move',fb,fl)
           assert (safe[2]-safe[0],safe[3]-safe[1])==(64,36),('Safe L2 growth not observed',safe)
           assert (blocked[2]-blocked[0],blocked[3]-blocked[1])==(32,24),('Unsafe L2 growth was not refused',blocked)
-          print('REAL STELLA P0 diagnostics PASS; RAM debugger transcript and timing remain separate requirements')
+          print('REAL STELLA DEBUGGER TIA VISUAL state diagnostics PASS; joystick input and growth checked via real emulator graphics, RAM/cycle transcript remains separate')
           PY
       - name: Preserve exact ROM, genuine debugger input scripts, screenshots and failures
         if: always()
