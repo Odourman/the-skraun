@@ -1,0 +1,604 @@
+{
+  "id": "THE_SKRAUN_MAIN_III_N3_SCENE_CONTRACT",
+  "version": "1.0.0",
+  "date": "2026-11-17",
+  "authority": "MAIN III source-only test contract; does not create game canon or implementation scope",
+  "platform": "Original Atari 2600 NTSC proof target",
+  "coordinates": {
+    "x": "0..159 TIA color-clocks; screen snapshot 320 RGB columns = 2 per clock in R3 tool captures",
+    "y": "0..175 diagnostic arena coordinates where R3 16-line HUD +176 arena; per-kernel exact region to be measured",
+    "physical": "262 NTSC scanlines nominal; 76 6507 cycles each; 192 visible rows (R3 diagnostic 16 HUD +176 arena), 3 VSYNC+37 VBLANK+30 overscan guideline, not universal forced code architecture",
+    "source_status": "all scenario coordinates not sourced directly from existing R3 or COL1 are synthetic test candidates, never canonical level maps"
+  },
+  "hard_constants": {
+    "active_knights_max": 2,
+    "archers_active": 1,
+    "total_active_enemy_types": [
+      "sword_knight",
+      "sword_knight",
+      "green_archer"
+    ],
+    "projectiles_active_max": 1,
+    "halo_seconds_approx": 0.5,
+    "telegraph_seconds_approx": 0.4,
+    "knight_recovery_seconds_approx": 1,
+    "render_player_sizes": [
+      {
+        "level": 1,
+        "width": 8,
+        "height": 12
+      },
+      {
+        "level": 2,
+        "width": 16,
+        "height": 24
+      },
+      {
+        "level": 3,
+        "width": 32,
+        "height": 36
+      }
+    ],
+    "score_knight": 100,
+    "score_archer": 250,
+    "extra_life_per_points": 2000,
+    "worlds": [
+      "forest",
+      "mountain",
+      "dream",
+      "night"
+    ]
+  },
+  "sources": {
+    "design": "https://github.com/Odourman/the-skraun/blob/main/docs/DESIGN_DECISIONS_01-60_2026-11-16.md",
+    "visual": "https://github.com/Odourman/the-skraun/blob/main/docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md",
+    "r3": "https://github.com/Odourman/the-skraun/blob/experiment/romdev-r3-decisive-scene-scheduler/docs/ROMDEV_P02_R3_DECISIVE_SCENE_SCHEDULER_MAIN_HANDOFF_2026-11-16.md",
+    "col1": "https://github.com/Odourman/the-skraun/pull/27",
+    "pf": "https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_II_PF_REP1C_RESOURCE_OWNER_AND_VENETIAN_SOURCE_AUDIT_2026-11-17.md",
+    "n2": "https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_III_P01_COL1_N2_WORST_CASE_CPU_RIOT_STACK_AUDIT_2026-11-17.md",
+    "research2": "https://drive.google.com/file/d/1MtA0edh0hCOa-OoIBDNITml7k18FYvJD/view",
+    "original_tia": "https://www.atariage.com/2600/programming/2600_101/docs/stella.html"
+  },
+  "scenes": [
+    {
+      "id": "S0",
+      "title": "U1-LEG1 P0 identity and movement at all levels",
+      "phase": "BASELINE",
+      "owner": "N3/N8/N9",
+      "purpose": "Freeze exact source sprite, P0 spatial/screen origin, two A/B frames and LEFT/RIGHT semantics before trying other resource owners.",
+      "states": [
+        {
+          "level": 1,
+          "width": 8,
+          "height": 12
+        },
+        {
+          "level": 2,
+          "width": 16,
+          "height": 24
+        },
+        {
+          "level": 3,
+          "width": 32,
+          "height": 36
+        }
+      ],
+      "inputs": [
+        "A/B each level, visual RIGHT maps original LEG1 LEFT; visual LEFT maps original LEG1 RIGHT",
+        "cardinal up/down retain facing; eight direction travel and source match",
+        "level 3 first/top and final/bottom row and no HMOVE cross-object shift"
+      ],
+      "must": [
+        "P0 origin source U1-LEG1 pixel-perfect at its approved source cells",
+        "same two base poses and no redrawn graphics as level changes",
+        "no extra/missing raster row from ART1 #19 regression",
+        "identical gameplay speed policy at all levels, no illegal diagonal corner cut"
+      ],
+      "negative": [
+        "R3 prior upside-down orientation, ART1 top-row ghost, P0 moved when repositioning P1"
+      ],
+      "evidence": [
+        "raw 12/24/36 scanline masks and renderer-to-source pixel comparison",
+        "actual 12-frame Stella screenshot sequence for moving P0 when authorized",
+        "input log shows real read versus debugger RAM injection"
+      ],
+      "status": "sprite source and isolated COL1 demonstrated; full-scene UNTESTED"
+    },
+    {
+      "id": "S1",
+      "title": "Three independent same-Y opponents, original R3 negative control",
+      "phase": "P1",
+      "owner": "N5/N7/N8",
+      "purpose": "Find whether two distinct sword knights and a green archer at equal Y can remain readable without R3 full-frame 20 Hz slot rotation.",
+      "states": [
+        {
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 32,
+              "y": 78
+            },
+            {
+              "type": "knight2",
+              "x": 101,
+              "y": 78
+            },
+            {
+              "type": "archer",
+              "x": 147,
+              "y": 78
+            }
+          ],
+          "troll": {
+            "x": 80,
+            "y": 78,
+            "level": 3
+          },
+          "coordinate_status": "adversarial fixture; enemies exact R3 observed positions, troll new candidate centre"
+        }
+      ],
+      "inputs": [
+        "12 consecutive frames, then 24 frames while knight telegraph changes",
+        "identical source art/position and independently track each actor",
+        "same-Y Y=78, no designer-enforced separation"
+      ],
+      "must": [
+        "three individually identifiable opponents at their own X/Y; no merged dummy sprite",
+        "distinguishable red knights and green archer, including during sword tell",
+        "report per-actor visible pixels per frame, longest absent-frame run and effective visual frequency"
+      ],
+      "negative": [
+        "R3 same-Y each actor 4/12 frames=20 Hz; 2/3 completely absent",
+        "single-P1 NUSIZ copies with fixed X spacing do not count as independent"
+      ],
+      "evidence": [
+        "12 raw uncomposited actual frames after new authorized ROM, explicit actor masks",
+        "per-frame actor/weapon visibility tabulation against R3 reference"
+      ],
+      "status": "R3 three actors 20Hz NEGATIVE; alternatives source-only"
+    },
+    {
+      "id": "S2",
+      "title": "P1 order, spacing and HUD-zone boundary stress",
+      "phase": "P1",
+      "owner": "N5/N8",
+      "purpose": "Do not let one handpicked X ordering, separation, or Y zone make a kernel look general.",
+      "states": [
+        {
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 120,
+              "y": 78
+            },
+            {
+              "type": "knight2",
+              "x": 40,
+              "y": 78
+            },
+            {
+              "type": "archer",
+              "x": 80,
+              "y": 78
+            }
+          ],
+          "coordinate_status": "synthetic permutation"
+        },
+        {
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 67,
+              "y": 78
+            },
+            {
+              "type": "knight2",
+              "x": 83,
+              "y": 78
+            },
+            {
+              "type": "archer",
+              "x": 101,
+              "y": 78
+            }
+          ],
+          "coordinate_status": "synthetic close-but-distinct; overlap semantics must be recorded"
+        },
+        {
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 40,
+              "y": 17
+            },
+            {
+              "type": "knight2",
+              "x": 80,
+              "y": 18
+            },
+            {
+              "type": "archer",
+              "x": 120,
+              "y": 19
+            }
+          ],
+          "coordinate_status": "synthetic near top HUD/arena transition"
+        }
+      ],
+      "inputs": [
+        "reverse actor type order without swapping their identities",
+        "VDEL/RESP1/HMOVE and color register crossover in one and multiple scanlines",
+        "move actors one cell across any proposed graphics zone boundaries"
+      ],
+      "must": [
+        "three real position coordinates independent of fixed hardware copies",
+        "no unintended P0 displacement when changing P1 HMOVE, no HUD leakage into arena",
+        "document close-range physical overlap, priority and game logic, no fake actor separation"
+      ],
+      "negative": [
+        "R3 partial overlap P0 occlusion: 128/136=94.1% pixels were masked on one test frame",
+        "three separated Y bands PASS does not imply any same-Y solution"
+      ],
+      "evidence": [
+        "per-scanline actual GRP1/COLUP1/RESP1/HMOVE register time slots",
+        "X permutation and two-level moving-frame sequences"
+      ],
+      "status": "UNPROVEN in replacement renderer"
+    },
+    {
+      "id": "S3",
+      "title": "P0+knight visual overlap with live weapon telegraph",
+      "phase": "INTERACTION",
+      "owner": "N5/N8/N9",
+      "purpose": "Distinguish actor presence in RAM from a readable dangerous object when P1 overlaps large P0.",
+      "states": [
+        {
+          "troll": {
+            "x": 104,
+            "y": 80,
+            "level": 3
+          },
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 105,
+              "y": 80,
+              "phase": "telegraph"
+            },
+            {
+              "type": "knight2",
+              "x": 124,
+              "y": 80,
+              "phase": "chase"
+            },
+            {
+              "type": "archer",
+              "x": 147,
+              "y": 80,
+              "phase": "flee"
+            }
+          ],
+          "coordinate_status": "synthetic stress, informed by measured R3 P0 occlusion, not a legal spawn prescription"
+        }
+      ],
+      "inputs": [
+        "hold at least ~24 NTSC frames of knight windup; then sword active and recovery",
+        "reverse display priority if proposed, but never silently change collision effect",
+        "P0 moving within active halo while weapon telegraphs"
+      ],
+      "must": [
+        "knight action and sword warning must be reportably readable despite overlaps",
+        "P0 and all enemies retain frozen source identity; projectile/halo logic not inferred from color",
+        "physical overlap does not itself inflict sword damage"
+      ],
+      "negative": [
+        "R3 partial case 94.1% of one knight's red pixels occluded"
+      ],
+      "evidence": [
+        "24 raw frames plus per-actor bbox/mask/visible-pixel accounting; 4:3 video inspection",
+        "strike direction locked at telegraph start"
+      ],
+      "status": "Full-scene UNPROVEN; test may expose required visual choice"
+    },
+    {
+      "id": "S4",
+      "title": "PF gold halo vs contrasting solids, actual high-risk mask row 98",
+      "phase": "PF_COLOR",
+      "owner": "N4/N7/N8",
+      "purpose": "Ask whether time-varying PF masks and COLUPF events can draw two visibly different spatial functions in same frame and physical scanline.",
+      "states": [
+        {
+          "halo": {
+            "x": 80,
+            "level": 3
+          },
+          "row": 98,
+          "geometry_source": "R3 halo L1/L2/R0/R1/R2 source masks, PF-REP1B"
+        },
+        {
+          "halo": {
+            "x": 84,
+            "level": 3
+          },
+          "row": 98,
+          "geometry_source": "R3 mask second exact case"
+        }
+      ],
+      "inputs": [
+        "gold ring ON with independently solid contrasting obstacles on same physical scanline",
+        "test left PF and right asymmetry; isolate each source mask before composite",
+        "preloaded X=gold/Y=solid STX/STY hypothesis with original R3 X/Y liveness conflict"
+      ],
+      "must": [
+        "report exact PF0/1/2 and COLUPF event completion before each 4-color-clock PF cell's beam deadline",
+        "for distinct destination cells requiring different colors, both colors appear same 60Hz frame",
+        "at mathematically identical requested pixel, output one documented visual priority, never claim two colors simultaneously"
+      ],
+      "negative": [
+        "PF-REP1 simple one-write/two-line cannot represent source masks",
+        "PF-REP1B naive 5-cycle events fail 56/60 among 416 critical mixed rows; toy 3 cycles not full solution",
+        "R3 golden solids or gold/blue alternating 30/30 whole frames disallowed as pass"
+      ],
+      "evidence": [
+        "source mask enumeration per X,Y and color transition times with CPU instruction/liveness table",
+        "later if authorized: actual Stella raw RGB and direct debugger cycle timing"
+      ],
+      "status": "SOURCE-ONLY FAIL for tested naive methods; N4 unstarted"
+    },
+    {
+      "id": "S5",
+      "title": "Halo X56/X104 edge, reverse and unequal PF halves",
+      "phase": "PF_COLOR",
+      "owner": "N4/N7/N8",
+      "purpose": "Catch clipping, wrong right-PF2, shifted ring centre and orphan scene pixels from a centered demonstration.",
+      "states": [
+        {
+          "halo": {
+            "x": 56,
+            "level": 3
+          },
+          "test": "leftmost original R3 diagnostic position"
+        },
+        {
+          "halo": {
+            "x": 104,
+            "level": 3
+          },
+          "test": "rightmost original R3 diagnostic position"
+        }
+      ],
+      "inputs": [
+        "X56->60->...->104 and direction reverse",
+        "same gold/contrasting solids at original scene Y bands",
+        "P0 remains at its visual center and original 4x L3 horizontal footprint"
+      ],
+      "must": [
+        "all R3-required source mask columns represented or explicit exact pixel-level failure",
+        "asymmetric right PF2 updates before beam crossing",
+        "no ghost columns, no unrelated P0 HMOVE shift, no inaccurate 2-clock recentering claim"
+      ],
+      "negative": [
+        "R3 right-PF2 source-required cells and measured approx 2-clock visual center displacement"
+      ],
+      "evidence": [
+        "left/right 13-X original mask diff, per-row PF0/1/2 write schedule",
+        "raw screenshot bounding box vs source pixel cells"
+      ],
+      "status": "SOURCE masks known, new scheduler UNPROVEN"
+    },
+    {
+      "id": "S6",
+      "title": "Simultaneous arrow, persistent orb, HUD and resource-owner conflict",
+      "phase": "OWNERSHIP",
+      "owner": "N3/N6/N8",
+      "purpose": "Prevent single-object microROM successes from hiding that all seven TIA graphical generators and four color owners are already contested.",
+      "states": [
+        {
+          "troll": {
+            "x": 80,
+            "y": 88,
+            "level": 3
+          },
+          "enemy": [
+            {
+              "type": "knight1",
+              "x": 32,
+              "y": 80
+            },
+            {
+              "type": "knight2",
+              "x": 101,
+              "y": 80
+            },
+            {
+              "type": "archer",
+              "x": 147,
+              "y": 80
+            }
+          ],
+          "projectile": {
+            "x": 92,
+            "y": 98,
+            "active": true
+          },
+          "orb": {
+            "x": 116,
+            "y": 112,
+            "available": true
+          },
+          "halo": {
+            "x": 80,
+            "active": true
+          },
+          "hud": {
+            "score": true,
+            "lives": true
+          },
+          "coordinate_status": "synthetic worst-resource overlap, not a canon map"
+        }
+      ],
+      "inputs": [
+        "arrow visible while halo active and orb not yet taken",
+        "arrows move fixed after shot; show arrow destroyed by halo or solid when appropriate",
+        "enemy colors remain red/red/green independent of any missile allocation"
+      ],
+      "must": [
+        "P0/GRP0 dedicated to player, P1/GRP1 enemy scheduling must not be silently borrowed for permanent orb",
+        "no implicit M0/M1/BL independent color: M0 shares COLUP0, M1 shares COLUP1, BL shares COLUPF",
+        "HUD score and lives readable, but R3 HUD placeholder not credited as gameplay",
+        "owner ledger shows exact byte/visible frame/register-color-domain for every object"
+      ],
+      "negative": [
+        "simple Ball-as-independent-gold over blue PF or M1-as-independent-blue arrow when P1 red/green",
+        "one object silently omitted in full-scene PASS"
+      ],
+      "evidence": [
+        "per-object physical owner assignment by scanline and frame; liveness/register table",
+        "both frame-visibility and active projectile/orb state (when real ROM is separately authorized)"
+      ],
+      "status": "No completed single-ROM coexistence proof"
+    },
+    {
+      "id": "S7",
+      "title": "Sword timing, arrow direction and physical collision through obstacles",
+      "phase": "GAMEPLAY",
+      "owner": "N3/N9/N10",
+      "purpose": "Freeze damage and timing semantics separately from PF pixels.",
+      "states": [
+        {
+          "world": "forest",
+          "frame_window": 24,
+          "scenario": "sword telegraph",
+          "timing_status": "~0.4 s at nominal NTSC 60 Hz, approximate"
+        },
+        {
+          "world": "night",
+          "scenario": "one arrow flight, bounce/no-homing forbidden"
+        }
+      ],
+      "inputs": [
+        "knight holds direction at windup start and stops for ~0.4s before sword active",
+        "arrow aims at player position at FIRE instant, then never homes",
+        "halo penetrates solid, kills arrow and enemy when in range, body/arrow/sword do not penetrate solids"
+      ],
+      "must": [
+        "no damage on body contact, windup or recovery; damage only active sword frame",
+        "knight recovery ~1s before next cue, windup direction immutable",
+        "at most 1 flying arrow and interval from last FIRE: forest ~3s, mountain ~2.5s, dream ~2s, night ~1.5s",
+        "player can move/attack during active ~0.5s halo and ~1s invulnerability"
+      ],
+      "negative": [
+        "TIA PF draw collision latch treated as gameplay truth when halo overlaps wall",
+        "aim point taken at windup instead of firing; telegraph invisible 2/3 frames"
+      ],
+      "evidence": [
+        "state event log, exact nominal frame conversions flagged as approximate",
+        "visual 24-frame sword warning sequence and per-object swept collision tests later"
+      ],
+      "status": "Design-canon ONLY; no real integrated gameplay ROM"
+    },
+    {
+      "id": "S8",
+      "title": "Four world contrast and night readability, not new palette canon",
+      "phase": "VISUAL",
+      "owner": "N3/N8/N10",
+      "purpose": "Screen readability for approved sprite, green archer, gold active halo, contrasting solids and strike cue must survive all four environments.",
+      "states": [
+        {
+          "world": "forest",
+          "levels": [
+            1,
+            2
+          ]
+        },
+        {
+          "world": "mountain",
+          "levels": [
+            3,
+            4
+          ]
+        },
+        {
+          "world": "dream",
+          "levels": [
+            5,
+            6
+          ]
+        },
+        {
+          "world": "night",
+          "levels": [
+            7,
+            8
+          ]
+        }
+      ],
+      "inputs": [
+        "same R3-problematic same-Y scene in each world palette candidate",
+        "12 and 24 consecutive 4:3 native original-Stella captures under movement",
+        "night lowest expected luminance, include orb and active sword"
+      ],
+      "must": [
+        "maintain neutral light gray troll, green archer and gold ring identity",
+        "all active hazards readable even at night, no overly disruptive constant flicker",
+        "separate candidate diagnostic palette from user's approved final visual art"
+      ],
+      "negative": [
+        "still screenshot looks acceptable but 20Hz/30Hz movement hides sword cue",
+        "archer green rendered using red knight color at wrong Y/scanline"
+      ],
+      "evidence": [
+        "source palette references and RGB/visibility metrics, human-view evaluation when requested",
+        "negative control video comparing R3 20Hz/30Hz"
+      ],
+      "status": "Not aesthetically/physically approved globally (#15 open)"
+    },
+    {
+      "id": "S9",
+      "title": "Full L3 mobility, safe orb growth and one-room future gameplay stress",
+      "phase": "PHYSICS",
+      "owner": "N3/N9/N10",
+      "purpose": "Preserve L3 free space and gameplay state while exercising worst renderer; no false claim that eight draft maps are canonical.",
+      "states": [
+        {
+          "arena": "COL1 single synthetic four-solid",
+          "source": "N1/N2 frozen ROM"
+        },
+        {
+          "arena": "eight source-only draft maps F01/F02/M03/M04/D05/D06/N07/N08",
+          "source": "K0 and source drafts, not production"
+        }
+      ],
+      "inputs": [
+        "diagonal slides at both corner negatives, all four solid contact directions",
+        "L3 continuous free movement >=90 frames as an existing diagnostic target",
+        "blocked growth x12,y64 at L2 and allowed x80,y88 synthetic positions, not official orb spawn",
+        "reserve knight spawn after ~2s when one slot opens, only two active at once"
+      ],
+      "must": [
+        "4-neighbor L3 accessible arena and safe orb sites for levels 1->2 and 2->3",
+        "no player teleport, clipping, invisible width downgrade or sticky mandatory channels",
+        "deaths don't respawn killed enemies/orb in SAME visit, new visit resets and saves persistent level/lives/score",
+        "8 maps only future design proposal; never declare them playable/canonical from K0"
+      ],
+      "negative": [
+        "K0 660 four-clock endpoint-only false corner shortcuts and 39348/768864 overly sticky swept-step differences",
+        "spawn too close to player or orb cannot grow to full L3"
+      ],
+      "evidence": [
+        "COL1 original Stella evidence and independent N2 model for diagnostic only",
+        "future code per-orb-center growth oracle and continuous movement tests for all real 8 maps"
+      ],
+      "status": "COL1 isolated PASS; eight future maps source-only"
+    }
+  ],
+  "checks": {
+    "all_required": [
+      "For every new ROM give frozen source SHA, exact branch/commit, 4096/BIN or bank map SHA, per-frame 262 line and 76-cycle timing, RAM + stack ledger, 12/24 consecutive original Stella frames, requested masks/trace, fail negative controls."
+    ],
+    "renderer_go": "No isolated PASS grants renderer GO; S0-S9 combined conflict must be demonstrated and independently accepted.",
+    "colors": "PF and Ball share COLUPF; M0=P0 shares COLUP0; M1=P1 shares COLUP1; background uses COLUBK; all color owners may change only by correct per-line/per-pixel deadlines.",
+    "unresolved_user_choice": "If distinct required scene geographies share an identical PF 4-color-clock pixel but request different visible colors, each candidate reports gold-priority, obstacle-priority or other option. No implicit aesthetic canon is created.",
+    "qualifier": "Human perceptual flicker/readability and X/Y collision priority thresholds remain to be confirmed; do not invent blanket 60Hz requirement or a user-approved screen effect."
+  }
+}
