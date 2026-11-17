@@ -184,3 +184,14 @@ Alla återkommande implementeringssteg är en **framtida plan**, inte redan aukt
 5. Fortsätt skilja mellan **kan fungera på TIA**, **kan ritas av denna kod**, **är faktiskt observerat i Stella**, **är spelbart i rörelse** och **har godkänts oberoende**. Ingen av de senare fyra följer automatiskt av den föregående.
 
 **Samlad verklighetsbedömning:** Projektet kan tekniskt fortsätta men har en ännu olöst **hög risk** för samtidiga visuella resurser och fiendeläsbarhet. Den reviderade planen köper information innan dyra implementationsfaser, nyttjar kreativa historiska tekniker utan att lova magisk extra TIA och bevarar varenda användargodkänd spelregel och sprite.
+
+## 8. MAIN III direkt genomförd N1-mottagningskontroll — 2026-11-17
+
+Efter denna huvudrapport faktiskt **hämtade** MAIN III [original 19-case ZIP från Drive](https://drive.google.com/file/d/1B2oKbzx59GvGk2ip15fDrEwwHeVEy1Yb/view) som rå binär i en isolerad körmiljö och kontrollerade oberoende från ROM DEVELOPMENTs tidigare påståenden:
+- ZIP-fil exakt **678660 byte**; direkt omräknad SHA256 **`e49d5187a977c9c580ff46c16d50089424c79cebe5500458a06ac221d96331f4`**.
+- **138 ZIP-medlemmar**, samtliga CRC-pass (Python `zipfile.ZipFile.testzip() == None`); inga korrupta medlemmar.
+- Arkivets `p01-col1.bin` är **4096 byte** och direkt omräknad SHA256 **`f36217f9ae96a1e927795ca639b9d6b6cca68ad3e8e4f296afadcdb52d6a6ad2`**, exakt samma som fryst original och GitHub Actions-körning.
+- Exakt **19 genuina TIA-pane PNG** med den avsiktliga grå P0-masken; MAIN III läste varje PNG och beräknade oberoende gray-pixel bounding-box. Alla 19 matchar utvecklartestets rapporterade positioner. Fyra blockerade kontaktpar visar identisk box före/efter. Diagonaltest 1 visar X oförändrat/Y+1, diagonaltest 2 X−2/Y oförändrat. **90-frames rörelse ger x+120 skärmbildspixlar**, konstant 64×36-bbox. Grow safe 64×36, grow blocked 32×24; dessa demonstreras med dokumenterad debugger-injektion, INTE mänskligt F1-val.
+- Detta är N1:s **fil-/pixelmottagning PASS**, ej independent Verification, fysisk hårdvarumätning eller full spelmotor, och statisk worst-case 6507-cykelbudget har ännu inte oberoende instruktionsbevisats.
+
+**Disposition:** N1:s praktiska paketreplay är därmed **GENOMFÖRT** i MAIN III; nästa aktiva tekniska prioritet är N2:s konservativa DASM-/timinggranskning, medan SOURCE-ONLY N3–N5 kan förberedas parallellt. N2 är inte ett argument för att stoppa orelaterad research. Inga nya kodorder eller kvalitetsgrindar öppnas/stängs automatiskt.
