@@ -1,6 +1,12 @@
 # THE SKRAUN — MAIN III ENTRY STATE / STATUS SNAPSHOT
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
+
+## MAIN III live supersession, 2026-11-17 (read this before older snapshot below)
+MAIN III independently checked connected GitHub, Drive and current PR #27 Actions. **The prior `pid: unbound variable` / Stella FAIL below is HISTORICAL.** PR #27 HEAD `3ac5799edc8adf5e63a901229bfb31ad2681402e`, actual Actions [44075138086](https://github.com/Odourman/the-skraun/actions/runs/44075138086) **SUCCESS**: DASM true 4096-byte NTSC ROM SHA256 `f36217f9ae96a1e927795ca639b9d6b6cca68ad3e8e4f296afadcdb52d6a6ad2`; source 332232-case oracle and compiled 6502 subset-model PASS; genuine Stella P0 U1-LEG1 A L1/L2/L3 and LEFT A/B animation pixel-readout PASS. Genuine debugger screenshot [44074822309](https://github.com/Odourman/the-skraun/actions/runs/44074822309) `_scanEnd #261` (0-based, consistent with 262); later workflow [44075138084](https://github.com/Odourman/the-skraun/actions/runs/44075138084) SUCCESS as job but `saveSes` 0-byte and X11 warnings mean **NO complete machine-readable timing evidence**. Controlled Stella near-obstacle corner/growth state and full 6507 path/RAM/stack acceptance still **NOT PROVEN**.
+
+**Current priority** (no new implementation scope): ROM DEVELOPMENT completes existing isolated COL1 in [draft PR #27](https://github.com/Odourman/the-skraun/pull/27) to binding #24 acceptance, per [MAIN III remaining-work instruction](https://github.com/Odourman/the-skraun/pull/27#issuecomment-6947066982). Full [MAIN III report](MAIN_III_MIGRATION_RECEIPT_AND_COL1_REMAINING_GATE_2026-11-17.md). PF-REP1 #25 research-only, R3 fullscene NO-GO, #1/#15/#19/#23/#24/#25 OPEN, no unauthorized renderer/merge/graphics/canon change. Historical text below retained verbatim as a dated record.
+
 ## Överlämningen
 - Full Github-migration: [MAIN II → MAIN III](../handoff/MAIN_II_TO_MAIN_III_MIGRATION_2026-11-17.md).
 - Exakt startprompt: [MAIN III startprompt](../handoff/MAIN_III_STARTPROMPT_2026-11-17.md).
