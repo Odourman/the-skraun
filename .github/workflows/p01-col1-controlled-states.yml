@@ -53,7 +53,7 @@ jobs:
               case "$control" in
                 leftdown) printf 'joy0Left #0\njoy0Down #0\n' ;;
                 left) printf 'joy0Left #0\n' ;;
-                select) printf 'swchb #253\n' ;;
+                select) printf 'runToPc $f050\nram $84 #253\n' ;;
               esac
               printf 'frame #2\nprint *$80\nprint *$81\nprint *$82\nprint *$9A\n'
               printf 'print _scanEnd\nprint _fCount\nprint _fCycles\nsaveSnap\nsaveSes\n'
@@ -91,7 +91,7 @@ jobs:
           root=Path('build/col1-controlled')
           def box(name):
               folder=root/name
-              # Stella 6.7.1 debugger saveSnap can save all-black 320x228
+              # SELECT is a controlled post-RIOT-read memory-state test at PC F050.\n              # Stella debugger frame advance ignores physical button key events.\n              # Stella 6.7.1 debugger saveSnap can save all-black 320x228
               # while its *genuine live TIA pane* visibly contains P0 + PF.
               # Use the Xvfb desktop capture of the actual emulator's TIA pane.
               desktop=folder/'DEBUGGER_DESKTOP.png'
