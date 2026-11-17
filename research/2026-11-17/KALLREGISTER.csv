@@ -1,0 +1,39 @@
+ID,Titel,URL,Typ,Läs-/evidensstatus
+P01,GitHub Skraun decisions,https://github.com/Odourman/the-skraun/blob/main/docs/DESIGN_DECISIONS_01-60_2026-11-16.md,Design,Direkt GitHub-fil
+P02,Skraun visual canon,https://github.com/Odourman/the-skraun/blob/main/docs/SKRAUN_VISUAL_DIRECTION_2026-11-16.md,Design,Direkt GitHub-fil
+P03,Skraun status,https://github.com/Odourman/the-skraun/blob/main/docs/PROJECT_STATUS_2026-11-16.md,Status,Direkt GitHub-fil; tidsbunden
+P04,Skraun 30 trick baseline,https://github.com/Odourman/the-skraun/blob/main/docs/R1_30_ATARI_TRICKS_RELEVANCE_AUDIT_2026-11-16.md,30 trick,Direkt GitHub-fil
+P05,Skraun 30 tricks identity,https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_II_RESEARCH_30_ATARI_TRICKS_SKRAUN_UPRIGHT_IDENTITY_OPTIONS_2026-11-16.md,30 trick,Direkt GitHub-fil
+P06,R3 handoff,https://github.com/Odourman/the-skraun/blob/experiment/romdev-r3-decisive-scene-scheduler/docs/ROMDEV_P02_R3_DECISIVE_SCENE_SCHEDULER_MAIN_HANDOFF_2026-11-16.md,Technical R3,Direkt GitHub-fil
+P07,K0 collision,https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_II_COLLISION_K0_RESEARCH_30_TRICKS_AND_NEXT_ROM_GATE_2026-11-16.md,Kollision,Direkt GitHub-fil
+P08,Eight room drafts,https://github.com/Odourman/the-skraun/blob/main/docs/MAIN_II_EIGHT_ROOMY_LEVEL3_MAP_DRAFT_REVIEW_AND_STOP_2026-11-16.md,Mappar,Direkt GitHub-fil
+P09,COL1 binding handoff,https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_ROM_DEV_P01_COL1_ONE_ARENA_COLLISION_DIAGNOSTIC_AUTHORIZED_2026-11-16.md,Auth,Direkt GitHub-fil
+P10,Issue 24,https://github.com/Odourman/the-skraun/issues/24,Issue,Direkt GitHub-issue; OPEN vid kontroll
+P11,Issue 23,https://github.com/Odourman/the-skraun/issues/23,Issue,Direkt GitHub-issue; OPEN vid kontroll
+P12,Issue 19,https://github.com/Odourman/the-skraun/issues/19,Issue,Direkt GitHub-issue; OPEN vid kontroll
+P13,Issue 15,https://github.com/Odourman/the-skraun/issues/15,Issue,Direkt GitHub-issue; OPEN vid kontroll
+P14,P01 independent issue 1,https://github.com/Odourman/the-skraun/issues/1,Issue,Direkt GitHub-issue; OPEN vid kontroll
+P15,ART1 PR18,https://github.com/Odourman/the-skraun/pull/18,ART1,Direkt GitHub-PR; draft
+T01,Stella Programmers Guide,https://www.atariage.com/2600/programming/2600_101/docs/stella.html,Primärhistorisk,Webbsida läst
+T02,8bitworkshop versatile PF,https://8bitworkshop.com/docs/posts/2025/versatile-playfield-kernel.html,Teknisk analys,Webbsida läst; kodfragment
+T03,8bitworkshop three stream,https://8bitworkshop.com/docs/posts/2025/versatile-three-stream-kernel.html,Teknisk analys,Webbsida läst; kodfragment
+T04,AtariAge flicker forum,https://forums.atariage.com/topic/347643-flickering-sprites-is-there-more-than-one-way-to-do-this/,Forum,Webbsida läst; observation inte verifierad Skraun
+T05,AtariAge Video Chess Venetian,https://atariage.com/2600/archives/design_case.html?SystemID=2600,Historisk,Sökindex/textutdrag; sidan kunde inte öppnas helt
+T06,Kovi Kovi technical thread,https://forums.atariage.com/topic/349506-kovi-kovi-for-atari-2600/,Modern homebrew,Webbsida läst; E7 används
+T07,Stella emulator docs,https://stella-emu.github.io/docs/,Emulator,Webbsida/listsök läst
+T08,AtariAge 2023 flicker thread,https://forums.atariage.com/topic/347643-flickering-sprites-is-there-more-than-one-way-to-do-this/,Erfarenhet,Webbsida läst
+T09,Batari multisprite docs,https://www.randomterrain.com/bb_files/atari-2600-memories-batari-basic-commands.html,Multisprite,Sökresultat; direkt sida cache miss
+T10,Bumbershoot mid screen update,https://bumbershootsoft.wordpress.com/2024/09/28/atari-2600-mid-screen-sprite-updates/,6507 kod,Webbsida läst
+T11,Stella TIA mapper list,https://stella-emu.github.io/docs/index.html,Mapper,Sökindex & dokumentation
+T12,RetroArch Tia support,https://docs.libretro.com/library/tia/,Kompatibilitet,Webbsida/sökresultat
+C01,Cyloid game.asm,https://github.com/keithadler/cyloid/blob/main/game.asm,ASM,Direkt fil läst: 2314 rader
+C02,Pacman4K asm,https://github.com/DNSDEBRO/Pacman4K/blob/main/source/pacman4K.asm,ASM,Direkt fil läst: 4868 rader; rättighetsnotis
+C03,Combat disassembly,https://github.com/johnidm/asm-atari-2600/blob/master/combat.asm,ASM,Direkt fil läst: 1988 rader
+C04,River Raid disassembly,https://github.com/johnidm/asm-atari-2600/blob/master/riverraid.asm,ASM,Direkt fil läst: 3646 rader
+C05,Pitfall disassembly,https://github.com/johnidm/asm-atari-2600/blob/master/pitfall.asm,ASM,Direkt fil läst: 3351 rader
+C06,Adventure disassembly,https://github.com/johnidm/asm-atari-2600/blob/master/adventure.asm,ASM,Direkt fil läst: 2797 rader
+C07,Raiders disassembly,https://github.com/halkuncode/Raiders2600/blob/main/src/raiders.asm,ASM,Direkt fil läst: 7276 rader
+C08,Space Invaders modern remake,https://github.com/Julio-Rats/Space_Invaders_Atari_2600/blob/main/Space%20Invaders.asm,ASM,"Repo upptäckt, kod inte analyserad, EJ original"
+C09,Berzerk code index,https://github.com/GregWagner/6502-Disassembly,Disassembly index,"Index läst, exakt kodfil ej öppnad"
+C10,8bitworkshop raster demo,https://8bitworkshop.com/docs/posts/2025/versatile-playfield-kernel.html,Kernel demo,Kodexempel läst
+C11,8bitworkshop 3-stream demo,https://8bitworkshop.com/docs/posts/2025/versatile-three-stream-kernel.html,Kernel demo,Kodexempel läst
