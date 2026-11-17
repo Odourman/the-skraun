@@ -1,0 +1,72 @@
+name: ROMDEV C P02-B3a asymmetric playfield diagnostic
+on:
+  push:
+    branches: [experiment/romdev-c-b3a]
+    paths:
+      - 'experiments/romdev_c_b3a.asm'
+      - 'tests/romdev_c_b3a_check.py'
+      - '.github/workflows/romdev-c-b3a.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  b3a:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Reproducible NTSC build
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm experiments/romdev_c_b3a.asm -f3 -obuild/romdev-c-b3a.bin -lbuild/romdev-c-b3a.lst -sbuild/romdev-c-b3a.sym
+          test "$(stat -c %s build/romdev-c-b3a.bin)" -eq 4096
+          sha256sum build/romdev-c-b3a.bin | tee build/SHA256SUMS
+          stella -rominfo build/romdev-c-b3a.bin | tee build/rominfo.txt
+      - name: Capture three PF centers in genuine Stella
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/romdev-c-b3a.bin" > build/stella.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 20); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              test -n "$wid" && break
+              sleep 1
+            done
+            test -n "$wid"
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            shot(){
+              xdotool key --window "$wid" F12
+              sleep 0.5
+              cp build/romdev-c-b3a.png "build/b3a_$1.png"
+            }
+            next_center(){
+              xdotool keydown --window "$wid" F1
+              sleep 0.32
+              xdotool keyup --window "$wid" F1
+              sleep 0.70
+            }
+            shot 56
+            next_center; shot 80
+            next_center; shot 104
+            scrot -z build/desktop.png
+          '
+          /usr/bin/python3 tests/romdev_c_b3a_check.py | tee build/C_PIXELS_AND_BUDGET.txt
+      - name: Archive evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: romdev-c-b3a-stella-pf-evidence
+          path: build/
+          if-no-files-found: warn

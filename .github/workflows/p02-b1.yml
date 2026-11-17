@@ -1,0 +1,71 @@
+name: P02-B1 Static Playfield Halo (diagnostic)
+
+on:
+  push:
+    branches: [experiment/p02-playfield-b1]
+    paths:
+      - 'experiments/p02_playfield_b1.asm'
+      - '.github/workflows/p02-b1.yml'
+      - 'tests/p02_b1_image_check.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-playfield:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install DASM, Stella and screenshot tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Assemble 4K NTSC research ROM
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm experiments/p02_playfield_b1.asm -f3 -obuild/p02-playfield-b1.bin -lbuild/p02-playfield-b1.lst -sbuild/p02-playfield-b1.sym
+          test "$(stat -c %s build/p02-playfield-b1.bin)" -eq 4096
+          sha256sum build/p02-playfield-b1.bin | tee build/SHA256SUMS
+          stella -rominfo build/p02-playfield-b1.bin | tee build/stella_rominfo.txt
+      - name: Capture real Stella image
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/p02-playfield-b1.bin" > build/stella.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 15); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              [ -n "$wid" ] && break
+              sleep 1
+            done
+            if [ -z "$wid" ]; then
+              scrot -z build/no_stella_window.png || true
+              echo "Could not locate emulator window."
+              exit 2
+            fi
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            xdotool key --window "$wid" F12
+            sleep 1
+            test -s build/p02-playfield-b1.png
+            cp build/p02-playfield-b1.png build/p02-b1-stella.png
+            scrot -z build/stella_desktop.png
+          '
+          /usr/bin/python3 tests/p02_b1_image_check.py build/p02-b1-stella.png | tee build/p02_b1_metrics.txt
+      - name: Upload evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-skraun-p02-b1-playfield-halo
+          path: build/
+          if-no-files-found: warn
