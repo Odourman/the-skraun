@@ -40,7 +40,7 @@ jobs:
           trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
           sleep 2
           mkdir -p "$HOME/.config/stella"
-          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "free_base 80 88 3 none" "free_left 80 88 3 left" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
+          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "corner_goal_base 64 114 3 none" "corner_goal_diag 64 114 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "side_right_base 112 60 3 none" "side_right_hit 112 60 3 right" "side_up_base 40 70 3 none" "side_up_hit 40 70 3 up" "side_down_base 40 114 3 none" "side_down_hit 40 114 3 down" "free_base 80 88 3 none" "free_left 80 88 3 left" "free_up 80 88 3 up" "free_down 80 88 3 down" "free_right_long 80 88 3 right90" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
             read -r name x y level control <<< "$spec"
             out="$PWD/build/col1-controlled/$name"
             mkdir -p "$out"
@@ -53,9 +53,14 @@ jobs:
               case "$control" in
                 leftdown) printf 'joy0Left #0\njoy0Down #0\n' ;;
                 left) printf 'joy0Left #0\n' ;;
+                up) printf 'joy0Up #0\n' ;;
+                down) printf 'joy0Down #0\n' ;;
+                right) printf 'joy0Right #0\n' ;;
+                right90) printf 'joy0Right #0\n' ;;
                 select) printf 'runToPc $f050\nram $84 #253\n' ;;
               esac
-              printf 'frame #2\nprint *$80\nprint *$81\nprint *$82\nprint *$9A\n'
+              if [ "$control" = right90 ]; then printf 'frame #90\n'; else printf 'frame #2\n'; fi
+              printf 'print *$80\nprint *$81\nprint *$82\nprint *$9A\n'
               printf 'print _scanEnd\nprint _fCount\nprint _fCycles\nsaveSnap\nsaveSes\n'
             } > "$HOME/.config/stella/autoexec.script"
             cp "$HOME/.config/stella/autoexec.script" "$out/INPUT.script"
@@ -109,20 +114,47 @@ jobs:
               return b
           base=box('corner_base')
           corner=box('corner_left_down')
+          cgbase=box('corner_goal_base')
+          cgdiag=box('corner_goal_diag')
           sb=box('solid_base')
           solid=box('solid_left')
+          rb=box('side_right_base')
+          rh=box('side_right_hit')
+          ub=box('side_up_base')
+          uh=box('side_up_hit')
+          db=box('side_down_base')
+          dh=box('side_down_hit')
           fb=box('free_base')
           fl=box('free_left')
+          fu=box('free_up')
+          fd=box('free_down')
+          long=box('free_right_long')
           safe=box('grow_safe')
           blocked=box('grow_block')
           assert (base[2]-base[0],base[3]-base[1])==(64,36),('L3 baseline shape incorrect',base)
           assert (corner[2]-corner[0],corner[3]-corner[1])==(64,36),('L3 corner shape incorrect',corner)
           assert corner[0]==base[0] and base[1]<corner[1]<=base[1]+2,('Strict L3 diagonal slide missing or joystick not registered',base,corner)
-          assert solid==sb,('Left collision physically failed',sb,solid)
+          assert cgdiag[0]==cgbase[0]-2 and cgdiag[1]==cgbase[1],('Unsafe diagonal goal should slide LEFT only',cgbase,cgdiag)
+          assert solid==sb,('Right-side obstacle LEFT-entry collision failed',sb,solid)
+          assert rh==rb,('Left-side obstacle RIGHT-entry collision failed',rb,rh)
+          assert uh==ub,('Bottom-of-upper obstacle UP-entry collision failed',ub,uh)
+          assert dh==db,('Top-of-lower obstacle DOWN-entry collision failed',db,dh)
           assert fl[0]<fb[0] and fl[1]==fb[1],('Positive free-left joystick control did not move',fb,fl)
+          assert fu[1]<fb[1] and fu[0]==fb[0],('Positive free-up joystick control missing',fb,fu)
+          assert fd[1]>fb[1] and fd[0]==fb[0],('Positive free-down joystick control missing',fb,fd)
+          assert long[0]>=fb[0]+110 and long[1]==fb[1] and (long[2]-long[0])==64,('Sustained L3 right movement missing',fb,long)
           assert (safe[2]-safe[0],safe[3]-safe[1])==(64,36),('Safe L2 growth not observed',safe)
           assert (blocked[2]-blocked[0],blocked[3]-blocked[1])==(32,24),('Unsafe L2 growth was not refused',blocked)
-          print('REAL STELLA DEBUGGER TIA VISUAL state diagnostics PASS; joystick input and growth checked via real emulator graphics, RAM/cycle transcript remains separate')
+          # Crop of actual Stella debugger Scn Ln field: 0-based 261 visually
+          # validated in the first real screenshot; require consistency across all cases.
+          reference=(root/'corner_base'/'DEBUGGER_DESKTOP.png')
+          roi=(674,148,711,161)
+          digits=Image.open(reference).convert('RGB').crop(roi).tobytes()
+          for folder in root.iterdir():
+              if not folder.is_dir(): continue
+              im=Image.open(folder/'DEBUGGER_DESKTOP.png').convert('RGB')
+              assert im.crop(roi).tobytes()==digits,('Stella Scn Ln displayed field changed',folder.name)
+          print('REAL STELLA DEBUGGER TIA VISUAL PASS: 4-sided contacts, two strict diagonal negatives, all positive directions, growth both ways, sustained Level3. Scanline field identical to confirmed 261 reference; no machine-readable cycle transcript')
           PY
       - name: Preserve exact ROM, genuine debugger input scripts, screenshots and failures
         if: always()
