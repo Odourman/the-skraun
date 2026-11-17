@@ -55,7 +55,7 @@ jobs:
             set -eu
             stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build/col1" -sssingle 1 -ss1x 1 "$PWD/build/col1/p01-col1.bin" > build/col1/STELLA_RUNTIME.log 2>&1 &
             pid=$!
-            # Stella's own Linux FAQ documents up to 5-10s ROM launch delays.
+            # Stella Linux FAQ documents up to 5-10s ROM launch delays.
             # Keep diagnostic results FAIL-CLOSED, but wait up to 30s.
             wid=""
             for attempt in $(seq 1 30); do
