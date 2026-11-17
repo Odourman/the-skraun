@@ -5,7 +5,7 @@ This directory preserves the full historical RESEARCH v1 text package (six text 
 Original uploaded ZIP (the same seven files including SHA256SUMS.txt):
 - Original ZIP filename: THE_SKRAUN_RESEARCH_DEEP_ARCHITECTURE_2026-11-17.zip
 - SHA256: b728fafcbfe3eb534b3e2b2fd1bdad40da32ca76df3d54b76cc5b9f94476e0df
-- Original file size: 28,000-ish bytes; refer to exact ZIP metadata when needed.
+- Original file size: 27,845 bytes, confirmed from original local ZIP metadata.
 - Original stored in Google Drive: https://drive.google.com/file/d/1k1AExfpgNrFFr_c3py3LYK4Byw6adQnS/view
 - Folder: https://drive.google.com/drive/folders/1gK6qVyiE-g4uK1DbxQiFGD9LGfhTsMFx
 
