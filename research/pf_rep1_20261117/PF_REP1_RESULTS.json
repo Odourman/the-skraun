@@ -1,0 +1,497 @@
+{
+  "schema": "skraun.pf-rep1.results.v1",
+  "origin_source_sha": "3c9ed79078eee6a0c63100614a593f92e240b5e8",
+  "assumptions": [
+    "Source-only decoded mask phase values; exact original R3 88 two-scanline pair loop, *not* real CPU timing",
+    "Unchanged R3 synthetic L3 ring/source and scenery variants; not final eight world maps",
+    "Theoretical zero-page stores only for register phase differences, ignoring loads/branches/setup/deadlines",
+    "Halo-vs-scenery overlap and colour priority simulations are unapproved hypothetical composites; distinct colours cannot be proven from single COLUPF"
+  ],
+  "summary": {
+    "x_count": 13,
+    "pairs_per_x": 88,
+    "all_simple_one_reg_per_two_line_direct_fail": true,
+    "source_multifield_change_min": 6,
+    "source_multifield_change_max": 12,
+    "phase_store_count_min": 248,
+    "phase_store_count_max": 288,
+    "fixed_original_R3_six_writes_per_line": 1056,
+    "halo_and_scenery_mixed_rows_per_x": 16,
+    "colour_overlap_x_count": 6
+  },
+  "by_x": [
+    {
+      "x": 56,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 8,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 272,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 24,
+        "2": 112,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 112,
+        "fields": [
+          0,
+          1,
+          49,
+          0,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 60,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 6,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 256,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 40,
+        "2": 96,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 108,
+        "fields": [
+          0,
+          1,
+          192,
+          0,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 64,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 6,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 248,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 40,
+        "2": 104,
+        "3": 0
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 2,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 108,
+        "fields": [
+          0,
+          0,
+          129,
+          16,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 84
+      }
+    },
+    {
+      "x": 68,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 8,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 264,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 24,
+        "2": 120,
+        "3": 0
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 16,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "1": 14,
+        "3": 2
+      },
+      "first_burst": {
+        "row_idx": 112,
+        "fields": [
+          0,
+          0,
+          140,
+          16,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 98
+      }
+    },
+    {
+      "x": 72,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 288,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 8,
+        "2": 128,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          240,
+          16,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 76,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 288,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 8,
+        "2": 128,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 14,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "2": 14,
+        "3": 2
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          224,
+          48,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 98
+      }
+    },
+    {
+      "x": 80,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 288,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 8,
+        "2": 128,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 2,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 2,
+        "4": 14
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "2": 2,
+        "4": 14
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          192,
+          112,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 84
+      }
+    },
+    {
+      "x": 84,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 288,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 8,
+        "2": 128,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 2,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 2,
+        "4": 14
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "4": 16
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          128,
+          240,
+          0,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 84
+      }
+    },
+    {
+      "x": 88,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 288,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 8,
+        "2": 128,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 16,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "2": 14,
+        "3": 2
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          0,
+          240,
+          128,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": {
+        "row_idx": 98
+      }
+    },
+    {
+      "x": 92,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 280,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 9,
+        "2": 134,
+        "3": 1
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          0,
+          224,
+          192,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 96,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 280,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 9,
+        "2": 134,
+        "3": 1
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          0,
+          192,
+          224,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 100,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 12,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 280,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 9,
+        "2": 134,
+        "3": 1
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 116,
+        "fields": [
+          0,
+          0,
+          0,
+          128,
+          240,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    },
+    {
+      "x": 104,
+      "active_pair_count": 88,
+      "source_double_or_triple_change_pairs": 8,
+      "unchanged_source_pairs": 70,
+      "minimum_PF_register_stores_in_176_line_reference": 272,
+      "phase_store_histogram": {
+        "0": 208,
+        "1": 24,
+        "2": 112,
+        "3": 8
+      },
+      "mixed_colours_same_rows": 16,
+      "mixed_colours_same_half": 16,
+      "overlap_pixel_cell_pairs": 0,
+      "min_colour_switches_hist_halo_priority": {
+        "3": 16
+      },
+      "min_colour_switches_hist_scenery_priority": {
+        "3": 16
+      },
+      "first_burst": {
+        "row_idx": 112,
+        "fields": [
+          0,
+          0,
+          0,
+          128,
+          140,
+          0
+        ],
+        "changed": 2
+      },
+      "first_same_pixel_overlap": null
+    }
+  ]
+}
