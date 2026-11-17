@@ -46,6 +46,7 @@ RenderBottom= $97
 HalfW       = $98
 HalfH       = $99
 GrowthBlocked = $9A
+BaseX       = $9B       ; original X for strict diagonal Y-projection
 
         SEG Code
         ORG $F000
@@ -104,6 +105,8 @@ Frame:
         sta Phase
 PhaseGood:
         jsr DetectDiagonal
+        lda PlayerX
+        sta BaseX
         lda #0
         sta MotionDid
         jsr MoveX
@@ -193,9 +196,10 @@ DetectDiagonal:
 NoDiag:
         rts
 
-; X-first, then Y. An axis is allowed only when the full expanded body
-; is legal. Diagonal never jumps through a blocked corner. X priority
-; on ambiguous corner slides is diagnostic, NOT final approved game feel.
+; Strict K0 corner policy: X and Y projections from ORIGINAL position
+; must both be clear before diagonal; then diagonal target must be clear.
+; If only X clears, slide X; if only Y clears, slide Y.
+; X preference on ambiguous corners is diagnostic, not final feel canon.
 MoveX:
         lda DiagonalSkip
         bne MoveXDone
@@ -252,10 +256,21 @@ WantUp:
         sbc #1
         sta TryY
 CheckMoveY:
-        lda PlayerX
-        sta TryX
         lda Level
         sta TestLevel
+        ; If horizontal input was also pressed, require Y-only projection
+        ; from original centre to be legal before trying diagonal goal.
+        lda JoyState
+        and #$C0
+        cmp #$C0
+        beq YGoalCheck
+        lda BaseX
+        sta TryX
+        jsr CandidateValid
+        beq MoveYDone
+YGoalCheck:
+        lda PlayerX
+        sta TryX
         jsr CandidateValid
         beq MoveYDone
         lda TryY
