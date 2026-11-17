@@ -1,13 +1,13 @@
 # THE SKRAUN – Permanent GRAPHICS-roll: verifierad migrationsöverlämning
 
-**Överlämningssnapshot:** 2026-11-17 (Europe/Stockholm). **Upprättad av:** föregående GRAPHICS-chatt. **Status:** informationsöverlämning, inte MAIN II:s signerade acceptansgrind och inte en auktoriserad ny grafikstudie.
+**Överlämningssnapshot:** 2026-11-17 (Europe/Stockholm). **Upprättad av:** föregående GRAPHICS-chatt. **Status:** informationsöverlämning, inte MAIN III:s signerade acceptansgrind och inte en auktoriserad ny grafikstudie.
 
 ## 1. Varför vi migrerar
 Den tidigare GRAPHICS-chatten har blivit lång och blandar flera gamla försök med nyare beslut. En ren GRAPHICS-chatt behöver få **rätt roll, aktuell källordning, faktiskt senaste användarval, spårbara artefakter och hårda stoppvillkor** utan att kopiera in eller automatiskt fortsätta historiska experiment. Projektets GitHub/Drive, inte chattminnet, är källor till sanningen.
 
 ## 2. Roll och gränser
-- **MAIN II:** ensam projektsamordnare och auktoriserar var och en avgränsad grafikarbetsorder; håller ihop design, research, implementation och granskning; avgör om ett nytt steg ska öppnas.
-- **GRAPHICS (ny chatt):** visualiserar, ritar och dokumenterar endast det användaren/MAIN II uttryckligen har auktoriserat; granskar riktiga projektkällor först; producerar källbitmappar, tydliga före-/efterbilder, GIF:ar, validering, manifest, separat GitHub-gren och Drive-paket när det beordras. Ansvarar inte för ROM-implementation eller oberoende godkännande.
+- **MAIN III (AKTUELL HUVUDROLL FRÅN 2026-11-17; tidigare MAIN II):** ensam projektsamordnare och auktoriserar var och en avgränsad grafikarbetsorder; håller ihop design, research, implementation och granskning; avgör om ett nytt steg ska öppnas.
+- **GRAPHICS (ny chatt, under MAIN III):** visualiserar, ritar och dokumenterar endast det användaren/MAIN III uttryckligen har auktoriserat; granskar riktiga projektkällor först; producerar källbitmappar, tydliga före-/efterbilder, GIF:ar, validering, manifest, separat GitHub-gren och Drive-paket när det beordras. Ansvarar inte för ROM-implementation eller oberoende godkännande.
 - **ROM DEVELOPMENT:** assembler, DASM, Stella, kernel och CPU-/scanline-felsökning, endast på separat ROM-uppdrag. GRAPHICS får inte på eget initiativ bygga/ändra ROM, mappa joystick eller hävda hårdvarurealiserbarhet.
 - **VERIFICATION:** oberoende verifiering av frysta färdiga leveranser; GRAPHICS får inte utge egen källvalidering för sådan verifiering.
 - **Användaren:** slutligt estetiskt omdöme om egna Skraun; senare explicita instruktioner om utseende och visuell mappning gäller framför äldre bildtolkningar.
@@ -36,6 +36,13 @@ Originalteckningen (`SKRAUN_ORIGINAL_HANDDRAWN_REFERENCE_2026-11-16.jpg`) är **
 
 Historiska studier (Q1, P1, P2, P3 U1/U2, P3-F1 D1/D2 och U1-FIX1) får användas för jämförelse/proveniens **bara där det behövs**. P1/P2 horisontellt liggande anatomi är **negativt exempel**. Äldre U1-FIX1 är LEG1:s frysta överdelsbas men inte den senaste fullständiga spritekällan. U1-LEG1:s källförfattares tidigare negativa bedömning av anatomisk läsbarhet föregicks av en användarbedömning som därefter godkände designen i den omvända etikettkopplingen; blanda inte ihop SOURCE-proveniens med senare estetisk acceptans.
 
+## 5a. Nyare projektledarmigration och faktisk MAIN III-status (17 november)
+**VIKTIG KORRIGERING:** MAIN II har **ersatts av MAIN III**. Det är verifierat i [CURRENT_MAIN_STATE_2026-11-17.md](https://github.com/Odourman/the-skraun/blob/main/docs/CURRENT_MAIN_STATE_2026-11-17.md), [MAIN II till MAIN III full migration](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_II_TO_MAIN_III_MIGRATION_2026-11-17.md) och [MAIN III:s startprompt](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_III_STARTPROMPT_2026-11-17.md). **Alla framtida GRAPHICS-uppdrag ska koordineras av nuvarande MAIN III** (eller eventuell ännu senare verifierad MAIN-roll), inte den historiska MAIN II-chatten.
+
+I MAIN III:s senaste kontrollerade snapshot: **#24 P01-COL1** påbörjad av ROM DEVELOPMENT i draft PR #27, egen käll-/DASM-/CPU-modellgranskning PASS men **real Stella-bild/Debugger-steget FAIL i workflow** och INGET Stella-PASS. **#25 PF-REP1** SOURCE-ONLY research öppet i draft PR #26 och inte en grafikorder. **#23** åtta framtida rymliga banor/fri L3-manövrering fortfarande en **OPEN GAMEPLAY/MAP-GATE**, inte ett nytt GRAPHICS-försök. R3 helscen NO-GO gäller fortsatt. GRAPHICS får varken ta över dessa arbeten eller dra slutsatsen att riktiga spriteproportioner i L3 bevisats.
+
+Det här avsnittet är **statussnapshot**. Den nya chatten måste läsa senaste status- och huvudrepo-källorna live, eftersom MAIN III:s fortsatta arbete kan ha flyttat PR/CI-staten.
+
 ## 6. Hårdvarurisker och öppna grindar
 - **#15 global visuell gate OPEN**. Den får inte stängas av GRAPHICS på grund av nivå-1-godkännandet.
 - **#22 U1-LEG1 SOURCE-arbetsorder CLOSED: completed.** Inte en pågående grafikorder.
@@ -46,4 +53,4 @@ Historiska studier (Q1, P1, P2, P3 U1/U2, P3-F1 D1/D2 och U1-FIX1) får använda
 - M0-extra konturpixel, NUSIZ huvud och två grå färgband gav ingen meningsfull identitetsvinst i MAIN:s frysta source-only koncepttest; ingen sådan hårdvaruanvändning är auktoriserad.
 
 ## 7. Status vid migration
-**Det finns ingen ny GRAPHICS-ritorder auktoriserad i denna migration.** Denna överlämning gör endast rollinstruktioner, källindex och startprompt tillgängliga på en **separat dokumentationsgren** och i Drive. Inga spelfiler, bitmappar eller tidigare arbetsgrenar får ändras, ingen merge till `main`, ingen ROM/Stella/VERIFICATION startas. Nästa chat ska först läsa riktiga källor och endast rapportera att den kan ta emot en NY explicit MAIN II-order.
+**Det finns ingen ny GRAPHICS-ritorder auktoriserad i denna migration. MAIN III:s migration är en ledarrollsövergång, inte ett nytt GRAPHICS-mandat.** Denna överlämning gör endast rollinstruktioner, källindex och startprompt tillgängliga på en **separat dokumentationsgren** och i Drive. Inga spelfiler, bitmappar eller tidigare arbetsgrenar får ändras, ingen merge till `main`, ingen ROM/Stella/VERIFICATION startas. Nästa chat ska först läsa riktiga källor och endast rapportera att den kan ta emot en NY explicit MAIN III-order.
