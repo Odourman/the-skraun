@@ -137,36 +137,32 @@ BlankWait:
         lda #0
         sta PF2
         ldx #192
+        lda #0            ; preloaded GRP0 for first (empty) visible row
 Visible:
         sta WSYNC
+        sta GRP0          ; first register write after WSYNC: never mid-sprite
         ldy PFCode,x
         lda PF0Choices,y
         sta PF0
         lda PF1Choices,y
         sta PF1
+        ; PREPARE GRP0 for the NEXT visible scanline, x-1.
+        ; Deliberately after PF writes; accumulator persists through
+        ; DEX/BNE and WSYNC so next line writes GRP0 at CPU cycle ~3.
         txa
         sec
+        sbc #1
         sbc RenderBottom
-        bcc BlankP0
+        bcc NextSpriteBlank
         cmp SpriteHeight
-        bcs BlankP0
+        bcs NextSpriteBlank
         tay
         lda (RowMapPtr),y
         tay
         lda (GfxPtr),y
-        sta GRP0
         jmp NextLine
-BlankP0:
-        ; GRP0 can change AFTER the beam passes a centred P0.
-        ; Preserve last glyph byte through one extra physical scanline
-        ; so its low (source bottom) row is not blanked prematurely.
-        txa
-        clc
-        adc #1
-        cmp RenderBottom
-        beq NextLine
+NextSpriteBlank:
         lda #0
-        sta GRP0
 NextLine:
         dex
         bne Visible
