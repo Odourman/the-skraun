@@ -59,3 +59,8 @@ Filen [handoff/MAIN_III_STARTPROMPT_2026-11-17.md](MAIN_III_STARTPROMPT_2026-11-
 - Titta alltid på nyaste live data, inte på detta dokument som en fryst framtidsprognos.
 
 **Migreringen är ett dokumenterat MAIN-ansvarsskifte, inte beslut om ny kod, merge, full engine eller oberoende Verification.**
+
+## I. VERIFIERADE GOOGLE DRIVE-MIGRATIONSFILER
+- [Full migrationshandoff – Google Docs](https://docs.google.com/document/d/1QdaWnlqMevGmjX6gaYUttTCvJ7yn0XCPukBEpUzyEfA/edit) – exakt initialt innehåll speglat från GitHub, nu kan denna senare förklarande länkrad finnas enbart på GitHub.
+- [Startprompt MAIN III – Google Docs](https://docs.google.com/document/d/1XLphoOEHNGxGH5mC4Yd6BJCDflOyx56xYuEBPIYyGwo/edit) – exakt GitHub-startprompt vid uppladdningen.
+- Båda dokumenten är VERIFIERAT flyttade till [The Skrauns projektmapp på Google Drive](https://drive.google.com/drive/folders/1tSipzf7bucrqFOwHBEH61fKvyl0z7D1z) under användarens konto. De ersätter inte befintliga originalkällor eller tester.
