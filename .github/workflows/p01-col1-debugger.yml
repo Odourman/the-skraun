@@ -77,6 +77,8 @@ jobs:
           '
           find "$HOME/.config/stella" "$PWD" -maxdepth 4 -type f -name '*.txt' -printf '%p %s bytes\n' > build/col1-debug/STELLA_FILES.txt
           find "$HOME/.config/stella" -type f -name '*.txt' -print -exec cp '{}' build/col1-debug/ \; || true
+          find "$HOME" -maxdepth 1 -type f -name 'session_*.txt' -print -exec cp '{}' build/col1-debug/ \; || true
+          grep -Hni '_scanEnd' build/col1-debug/session_*.txt > build/col1-debug/STELLA_SCANLINE_READOUT.txt || true
           test -s build/col1-debug/DEBUGGER_DESKTOP.png
           echo "=== debugger console extract ==="
           grep -Ei '_scanEnd|_fCount|262|scanline|session|frame|error' build/col1-debug/STELLA_DEBUGGER.log | tail -60 || true
