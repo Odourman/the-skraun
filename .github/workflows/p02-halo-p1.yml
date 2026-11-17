@@ -1,0 +1,125 @@
+name: P02-A P1 halo raster experiment
+
+on:
+  push:
+    branches: [experiment/p02-halo-p1]
+    paths:
+      - 'experiments/p02_halo_p1.asm'
+      - '.github/workflows/p02-halo-p1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-stella:
+    name: Build and capture P1 halo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install experiment tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+      - name: Build isolated P02-A ROM
+        shell: bash
+        run: |
+          mkdir -p build
+          dasm experiments/p02_halo_p1.asm -f3 -obuild/p02-halo-p1.bin -lbuild/p02-halo-p1.lst -sbuild/p02-halo-p1.sym
+          test "$(stat -c %s build/p02-halo-p1.bin)" -eq 4096
+          sha256sum build/p02-halo-p1.bin | tee build/SHA256SUMS
+          python3 experiments/p02_cpu_budget.py build/p02-halo-p1.bin | tee build/p02_cpu_model.log
+          stella -rominfo build/p02-halo-p1.bin
+      - name: Capture fire at three levels in actual Stella
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1024x768x24" bash -c '
+            set -euo pipefail
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build" -sssingle 1 -ss1x 1 "$PWD/build/p02-halo-p1.bin" > build/stella.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            wid=""
+            for i in $(seq 1 15); do
+              wid=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -1 || true)
+              [ -n "$wid" ] && break
+              sleep 1
+            done
+            if [ -z "$wid" ]; then
+              scrot -z build/stella_failed_desktop.png || true
+              echo "No visible Stella window after startup"
+              exit 2
+            fi
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            shot(){
+              xdotool key --window "$wid" F12
+              sleep 0.8
+              test -s build/p02-halo-p1.png
+              cp build/p02-halo-p1.png "build/$1.png"
+            }
+            shot p02_level1_idle
+            xdotool keydown --window "$wid" space
+            sleep 0.15
+            shot p02_level1_fire
+            xdotool keyup --window "$wid" space
+            sleep 2.0
+            xdotool keydown --window "$wid" F1
+            sleep 0.3
+            xdotool keyup --window "$wid" F1
+            sleep 0.7
+            shot p02_level2_idle
+            xdotool keydown --window "$wid" space
+            sleep 0.15
+            shot p02_level2_fire
+            xdotool keyup --window "$wid" space
+            sleep 1.6
+            xdotool keydown --window "$wid" F1
+            sleep 0.3
+            xdotool keyup --window "$wid" F1
+            sleep 0.7
+            shot p02_level3_idle
+            xdotool keydown --window "$wid" space
+            sleep 0.15
+            shot p02_level3_fire
+            xdotool keyup --window "$wid" space
+            sleep 1.2
+            xdotool keydown --window "$wid" Right
+            xdotool keydown --window "$wid" space
+            sleep 0.20
+            shot p02_level3_move_fire
+            xdotool keyup --window "$wid" space
+            xdotool keyup --window "$wid" Right
+            scrot -z build/stella_desktop.png
+          '
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          expected_sizes={1:16,2:32,3:64}
+          for level,width in expected_sizes.items():
+              f=Path(f"build/p02_level{level}_idle.png")
+              im=Image.open(f).convert("RGB")
+              green=[x for y in range(im.height) for x in range(im.width) if (lambda p: p[1]>p[0]*1.5 and p[1]>p[2]*1.5 and p[1]>60)(im.getpixel((x,y)))]
+              if not green or max(green)-min(green)+1 != width:
+                  raise SystemExit(f"SELECT did not produce level {level} width {width}: {f}")
+              print(f.name, "green sprite width",max(green)-min(green)+1)
+          for f in sorted(Path("build").glob("p02_level*fire.png")):
+              im=Image.open(f).convert("RGB")
+              pixels=list(im.getdata())
+              distinct=len(set(pixels))
+              print(f.name, im.size, "distinct colors",distinct)
+              if distinct < 3:
+                  raise SystemExit(f"No visible halo (green/gold/black expected): {f}")
+          PY
+      - name: Upload P02 experiment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-skraun-p02-p1-halo-experiment
+          path: |
+            build/
+          if-no-files-found: warn
