@@ -101,6 +101,19 @@ jobs:
             xdotool key --window "$wid" F12
             sleep 0.7
             cp build/col1/p01-col1.png build/col1/actual_level3_right.png
+            # Capture real LEFT facing and moving A/B with no bitmap modification.
+            xdotool keydown --window "$wid" Left
+            sleep 0.25
+            for ix in $(seq 1 10); do
+              xdotool key --window "$wid" F12
+              sleep 0.16
+              cp build/col1/p01-col1.png "build/col1/left_walk_$ix.png"
+            done
+            xdotool keyup --window "$wid" Left
+            sleep 0.5
+            xdotool key --window "$wid" F12
+            sleep 0.5
+            cp build/col1/p01-col1.png build/col1/left_idle.png
             scrot -z build/col1/STELLA_DESKTOP.png
             kill "$pid" || true
             wait "$pid" || true
@@ -156,6 +169,39 @@ jobs:
               assert actual==expected_bits,('Pixel-shape not original source bitmap',p,
                  [(i,a,b) for i,(a,b) in enumerate(zip(actual,expected_bits)) if a!=b][:7])
           print('PASS: all 4 actual Stella images have byte-exact user-approved U1-LEG1 A shape, L1/L2/L3, no row corruption.')
+          original_B_left=[
+              '00100100','01111110','01011010','01100110',
+              '00111110','01111111','01111101','00111100',
+              '00111100','01100100','11000100','00000110']
+          def level3_bits(path):
+              im=Image.open(path).convert('RGB')
+              coords=[(x,y) for y in range(im.height) for x in range(im.width)
+                      if all(v>150 for v in im.getpixel((x,y)))
+                      and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
+              assert coords,('No level3 gray sprite',path)
+              bx0=min(x for x,y in coords);by0=min(y for x,y in coords)
+              bx1=max(x for x,y in coords)+1;by1=max(y for x,y in coords)+1
+              assert (bx1-bx0,by1-by0)==(64,36),(path,(bx0,by0,bx1,by1))
+              ret=[]
+              for yy in range(by0,by1):
+                  row=''
+                  for bit in range(8):
+                      pix=[im.getpixel((bx0+bit*8+dx,yy)) for dx in range(8)]
+                      val=[all(z>150 for z in t) and max(t)-min(t)<20 for t in pix]
+                      assert all(v==val[0] for v in val),('P0 x4 fill disrupted',path,yy,bit)
+                      row+=str(int(val[0]))
+                  ret.append(row)
+              return ret
+          A=[z for z in original_right for _ in range(3)]
+          B=[z for z in original_B_left for _ in range(3)]
+          assert level3_bits(Path('build/col1/left_idle.png'))==A,'After Left button release P0 should be source A-LEFT'
+          samples=list(Path('build/col1').glob('left_walk_*.png'))
+          assert len(samples)==10,samples
+          walking=[level3_bits(p) for p in samples]
+          assert all(bits in (A,B) for bits in walking),'Wrong source art in moving LEFT frames'
+          assert A in walking and B in walking,'Both approved A and B poses must appear in actual Stella left-facing walking captures'
+          print('PASS: authentic Stella LEFT A/B walking, idle LEFT A, no midpixel corruption, level3 32x36 logical')
+
           Path('build/col1/STELLA_PIXEL_AUDIT.txt').write_text(
               'Genuine Stella screenshots, gray P0 output bbox (physical pixel units)\n'+
               '\n'.join(str((str(p),b)) for p,b in zip(paths,boxes))+'\n')
