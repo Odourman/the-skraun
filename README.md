@@ -1,5 +1,7 @@
 # The Skraun
 
+> **MAIN III migration / current snapshot, 2026-11-17:** [Read the live-updated entry state](docs/CURRENT_MAIN_STATE_2026-11-17.md), [full MAIN II → MAIN III handoff](handoff/MAIN_II_TO_MAIN_III_MIGRATION_2026-11-17.md), and [exact clean-chat start prompt](handoff/MAIN_III_STARTPROMPT_2026-11-17.md). [Google Drive migration document](https://docs.google.com/document/d/1QdaWnlqMevGmjX6gaYUttTCvJ7yn0XCPukBEpUzyEfA/edit) and [Google Drive startprompt](https://docs.google.com/document/d/1XLphoOEHNGxGH5mC4Yd6BJCDflOyx56xYuEBPIYyGwo/edit). All older "latest" statements below are dated history: current P01-COL1 [draft PR #27](https://github.com/Odourman/the-skraun/pull/27) has real DASM/CPU-model PASS, genuine Stella job still **FAIL** due workflow shell error; [PF-REP1 #25](https://github.com/Odourman/the-skraun/issues/25) research remains SOURCE-ONLY; R3 full-scene NO-GO. Verify live sources before acting.
+
 **The Skraun** is an Atari 2600 top-down action game about a four-legged troll fighting knights and a green archer.
 
 ## Project status (2026-11-16)
