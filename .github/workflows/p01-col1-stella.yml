@@ -105,8 +105,36 @@ jobs:
               assert im.width>=160 and im.height>=192 and cols>=3, f'Blank/unusable {p}'
               assert got==size,(p,got,size)
               boxes.append(box)
-          assert boxes[-1][0]>=boxes[-2][0]+8,('Right joystick did not move level3 P0',boxes)
-          assert boxes[-1][1]==boxes[-2][1],('Right joystick unexpectedly moved sprite Y',boxes)
+          # Alphabetic glob sort is right BEFORE start: verify right moved away from start.
+          assert boxes[-2][0]>=boxes[-1][0]+8,('Right joystick did not move level3 P0',boxes)
+          assert boxes[-2][1]==boxes[-1][1],('Right joystick unexpectedly moved sprite Y',boxes)
+          # Pixel-exact original user-accepted U1-LEG1 A frame, future visual RIGHT
+          # is the HORIZONTAL MIRROR of the ORIGINAL source RIGHT.
+          original_right=[
+              '00100100','01111110','01011010','01100110',
+              '00111110','01111111','10111100','00111100',
+              '00111100','00100110','00100011','01100000']
+          source_right=[v[::-1] for v in original_right]
+          for p,box,(w,h) in zip(paths,boxes,expected):
+              image=Image.open(p).convert('RGB')
+              hrepeat=h//12
+              bit_width=w//8
+              actual=[]
+              for screen_row in range(h):
+                  y=box[1]+screen_row
+                  bits=''
+                  for bit in range(8):
+                      run=[image.getpixel((box[0]+bit*bit_width+offset,y))
+                           for offset in range(bit_width)]
+                      grey=lambda color: all(z>150 for z in color) and max(color)-min(color)<20
+                      active=[grey(v) for v in run]
+                      assert all(q==active[0] for q in active),('Mid-sprite GRP0 corruption',p,screen_row,bit,active)
+                      bits+=('1' if active[0] else '0')
+                  actual.append(bits)
+              expected_bits=[bits for bits in source_right for _ in range(hrepeat)]
+              assert actual==expected_bits,('Pixel-shape not original source bitmap',p,
+                 [(i,a,b) for i,(a,b) in enumerate(zip(actual,expected_bits)) if a!=b][:7])
+          print('PASS: all 4 actual Stella images have byte-exact user-approved U1-LEG1 A shape, L1/L2/L3, no row corruption.')
           Path('build/col1/STELLA_PIXEL_AUDIT.txt').write_text(
               'Genuine Stella screenshots, gray P0 output bbox (physical pixel units)\n'+
               '\n'.join(str((str(p),b)) for p,b in zip(paths,boxes))+'\n')
