@@ -1,0 +1,123 @@
+name: P01-COL1 authentic Stella controlled-state probe
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/p01_col1_single_arena.asm'
+      - '.github/workflows/p01-col1-controlled-states.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  state-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM and Stella debugger
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+          mkdir -p build/col1-controlled
+      - name: Reproduce unchanged approved 4096-byte ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/p01_col1_single_arena.asm -f3 -obuild/col1-controlled/p01-col1.bin -lbuild/col1-controlled/p01-col1.lst -sbuild/col1-controlled/p01-col1.sym
+          test "$(stat -c %s build/col1-controlled/p01-col1.bin)" -eq 4096
+          sha256sum build/col1-controlled/p01-col1.bin | tee build/col1-controlled/ROM_SHA256.txt
+          echo 'f36217f9ae96a1e927795ca639b9d6b6cca68ad3e8e4f296afadcdb52d6a6ad2  build/col1-controlled/p01-col1.bin' | sha256sum -c -
+      - name: Drive genuine Stella debugger with RAM and joystick state
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1400x1000x24 > build/col1-controlled/XVFB.log 2>&1 &
+          xvfb_pid=$!
+          trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
+          sleep 2
+          mkdir -p "$HOME/.config/stella"
+          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
+            read -r name x y level control <<< "$spec"
+            out="$PWD/build/col1-controlled/$name"
+            mkdir -p "$out"
+            {
+              printf 'base dec\nframe #10\n'
+              printf 'ram $80 #%s\n' "$x"
+              printf 'ram $81 #%s\n' "$y"
+              printf 'ram $82 #%s\n' "$level"
+              printf 'ram $86 #0\nram $85 #0\nram $9A #0\n'
+              case "$control" in
+                leftdown) printf 'joy0Left #1\njoy0Down #1\n' ;;
+                left) printf 'joy0Left #1\n' ;;
+                select) printf 'swchb #253\n' ;;
+              esac
+              printf 'frame #1\nprint *$80\nprint *$81\nprint *$82\nprint *$9A\n'
+              printf 'print _scanEnd\nprint _fCount\nprint _fCycles\nsaveSnap\nsaveSes\n'
+            } > "$HOME/.config/stella/autoexec.script"
+            cp "$HOME/.config/stella/autoexec.script" "$out/INPUT.script"
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$out" -sssingle 1 -ss1x 1 "$PWD/build/col1-controlled/p01-col1.bin" > "$out/STELLA.log" 2>&1 &
+            pid=$!
+            win=""
+            for t in $(seq 1 30); do
+              win=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -n1 || true)
+              if [ -n "$win" ]; then break; fi
+              if ! kill -0 "$pid" 2>/dev/null; then break; fi
+              sleep 1
+            done
+            if [ -z "$win" ]; then echo "NO STELLA WINDOW: $name"; cat "$out/STELLA.log"; exit 1; fi
+            sleep 3
+            xdotool windowfocus "$win" || true
+            scrot -z "$out/DEBUGGER_DESKTOP.png"
+            find "$out" -maxdepth 1 -type f -printf '%f %s bytes\n' > "$out/FILES.txt"
+            for f in "$HOME"/*-*-*_*-*-*.txt "$HOME"/.config/stella/*-*-*_*-*-*.txt; do
+              if [ -f "$f" ]; then
+                cp "$f" "$out/SESSION_$(basename "$f")"
+                rm -f "$f"
+              fi
+            done
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" || true
+          done
+      - name: FAIL-CLOSED physical screenshot movement and growth checks
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path('build/col1-controlled')
+          def box(name):
+              folder=root/name
+              shots=[p for p in folder.glob('*.png') if p.name!='DEBUGGER_DESKTOP.png']
+              assert shots, f'{name}: Stella saveSnap did not generate a true TIA screenshot'
+              im=Image.open(shots[-1]).convert('RGB')
+              coords=[(x,y) for y in range(im.height) for x in range(im.width)
+                  if all(z>150 for z in im.getpixel((x,y))) and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
+              assert coords, f'{name}: no detectible gray P0 in screenshot'
+              b=min(x for x,y in coords),min(y for x,y in coords),max(x for x,y in coords)+1,max(y for x,y in coords)+1
+              print('GENUINE STELLA',name,'snap',shots[-1].name,'size',im.size,'P0_bbox',b)
+              return b
+          base=box('corner_base')
+          corner=box('corner_left_down')
+          sb=box('solid_base')
+          solid=box('solid_left')
+          safe=box('grow_safe')
+          blocked=box('grow_block')
+          assert (base[2]-base[0],base[3]-base[1])==(64,36),('L3 baseline shape incorrect',base)
+          assert (corner[2]-corner[0],corner[3]-corner[1])==(64,36),('L3 corner shape incorrect',corner)
+          assert corner[0]==base[0] and corner[1]==base[1]+1,('Strict L3 diagonal slide missing',base,corner)
+          assert solid==sb,('Left collision physically failed or controlled input not delivered',sb,solid)
+          assert (safe[2]-safe[0],safe[3]-safe[1])==(64,36),('Safe L2 growth not observed',safe)
+          assert (blocked[2]-blocked[0],blocked[3]-blocked[1])==(32,24),('Unsafe L2 growth was not refused',blocked)
+          print('REAL STELLA P0 diagnostics PASS; RAM debugger transcript and timing remain separate requirements')
+          PY
+      - name: Preserve exact ROM, genuine debugger input scripts, screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p01-col1-authentic-controlled-state-probe
+          path: build/col1-controlled/
+          if-no-files-found: warn
