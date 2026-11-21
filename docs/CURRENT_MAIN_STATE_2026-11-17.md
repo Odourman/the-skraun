@@ -2,6 +2,12 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 N6-C NEXT DECISION GATE – Issue #30, SOURCE-ONLY
+
+**Next explicit action per user 'Ok, hur går vi vidare nu då?':** Stop repeating design menus; one focused source-only technical feasibility decision gate opened as [Issue #30 – N6-C 3 enemy + sword + PF-gold + BL orb unified 76-cycle scheduler](https://github.com/Odourman/the-skraun/issues/30). It specifies two genuinely different renderers (dynamic P0/P1 owner-lending plus horizontal GRP1 path, or Y-local two/three way P1 Venetian), original N3 S0–S9 stress source, specific X80/X84 and fiend permutations, per-beam-deadline register events with 76 cycles/fysical row and 128B RIOT incl stack, and STOP on exact counterexample. **First minimal N7 ROM test requires separate explicit authorization AFTER N6-C source decision**. This GitHub issue does not execute research or implement any ROM by itself.
+
+**Canon** remains after user's latest approval: light-blue shared knight color as preferred test, on-hit sword included in actor P1 pose, world camouflage Ranger, B world PF OFF / gold PF ON, BL orb color reacts, simpler PF geometry and optional L2/L3 vertical-scale only as design candidates; three concurrent enemies unchanged. Updated source [accepted N6 scope](MAIN_III_N6_USER_ACCEPTED_COMPARATIVE_DESIGN_SCOPE_2026-11-21.md).
+
 ## MAIN III 2026-11-21 USER ACCEPTED N6 RECOMMENDATION SET — SOURCE ONLY, NO N7
 
 **Explicit user acknowledgement:** "Ja, bra. Följ dina rekommendationer. Det låter bra!" after MAIN's detailed melee, three-enemy, light-blue-armour, halo shape, orb/reactive-color and scale proposal. **Action:** created [versioned N6 comparison/stop matrix](MAIN_III_N6_USER_ACCEPTED_COMPARATIVE_DESIGN_SCOPE_2026-11-21.md) and updated [date-stamped user-decision addendum](DESIGN_DECISIONS_01-60_2026-11-16.md). This grants N6 source-only research and comparison scope, not an unspecific implementation order. No ROM, new sprites, mapper, PR merge or independent Verification performed.
