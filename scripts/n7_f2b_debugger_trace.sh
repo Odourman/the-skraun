@@ -28,10 +28,10 @@ xvfb-run -a -s "-screen 0 1400x1000x24" bash -c '
  sleep 2
  i=0
  for cmd in \
- "runToPc \$f0b5" "runToPc \$f0c6" "runToPc \$f0ca" \
- "step #1" "runToPc \$f0cc" "runToPc \$f0d0" \
- "runToPc \$f0d4" "runToPc \$f0b5" "runToPc \$f0c6" \
- "runToPc \$f0ca" "step #1" "runToPc \$f0cc" "runToPc \$f0d0"
+ "runToPc \$f0b5" "runToPc \$f0c5" "runToPc \$f0c9" \
+ "step #1" "runToPc \$f0cb" "runToPc \$f0cf" \
+ "runToPc \$f0d3" "runToPc \$f0b5" "runToPc \$f0c5" \
+ "runToPc \$f0c9" "step #1" "runToPc \$f0cb" "runToPc \$f0cf"
  do
    i=$((i+1))
    echo "$i $cmd" >> "$out/TRACE_COMMANDS.txt"
