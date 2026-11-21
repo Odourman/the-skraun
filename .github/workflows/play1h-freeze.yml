@@ -24,8 +24,8 @@ jobs:
           set -euo pipefail
           dasm experiments/play1_h_single_arena.asm -f3 -oexperiments/play1_h_single_arena.bin -lexperiments/play1_h_single_arena.lst -sexperiments/play1_h_single_arena.sym 2>&1 | tee experiments/play1_h_DASM_BUILD.log
           test "$(stat -c %s experiments/play1_h_single_arena.bin)" -eq 4096
-          echo '58abc9f1e5effca906e4e450038269422deca525ab31b9ea271dcde3ebad1b77  experiments/play1_h_single_arena.asm' | sha256sum -c -
-          echo 'dee028be4080b658f5541134ba62bdd778510a8b76ae08855fa6fad59ba97420  experiments/play1_h_single_arena.bin' | sha256sum -c -
+          echo '0aa5cf5d14e1eba0b786965fe316327810de01d36a4a32202651e06f36255c16  experiments/play1_h_single_arena.asm' | sha256sum -c -
+          echo '6e5e203ff2715fac650b76a620bc1e3e3b0084d67e82452842edd7b5e1903bca  experiments/play1_h_single_arena.bin' | sha256sum -c -
           sha256sum experiments/play1_h_single_arena.asm experiments/play1_h_single_arena.bin > experiments/play1_h_SHA256SUMS.txt
       - name: Commit only authentic built ROM, listing, symbols, hashes into isolated experiment
         run: |
