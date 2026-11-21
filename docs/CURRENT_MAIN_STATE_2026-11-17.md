@@ -2,6 +2,10 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 RESEARCH II source-only N6-C handoff delivered
+
+**Next role routing (after user asked who should receive next work):** RESEARCH II, NOT ROM DEVELOPMENT. Published a focused N6-C [RESEARCH II handoff](../handoff/RESEARCH_II_N6C_P1_TIMING_AND_INTEGRATED_KERNEL_SOURCE_ONLY_2026-11-21.md), notified [RESEARCH-only PR #26](https://github.com/Odourman/the-skraun/pull/26#issuecomment-7063279415), and logged it on [N6-C Issue #30](https://github.com/Odourman/the-skraun/issues/30#issuecomment-7063280190). Target exact beam/cycle-timed P1 independent X/Y when P0 busy in S2-close/S3, combined with B gold PF, BL orb, M0 arrow, sword telegraph, 76cy and RIOT 128B incl stack; return a bounded physical schedule or first reproducible counterexample. **Separate RESEARCH II chat not automatically launched or notified by GitHub; requires user to invoke/submit link in that chat.** No source evidence that the role has begun. N6-C still OPEN, N7 explicitly NOT AUTHORIZED, no ROM nor independent Verification started.
+
 ## MAIN III 2026-11-21 N6-C SOURCE REPLAY EXECUTED – halo shape/P0 loan/P1 jump negatives; full 76-cycle gate OPEN
 
 **Explicit user 'Ok, bra. Gör så' → actual source-only N6-C probe performed, not just issue filing.** [Full report](MAIN_III_N6C_SOURCE_ONLY_PHYSICAL_FEASIBILITY_INTERIM_2026-11-21.md) and [Issue #30 tool-anchored update](https://github.com/Odourman/the-skraun/issues/30#issuecomment-7063244158). Source package ZIP local SHA256 `b6a0375e6e86a2964049827773db058a20ba4b2f9f96d38b54d29cf5576c6ff5`, 14 archived files, 13/13 SHA256 checked, separate extraction replay 8/8 output hashes repeat-identical. Reused exact frozen R3 ASM blob `3c9ed79078eee6a0c63100614a593f92e240b5e8`; new source-only Python models original versus two synthetic halo masks over 13 X×176 physical R3 arena rows, P0 and triple-enemy Y contention from N3 and original R3 A/B line opcode costs.
