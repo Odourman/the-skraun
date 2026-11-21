@@ -1,0 +1,36 @@
+name: N7 freeze exact failed F2b diagnostic ROM on experiment branch
+on:
+  push:
+    branches:
+      - experiment/n7-f2b-three-enemy-retrigger-20261121
+    paths:
+      - .github/workflows/n7-f2b-freeze-rom.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  freeze-rom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: experiment/n7-f2b-three-enemy-retrigger-20261121
+      - name: Assemble and verify single final F2b attempt
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm
+          dasm experiments/n7_f2b_minimal_ntsc.asm -f3 -oexperiments/n7_f2b_minimal_ntsc.bin -lexperiments/n7_f2b_minimal_ntsc.lst -sexperiments/n7_f2b_minimal_ntsc.sym
+          test "$(stat -c %s experiments/n7_f2b_minimal_ntsc.bin)" -eq 4096
+          echo "d15c4805b06c562cb76369dfe3efff3a8c9537f28de4945196d198957fc5368f  experiments/n7_f2b_minimal_ntsc.bin" | sha256sum -c -
+          sha256sum experiments/n7_f2b_minimal_ntsc.asm experiments/n7_f2b_minimal_ntsc.bin > experiments/n7_f2b_SHA256SUMS.txt
+      - name: Commit exact assembled ROM, symbols and listing only to N7 draft
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add experiments/n7_f2b_minimal_ntsc.bin experiments/n7_f2b_minimal_ntsc.lst experiments/n7_f2b_minimal_ntsc.sym experiments/n7_f2b_SHA256SUMS.txt
+          git commit -m "artifact(N7): freeze real 4KiB failed-F2b diagnostic, DASM listing and symbols"
+          git push origin HEAD:refs/heads/experiment/n7-f2b-three-enemy-retrigger-20261121
