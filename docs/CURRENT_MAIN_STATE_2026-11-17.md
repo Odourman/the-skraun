@@ -2,6 +2,12 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 NEXT PLAYABLE ROM DIRECTION SELECTED – NO N8/AUTHORIZATION BY SCOPE DRIFT
+
+**User:** "Ok, bra. Fortsätt med nästa steg nu då" after Project Sources/Instructions check. MAIN checked live #23/#30/#31/#33 and anchored the existing actual [P01-COL1 ROM and original sprite/collision/joystick/graduated-scale results](MAIN_II_P01_COL1_REAL_ROM_COLLISION_DIAGNOSTIC_RECEIPT_2026-11-17.md), supported by [conservative code/RAM cycle audit](MAIN_III_P01_COL1_N2_WORST_CASE_CPU_RIOT_STACK_AUDIT_2026-11-17.md). Existing #33 independent read-only negative Verification still authorized and pending, but not required to stop unrelated MAIN gameplanning.
+
+**MAIN's next concrete decision/proposal:** [First playable single-arena ROM loop](MAIN_III_NEXT_PLAYABLE_SINGLE_ARENA_PROPOSAL_2026-11-21.md): reuse COL1 P0 movement/three scales/obstacle collision; implement orb pickup and FIRE 0.5s mobile/growing 360° gold PF halo, simple one stationary training P1 target receiving logical halo hit; test readability, cycle budget and level3 open movement in real DASM/Stella. Training target is **not** a proposed permanent reduction of 2 knights + world-camouflaged Ranger. Favor a single 4KiB NTSC experiment and a fast developer self-test; no redundant recurring Verification loop. Avoid promising that a one-target demo solves N6-C same-Y P1 three-fiender full renderer. **This is a PROPOSAL only, not an authorized new N8/N9, N7 retry, full gameplay engine, sprite edit, mapper change or PR merge.** A specific separate user authorization is required before ROM DEVELOPMENT II can start this new work. No new ROM was built in MAIN. Issue #33 remains a one-shot independent audit of the *old frozen negative*.
+
 ## MAIN III 2026-11-21 USER PRIORITY: SPEED, PLAYABILITY, MINIMAL VERIFICATION FRICTION
 
 **User's explicit priority:** "Kom ihåg att vi inte ska fastna på att göra verification hela tiden. Vi ska vara ganska modiga och inte så försiktiga. Vi ska jobba ganska snabbt med spelet." MAIN treats this as **binding project execution/pace direction**, not permission to invent hardware PASS, skip the safety of bounded scope, silently change gameplay canon, or start N8.
