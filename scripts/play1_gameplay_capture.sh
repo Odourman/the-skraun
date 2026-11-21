@@ -7,13 +7,13 @@ Xvfb :99 -screen 0 1400x1000x24 > build/play1/gameplay/XVFB.log 2>&1 &
 xpid=$!
 trap 'kill "$xpid" 2>/dev/null || true' EXIT
 sleep 2
-for scene in baseline movement_pickup level3_after_respawn halo_fire_target; do
+for scene in baseline l1_fire movement_pickup level2_fire level3_after_respawn halo_fire_target halo_follow_move; do
   out="$PWD/build/play1/gameplay/$scene"
   mkdir -p "$out"
   {
     echo 'base dec'
     echo 'frame #10'
-    if [ "$scene" != baseline ]; then
+    if [ "$scene" != baseline ] && [ "$scene" != l1_fire ]; then
       echo 'joy0Right #0'
       echo 'frame #16'
       echo 'joy0Right #1'
@@ -21,12 +21,17 @@ for scene in baseline movement_pickup level3_after_respawn halo_fire_target; do
       echo 'frame #24'
       echo 'joy0Down #1'
     fi
-    if [ "$scene" = level3_after_respawn ] || [ "$scene" = halo_fire_target ]; then
+    if [ "$scene" = level3_after_respawn ] || [ "$scene" = halo_fire_target ] || [ "$scene" = halo_follow_move ]; then
       echo 'frame #100'
     fi
-    if [ "$scene" = halo_fire_target ]; then
+    if [ "$scene" = l1_fire ] || [ "$scene" = level2_fire ] || [ "$scene" = halo_fire_target ] || [ "$scene" = halo_follow_move ]; then
       echo 'joy0Fire #0'
       echo 'frame #2'
+      if [ "$scene" = halo_follow_move ]; then
+        echo 'joy0Right #0'
+        echo 'frame #8'
+        echo 'joy0Right #1'
+      fi
       echo 'joy0Fire #1'
     fi
     echo 'print *$80'
@@ -36,6 +41,7 @@ for scene in baseline movement_pickup level3_after_respawn halo_fire_target; do
     echo 'print *$9D'
     echo 'print *$9E'
     echo 'print *$A1'
+    echo 'print *$A5'
     echo 'print _scanEnd'
     echo 'print _fCount'
   } > "$HOME/.config/stella/autoexec.script"
