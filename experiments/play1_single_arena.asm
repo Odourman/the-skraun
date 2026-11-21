@@ -66,6 +66,7 @@ TargetAlive = $A1       ; one frozen original R3 knight P1 dummy
 TargetFlash = $A2       ; death feedback countdown
 CheckDX     = $A3
 CheckDY     = $A4
+HaloVisualMask = $A5   ; 0=PF halo off, 03/1F/FF levelwise radius/thickness
 
         SEG Code
         ORG $F000
@@ -152,7 +153,7 @@ PhaseGood:
         sec
         sbc HalfW
         sta RenderX
-        lda #176
+        lda #177            ; pre-offset P0 bottom; remove SBC #1 in scanline
         sec
         sbc PlayerY
         sec
@@ -180,17 +181,24 @@ Visible:
         lda OrbScan,x
         and OrbMask
         sta ENABL         ; visible BL orb, shares COLUPF
-        ldy PFCode,x
-        lda PF0Choices,y
+        ; Direct 193-byte obstacle maps: save 4 physical CPU cycles
+        ; relative to old PFCode -> PF0Choices/PF1Choices indirection.
+        lda PlayPF0,x
         sta PF0
-        lda PF1Choices,y
+        lda PlayPF1,x
         sta PF1
+        ; Gold halo outlines are OR-composited in previously unused PF2
+        ; cells and never clear a solid PF0/PF1 obstacle bit.
+        ; This first rendering candidate is fixed around arena y112/x80:
+        ; vertically and horizontally following P0 is NOT yet proven.
+        lda HaloPF2Rows,x
+        and HaloVisualMask
+        sta PF2
         ; PREPARE GRP0 for the NEXT visible scanline, x-1.
         ; Deliberately after PF writes; accumulator persists through
         ; DEX/BNE and WSYNC so next line writes GRP0 at CPU cycle ~3.
         txa
         sec
-        sbc #1
         sbc RenderBottom
         bcc NextSpriteBlank
         cmp SpriteHeight
@@ -656,11 +664,16 @@ AttackColor:
         lda HaloFrames
         beq AttackOff
         lda #$2E
-        sta COLUPF       ; approved TEST B: whole arena PF + BL GOLD
+        sta COLUPF       ; TEST B: full arena PF + BL GOLD while active
+        ldx Level
+        lda HaloMaskTable,x
+        sta HaloVisualMask
         jmp AttackRadius
 AttackOff:
         lda #$86
-        sta COLUPF       ; world blue scene/off + orb
+        sta COLUPF       ; blue diagnostic world PF+orb when inactive
+        lda #0
+        sta HaloVisualMask
 AttackRadius:
         ldx Level
         lda RadiusTable,x
@@ -740,6 +753,8 @@ RadiusTable:
         dc.b 0,18,28,40
 RecoverTable:
         dc.b 0,60,36,15
+HaloMaskTable:
+        dc.b 0,$03,$1F,$FF
 
 ; Source original R3 K1 exact eight bytes $18,$3C,$7E,$DB,$5A,$24,$66,$42,
 ; each displayed twice, in decreasing scanline X index order.
@@ -797,6 +812,41 @@ PlayArtLo:
 PlayArtHi:
         dc.b >PlayL1P0,>PlayL1P1,>PlayL1P2,>PlayL1P3,>PlayL2P0,>PlayL2P1,>PlayL2P2,>PlayL2P3,>PlayL3P0,>PlayL3P1,>PlayL3P2,>PlayL3P3
 
+
+        ; PLAY1 combined original asymmetric PF obstacle source (mirror enabled)
+        ; Halo is a *first visible centered static contour experiment*,
+        ; NOT full P0-following sprite or full-scene claim.
+        ORG $F900
+PlayPF0:
+        ds 129,0
+        ds 24,$80
+        ds 40,0
+        ORG $FA00
+PlayPF1:
+        ds 25,0
+        ds 16,$3E
+        ds 88,0
+        ds 24,$E0
+        ds 40,0
+        ORG $FB00
+HaloPF2Rows:
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF
+        dc.b $FF,$FF,$80,$80,$80,$80,$80,$9F,$9F,$9F,$90,$90
+        dc.b $90,$90,$90,$93,$93,$93,$92,$92,$92,$92,$92,$92
+        dc.b $92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92
+        dc.b $92,$92,$92,$93,$93,$93,$90,$90,$90,$90,$90,$9F
+        dc.b $9F,$9F,$80,$80,$80,$80,$80,$FF,$FF,$FF,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00
         ORG $FFFC
         dc.w Reset
         dc.w Reset
