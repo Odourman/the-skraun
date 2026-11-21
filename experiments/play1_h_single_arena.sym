@@ -52,7 +52,7 @@ HaloBaseLo               f5b0              (R )
 HaloFrames               009e              (R )
 HaloL1Rows               f820                  
 HaloL2Rows               fb30                  
-HaloL3Rows               fe80                  
+HaloL3Rows               fe40                  
 HaloMaskTable            f5ac              (R )
 HaloPointerOff           f0b0              (R )
 HaloPointerReady         f0b8              (R )
