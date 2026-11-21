@@ -25,7 +25,9 @@ jobs:
       - name: Genuine Stella gameplay joystick and FIRE A-B-C positions
         run: bash scripts/play1h_stella_abc.sh
       - name: Independent-of-script pixel oracle over real Stella screenshots (developer test)
-        run: /usr/bin/python3 tests/play1h_pixels.py | tee build/play1h/PIXELS.log
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/play1h_pixels.py | tee build/play1h/PIXELS.log
       - name: Retain raw ROM, ASM, listing/symbols, true Stella debugger images and scripts
         if: always()
         uses: actions/upload-artifact@v4
