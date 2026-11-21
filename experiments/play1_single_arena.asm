@@ -843,12 +843,12 @@ DummyScan:
         ds 73,0
         dc.b $42,$42,$66,$66,$24,$24,$5A,$5A
         dc.b $DB,$DB,$7E,$7E,$3C,$3C,$18,$18
-        ds 103,0
+        ds 104,0          ; index192 read by first of 192 visible lines MUST be zero
         ORG $FD00
 OrbScan:
         ds 63,0
         dc.b 2,2,2,2
-        ds 125,0
+        ds 126,0          ; index192 must be zero, never $FF ORG padding
 
         ORG $FFFC
         dc.w Reset
