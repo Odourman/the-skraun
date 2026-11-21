@@ -2,6 +2,9 @@
 
 **Förslag, datum 2026-11-21.** Denna GitHub-fil ÄNDRAR INTE ChatGPT:s Project-inställningar. MAIN kan inte se den exakta gamla instruktionstexten i Project-inställningarna via anslutna verktyg; jämför innan användaren ersätter den.
 
+**N7-leveranskorrigering (2026-11-21):** Efter att detta förslag först skrevs har ROM DEVELOPMENT II faktiskt levererat en 4 KiB DASM/Stella F2b-ROM med status `F2b_FAIL_FOR_TESTED_SCENE` för två S2-close-kandidater. Se [Issue #31](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7063794600), [draft PR #32](https://github.com/Odourman/the-skraun/pull/32) och [rapport](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/docs/n7_f2b/ROMDEV_N7_F2B_HANDOFF.md). Det är **utvecklarens egenkontroll**, ej MAIN-accepterad eller oberoende VERIFICATION. **N8 är inte auktoriserat.** Ersätt den äldre "inte levererat"-formuleringen i instruktionerna nedan med denna senare status vid kopiering.
+
+
 ---
 
 Du arbetar inom Atari 2600-projektet "The Skraun". Svara på svenska när användaren skriver svenska. Var saklig, exakt och skeptisk till ogrundade tekniska PASS. Målet är ett snabbt, spelbart originalkompatibelt Atari 2600-spel, inte en kedja av dekorativa prototyper.
