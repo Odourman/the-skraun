@@ -2,6 +2,17 @@
 
 **Snapshot:** 2026-11-21. Aktuell status måste alltid verifieras mot live GitHub före handling. **Inga regler i denna text auktoriserar implementation utöver befintlig N7/F2b-order.**
 
+## 0. SENARE UPPDATERING 2026-11-21: N7/F2b FAKTISKT LEVERERAD — ROM DEVELOPMENT II FAIL, MAIN/VERIFICATION EJ SLUTFÖRD
+
+**Prioritera detta avsnitt framför äldre snapshotrader i samma dokument.** Efter att denna Project Source ursprungligen skrevs publicerade ROM DEVELOPMENT II en fryst N7/F2b diagnostikleverans:
+- [N7 issue #31 mottagningskommentar](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7063794600), [draft PR #32](https://github.com/Odourman/the-skraun/pull/32), branch `experiment/n7-f2b-three-enemy-retrigger-20261121`, commit `25e5e22ab6eb91aeb69c0926ffa0a822b4fc201d`.
+- [Utvecklarens slutrapport](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/docs/n7_f2b/ROMDEV_N7_F2B_HANDOFF.md), [PLAYTEST](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/PLAYTEST_N7_F2B.md) och [riktiga Stella testkörningen](https://github.com/Odourman/the-skraun/actions/runs/44911856432).
+- 4 096-byte NTSC DASM-ROM byggd, slut-ROM SHA256 `d15c4805b06c562cb76369dfe3efff3a8c9537f28de4945196d198957fc5368f`. Två begränsade F2b-varianter prövades i **S2-close**, andra efter en NOP-borttagning; utvecklarens slutsats `F2b_FAIL_FOR_TESTED_SCENE`: 0/12 fullständigt source-exakta bildrutor per aktör, en P1-bandrad hoppade fortfarande från scanline131 till133. **Inte ett universellt bevis att alla TIA/F2b-arkitekturer är omöjliga.**
+- S2 permutation, S3 P0 L3, faktisk PF B/ON, orb/pil/svärd/HUD och full 128B RAM/stack PASS **inte utförda eller bevisade** p.g.a. beslutat STOP. Build och egna Stella/CI är **ROM DEVELOPMENT egenkontroll, inte MAIN-granskning eller independent Verification**. MAIN III har ännu inte accepterat/avvisat denna ROM-leverans genom separat dokumenterat beslut.
+- **Status vid denna uppdatering:** `N7_F2B_DEVELOPER_DELIVERED_FAIL_TESTED_SCENE / MAIN_REVIEW_PENDING / N6_C_FULL_ENGINE_OPEN / N8_NOT_AUTHORIZED / NO_MAIN_MERGE / VERIFICATION_NOT_AUTHORIZED`. ROM DEVELOPMENT II har stoppat ytterligare arbete enligt sin arbetsorder.
+
+Detta är en **daterad ny status**, inte en ny implementationsauktorisation. När MAIN granskar #31 eller andra nya commits ändras status utifrån de nya primärkällorna.
+
 ## 1. Snapshot av verklig status
 
 | Område | Status | Primärkälla |
