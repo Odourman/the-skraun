@@ -67,7 +67,8 @@ TargetFlash = $A2       ; death feedback countdown
 CheckDX     = $A3
 CheckDY     = $A4
 HaloVisualMask = $A5   ; previous level-dependent contour bits
-HaloRowPtr = $A6         ; 16-bit ROM row pointer shifted by real PlayerY, computed in VBLANK
+HaloRowPtr = $A6  ; dynamic level-baked ROM pointer
+OrbRowPtr = $A8   ; BL shown/hidden pointer
 
         SEG Code
         ORG $F000
@@ -150,15 +151,23 @@ PhaseGood:
         jsr DebugLevel
         jsr UpdateScale
         jsr UpdateGait
-        ; Real signed dynamic Y shift without source bitmap modification.
-        ; HaloPF2Rows begins at FE80; FE80 + (PlayerY-112) = FE10+PlayerY.
-        ; Safe pointer range FE1A..FEB7; X 1..192 reads FE1B..FF77.
+        lda HaloFrames
+        beq HaloPointerOff
+        ldx Level
         lda PlayerY
         clc
-        adc #$10
+        adc HaloBaseLo,x
         sta HaloRowPtr
-        lda #$FE
+        lda HaloBaseHi,x
+        adc #0
         sta HaloRowPtr+1
+        jmp HaloPointerReady
+HaloPointerOff:
+        lda #$BE
+        sta HaloRowPtr
+        lda #$FD
+        sta HaloRowPtr+1
+HaloPointerReady:
         lda PlayerX
         sec
         sbc HalfW
@@ -187,20 +196,20 @@ Visible:
         sta WSYNC
         sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)
         ; PF byte writes FIRST, before left PF cell deadlines.
-        lda PlayPF0,x
-        sta PF0           ; c10, before visible left PF0
+        ; original static synthetic PF masks, PF0 is PF1 & $80.
+        ; PF1 first and PF0 second saves 2c/row without altering bits.
         lda PlayPF1,x
-        sta PF1           ; c17, before visible left PF1
+        sta PF1
+        and #$80
+        sta PF0
         txa
         tay
         lda (HaloRowPtr),y
-        and HaloVisualMask
         sta PF2           ; c27, before left PF2 beam deadline
         ; P1 x125 and BL x96 are beyond these register write deadlines.
         lda DummyScan,x
         sta GRP1          ; c34, original R3 knight on P1, one dummy
-        lda OrbScan,x
-        and OrbMask
+        lda (OrbRowPtr),y
         sta ENABL         ; c44, BL original TIA ball
         ; Fixed-centre PF2 ring trial (arena x80/y112), NOT P0-following.
         ; PREPARE GRP0 for the NEXT visible scanline, x-1.
@@ -235,6 +244,19 @@ NextLine:
         jsr UpdateOrb
         jsr UpdateAttack
         jsr CheckHaloHit
+        lda OrbMask
+        beq SelectOrbZero
+        lda #0
+        sta OrbRowPtr
+        lda #$FD
+        sta OrbRowPtr+1
+        jmp OrbSelected
+SelectOrbZero:
+        lda #$BE
+        sta OrbRowPtr
+        lda #$FD
+        sta OrbRowPtr+1
+OrbSelected:
 OverScanWait:
         lda INTIM
         bne OverScanWait
@@ -764,6 +786,8 @@ RecoverTable:
         dc.b 0,60,36,15
 HaloMaskTable:
         dc.b 0,$03,$1F,$FF
+HaloBaseLo: dc.b 0,$B0,$C0,$10
+HaloBaseHi: dc.b 0,$F7,$FA,$FE
 
 ; Source original R3 K1 exact eight bytes $18,$3C,$7E,$DB,$5A,$24,$66,$42,
 ; each displayed twice, in decreasing scanline X index order.
@@ -817,6 +841,29 @@ PlayArtHi:
         ; PLAY1 combined original asymmetric PF obstacle source (mirror enabled)
         ; Halo is a *first visible centered static contour experiment*,
         ; NOT full P0-following sprite or full-scene claim.
+        ; L1 source-baked visible profile, with real signed Y shift
+        ORG $F7A8
+        ds 120,0
+        ORG $F820
+HaloL1Rows:
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$03
+        dc.b $03,$03,$00,$00,$00,$00,$00,$03,$03,$03,$00,$00
+        dc.b $00,$00,$00,$03,$03,$03,$02,$02,$02,$02,$02,$02
+        dc.b $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
+        dc.b $02,$02,$02,$03,$03,$03,$00,$00,$00,$00,$00,$03
+        dc.b $03,$03,$00,$00,$00,$00,$00,$03,$03,$03,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00
+        ds 31,0
         ORG $F900
 PlayPF0:
         ds 129,0
@@ -829,6 +876,27 @@ PlayPF1:
         ds 88,0
         ds 24,$E0
         ds 40,0
+        ds 111,0
+        ORG $FB30
+HaloL2Rows:
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$1F
+        dc.b $1F,$1F,$00,$00,$00,$00,$00,$1F,$1F,$1F,$10,$10
+        dc.b $10,$10,$10,$13,$13,$13,$12,$12,$12,$12,$12,$12
+        dc.b $12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$12
+        dc.b $12,$12,$12,$13,$13,$13,$10,$10,$10,$10,$10,$1F
+        dc.b $1F,$1F,$00,$00,$00,$00,$00,$1F,$1F,$1F,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00
+        ds 15,0
         ; At $FC00+X and $FD00+X all X=1..192 reads stay same page.
         ORG $FC00
 DummyScan:
@@ -840,13 +908,14 @@ DummyScan:
 OrbScan:
         ds 63,0
         dc.b 2,2,2,2
-        ds 126,0          ; index192 must be zero, never $FF ORG padding
+        ds 126,0          ; index192 must be zero
+        ds 63,0           ; guarantee FDC1..FDFF zeros for OFF pointer
 
-        ; 128-byte zero left guard + 193-row halo + right guard:
-        ; PlayerY signed pointer shifts never read unrelated PF/dummy/BL data.
+        ; level3 Y-motion template with full two-sided guards in ROM
         ORG $FE00
         ds 128,0
-HaloPF2Rows:
+        ORG $FE80
+HaloL3Rows:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF
@@ -864,8 +933,7 @@ HaloPF2Rows:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00
-
-
+        ds 187,0
         ORG $FFFC
         dc.w Reset
         dc.w Reset
