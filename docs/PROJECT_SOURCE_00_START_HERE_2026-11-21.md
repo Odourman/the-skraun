@@ -2,6 +2,11 @@
 
 **Snapshotdatum:** 2026-11-21. **Status:** ChatGPT Project Source-navigering, **inte** ny canon, implementationstillstånd eller ersättare för aktuell GitHub. **Ägare:** MAIN III. Detta är en konsolidering och up-to-date ingångspunkt för chattar som annars börjar i migrations-/P01-/R3-dokument från 16–17 november.
 
+## 0. STATUSRÄTTELSE: N7 F2b slutleverans har inkommit 2026-11-21
+
+**Senare samma dag än första snapshotten:** ROM DEVELOPMENT II har byggt en verklig 4 KiB NTSC ROM, kört Stella och levererat **F2b_FAIL_FOR_TESTED_SCENE** för två snäva S2-close kandidater (efter en NOP-borttagning), [Issue #31](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7063794600), [draft PR #32](https://github.com/Odourman/the-skraun/pull/32), [teknisk rapport](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/docs/n7_f2b/ROMDEV_N7_F2B_HANDOFF.md). **MAIN-revision ännu inte genomförd; ingen oberoende VERIFICATION, ingen N8 eller ytterligare ROM-order.** Se alltid [Project Source 02, senaste tillägg](PROJECT_SOURCE_02_STATUS_GATES_AND_ROLES_2026-11-21.md). Tidigare "ej byggt" längre ned är historisk snapshot, inte nuläge.
+
+
 ## 1. Regel före varje större uppdrag
 
 Kontrollera **live** GitHub [Odourman/the-skraun](https://github.com/Odourman/the-skraun), gällande branch/commit, bindande beslut och exakt auktoriserat arbetsscope via anslutna verktyg. För ärenden med Google Drive-källor: kontrollera relevanta faktiska Drive-filer, inte bara gamla kopior. Project Sources är daterade snapshots. ChatGPT Memory är **aldrig** sanningskälla för canon, ROM, gate, branch, sha eller leveransstatus. Ett issue/handoff i GitHub startar **inte** en separat rollchatt automatiskt.
