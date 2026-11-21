@@ -179,3 +179,29 @@ Denna text är en **arbetsarkitektur på konceptnivå**, INTE en bekräftad 76-c
 - `output/N6_SUMMARY.json` och `output/N6_REPLAY_LOG.json` — full aritmetik med arkivexakt källa, varningar och resultat. `source_inputs/` är återpublicerade frysta N4/N5-källskärvor för beviskedjan, **inte vidareutvecklad spelkod**.
 
 **Slutlig klassning:** `N6_A_SOURCE_MODEL_DONE`, `N6_B_SOURCE_MODEL_DONE`, `N6_C_UNIFIED_TIA_CPU_RIOT_BEAM_PROOF_OPEN`, `N7_NOT_AUTHORIZED`, `SOURCE_ONLY_NOT_VERIFICATION`.
+
+## 9. N6 tillägg 2026-11-21: adaptiv fiende-Venetian vid PARTIELL Y-överlappning samt omprövningsgrind
+
+**Auktoritet:** användaren betonade uttryckligen att MAIN inte ska 'piska en död häst', utan pröva verkliga lösningar och **överväga kreativa omval om ett krav visar sig orimligt**, utan att ge upp vid första negativa test. Detta auktoriserar att analysera och rangordna alternativ i N6; **ingen specifik canon-ändring, N7 ROM eller permanent avkortad fiendebesättning är härmed godkänd**.
+
+### Kontinuerligt Y-sorterad, adaptiv P1-ägarskap i stället för statisk varannan-rad hela arenan
+
+- Dela inte om aktörer bara ligger på skärmen samtidigt. För en 16-physical-line R3 source sprite, sätt ett levande rasterintervall [Y, Y+15] per actor och räkna överlapp per fysisk Y. Om endast en actor lever på aktuell Y får P1 full rasterradsampling, även om andra aktörer existerar ovanför/under.
+- Om två delar samma fysisk Y kan P1 **kandidatmässigt** ha 2-way even/odd raster line interleave lokalt. Om tre delar samma Y pröva kort 3-way interleave (det kan kräva mer mask-/positioneringsarbete än 76c tillåter). Välj prioritet för riddarens ~24f windup om tekniskt möjligt; den får inte döljas.
+- Exempel: Knight1 fysisk Y40–55, Knight2 Y48–63, Ranger Y52–67. Schemapartition: 40–47 K1 only (8 lines); 48–51 K1/K2 (4); 52–55 K1/K2/R (4); 56–63 K2/R (8); 64–67 R only (4). Källa: intervalldelningsanalys här, **inte assemblerad emulatorbevisning**.
+- Caveat: samma P1 hardware generator kan bara ge en fri X vid en given tid utan extra reposition/GRP. **Att skriva olika GRP1 per fysisk rad är inte samma sak som att flytta dess horisontella läge.** RESP1 (coarse)/HMP1(HMOVE)/NUSIZ/VDEL positioneringsdeadlines, artefakter vid ompositionering, same-line order och X-permutation måste räknas på all Y-positionering; en 2-way actor m.m. kräver ibland växlande stora X hopp varje fysisk rad. R3 gamla HMOVE sidoskift för P0 måste vara negativ kontroll.
+- En alternativ ägarstrategi värd att jämföra: om P0 (Skraun) inte är aktivt i rasterbandet kan **P0 temporärt användas av en fiende** medan P1 ritar övriga, förutsatt korrekt P0 originalgrafik, 4×-bredd på level 3, P0/M0 grå färgkoppling, repositioning/restore och inga samtidiga Skraun-hits. Detta är en ny arkitekturhypotes, inte en gratis andra aktör: M0 pil och flera Skraun Y-närvarofall kan ta bort möjligheten. Får bara användas om inga aktiva P0-originalpixlar förloras.
+- NUSIZ copies när mask/X följer lagliga spacing kan användas lokalt, inte göra fria X till fasta X; GRP rewrite mellan kopior måste beam-timed. Extra 3-line-prototype only if each 76c physical line legal, source pixel preserved enough and all TIA owners included.
+
+### Kreativa omval: minsta intrång först, explicit tradeoff
+
+| Fallback | Typ av ändring | Teknisk hypotetisk vinst | Kostnad / nödvändig användarbedömning |
+|---|---|---|---|
+| 0. Dynamisk P0/P1/Y-scheduler, två röda samma TIA-byte, sparse PF | **Ingen canon-ändring** | Delar rasterresurser när verkligt lediga | Kräv full käll-/ROM-bevisning; fortfarande beam/stack-problem |
+| 1. Förändra fiendernas visuella *höjd* eller varningspose, behåll silhuett/roll | **Mindre grafikjustering** | Färre Y-overlap rader och eventuellt mindre trevägsbehov | Kräver ny ART + user-godkänd läsbarhet; inte reducera varningsfönster tyst |
+| 2. Ändra halons *visuella* ritning men behåll 360° logisk räckvidd | **Grafik-kompromiss** | Kan minska PF0/1/2 och 2-färgs inom samma line, speciellt om endast en färg krävs | Tydlig preview krävs, ring genom hinder och effekt bibehålls logiskt |
+| 3. Lokalt 2-/3-vägs-Venetian eller begränsat frame-flicker | **Visuell kompromiss** | Fler objekt samtidigt inom samma frame | Färre fysiska pixlar och risk för svärd/ranger osynlighet, måste prövas 60Hz rörligt |
+| 4. Ändra aktiva fiender till exempel 1 knight + 1 ranger plus reservspawn | **Större gameplay-ändring** | Minskar worst same-Y P1 samtidighet från tre till två | Användaren måste godkänna före ändrad active-knights canon; antal totalt kan hållas |
+| 5. Superchip/annan mapper/extra CPU | **Hårdvaru- och kompatibilitetsval** | Mer RAM/beräkningsförberedelse | TIA scanline/färger oförändrade, original-cart/RetroN77 kompatibilitet måste särskilt prövas |
+
+**N6-C beslutsregel:** Testa minst två VERKLIGT OLIKA komplett-kernelalternativ: (A) lokal Y-sort + P0/P1 owner-lending och minskad PF write scheduling; (B) samma design men lokal P1 Venetian där Y-overlap. För båda: worst S1,S2,S3 Y/close/permuted X/24f sword tell + S4,S5,S6 gold/solid/orb/arrow. Kräv 76-cycle deadline och 128B+stack; ignorera inte app/AI/HUD. Redovisa första fysiska counterexample för varje. Om båda faller, skriv ranked *specific creative compromise proposals* med sannolik påverkan, **inte** fler upprepade varianter av samma R3 20Hz helframe-flicker. Inget N7 eller självständig Verification får inledas som implicit nästa steg.
