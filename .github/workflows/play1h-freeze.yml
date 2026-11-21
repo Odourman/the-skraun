@@ -34,4 +34,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add experiments/play1_h_single_arena.bin experiments/play1_h_single_arena.lst experiments/play1_h_single_arena.sym experiments/play1_h_DASM_BUILD.log experiments/play1_h_SHA256SUMS.txt
           git commit -m 'artifact(PLAY1-H): freeze 4096B real Stella-tested Y-follow PARTIAL ROM'
+          git fetch origin experiment/play1-h-moving-visible-halo-20261121
+          git rebase origin/experiment/play1-h-moving-visible-halo-20261121
           git push origin HEAD:refs/heads/experiment/play1-h-moving-visible-halo-20261121
