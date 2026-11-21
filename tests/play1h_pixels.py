@@ -3,7 +3,7 @@ from PIL import Image
 from pathlib import Path
 import json,hashlib,numpy as np
 root=Path('build/play1h/moving')
-names=['baseline','L1_on','L2_on','A_L3_on','B_L3_right8','C_L3_right8_down8']
+names=['baseline','L1_on','L2_on','A_L3_on','B_L3_right8','C_L3_right8_up8','D_L3_right8_down8']
 data={}
 pix={}
 for name in names:
@@ -26,22 +26,29 @@ for name in names:
  pix[name]=(gold,gray,blue)
  print(name,data[name])
 assert data['baseline']['P0'] and data['baseline']['blue_n']>0
-assert data['A_L3_on']['P0'] and data['B_L3_right8']['P0'] and data['C_L3_right8_down8']['P0']
-for l,dim in [('L1_on',(16,12)),('L2_on',(32,24)),('A_L3_on',(64,36)),('B_L3_right8',(64,36)),('C_L3_right8_down8',(64,36))]:
+assert all(data[k]['P0'] for k in ['A_L3_on','B_L3_right8','C_L3_right8_up8','D_L3_right8_down8'])
+for l,dim in [('L1_on',(16,12)),('L2_on',(32,24)),('A_L3_on',(64,36)),('B_L3_right8',(64,36)),('C_L3_right8_up8',(64,36)),('D_L3_right8_down8',(64,36))]:
  b=data[l]['P0']; assert (b[2]-b[0],b[3]-b[1])==dim,(l,b,dim)
 assert data['B_L3_right8']['P0'][0]>data['A_L3_on']['P0'][0],'P0 did not really move X'
-assert data['C_L3_right8_down8']['P0'][1]>data['B_L3_right8']['P0'][1],'P0 did not really move Y'
+assert data['C_L3_right8_up8']['P0'][1]<=data['B_L3_right8']['P0'][1]-7,'P0 did not freely move up 8 physical Y lines'
+assert data['D_L3_right8_down8']['P0'][1]<=data['B_L3_right8']['P0'][1]+2,'L3 was allowed to clip into lower-right 4-solid obstacle'
 def difference(a,b):
  m1,g1,p1=pix[a];m2,g2,p2=pix[b]
  non=(~(g1|g2|p1|p2))
  delta=np.logical_xor(m1,m2)&non
  return int(delta.sum()),bbox(delta)
 result={}
-for k,a,b in [('x','A_L3_on','B_L3_right8'),('y','B_L3_right8','C_L3_right8_down8')]:
+for k,a,b in [('x','A_L3_on','B_L3_right8'),('y','B_L3_right8','C_L3_right8_up8')]:
  cnt,box=difference(a,b)
  result[k]={'unoccluded_gold_pixel_changes':cnt,'bbox':box}
  print('REAL_TIA_A_B_C',k,result[k])
-(root/'PLAY1H_REAL_PIXEL_AUDIT.json').write_text(json.dumps({'scenes':data,'unoccluded_diffs':result},indent=2))
+# The deliberately tested CTRLPF mirror->repeat X shortcut may move
+# physical SOLIDS with the halo; verify an upper obstacle row well above
+# all PLAY1 active PF2 bands, and fail the scene-preservation contract.
+upper_y=60
+scene_shift=int(np.logical_xor(pix['A_L3_on'][0][upper_y],pix['B_L3_right8'][0][upper_y]).sum())
+print('PHYSICAL_SCENERY_SHIFT',{'row':upper_y,'gold_pixels_changed':scene_shift,'must_be_zero_for_VALID_solution':True})
+(root/'PLAY1H_REAL_PIXEL_AUDIT.json').write_text(json.dumps({'scenes':data,'unoccluded_diffs':result,'upper_obstacle_row_shift':scene_shift},indent=2))
 print('This script tests actual pixels; nonzero position-dependence alone does NOT prove geometric 360 halo.')
 formats={x['display_format'] for x in data.values()}
 assert all('NTSC' in x for x in formats),('NTSC frame discipline FAILED, actual Stella autodetected',formats)
