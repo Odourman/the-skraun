@@ -3,7 +3,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/play1h/moving "$HOME/.config/stella"
 scene_num=0
-for scene in baseline A_L3_on B_L3_right8 C_L3_right8_down8 L1_on L2_on; do
+for scene in baseline A_L3_on B_L3_right8 C_L3_right8_up8 D_L3_right8_down8 L1_on L2_on; do
   scene_num=$((scene_num+1))
   export DISPLAY=":$((90+scene_num))"
   Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "build/play1h/XVFB_${scene}.log" 2>&1 &
@@ -33,12 +33,17 @@ for scene in baseline A_L3_on B_L3_right8 C_L3_right8_down8 L1_on L2_on; do
          fi
          echo 'joy0Fire #0'
          echo 'frame #2'
-         if [ "$scene" = B_L3_right8 ] || [ "$scene" = C_L3_right8_down8 ]; then
+         if [ "$scene" = B_L3_right8 ] || [ "$scene" = C_L3_right8_up8 ] || [ "$scene" = D_L3_right8_down8 ]; then
            echo 'joy0Right #0'
            echo 'frame #8'
            echo 'joy0Right #1'
          fi
-         if [ "$scene" = C_L3_right8_down8 ]; then
+         if [ "$scene" = C_L3_right8_up8 ]; then
+           echo 'joy0Up #0'
+           echo 'frame #8'
+           echo 'joy0Up #1'
+         fi
+         if [ "$scene" = D_L3_right8_down8 ]; then
            echo 'joy0Down #0'
            echo 'frame #8'
            echo 'joy0Down #1'
