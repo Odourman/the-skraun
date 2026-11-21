@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software DISPLAY=:99
+export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/play1h/moving "$HOME/.config/stella"
-Xvfb :99 -screen 0 1400x1000x24 > build/play1h/XVFB.log 2>&1 &
-xpid=$!
-trap 'kill "$xpid" 2>/dev/null || true' EXIT
-sleep 2
+scene_num=0
 for scene in baseline A_L3_on B_L3_right8 C_L3_right8_down8 L1_on L2_on; do
+  scene_num=$((scene_num+1))
+  export DISPLAY=":$((90+scene_num))"
+  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "build/play1h/XVFB_${scene}.log" 2>&1 &
+  xpid=$!
+  sleep 2
   out="$PWD/build/play1h/moving/$scene"
   mkdir -p "$out"
   {
@@ -64,6 +66,8 @@ for scene in baseline A_L3_on B_L3_right8 C_L3_right8_down8 L1_on L2_on; do
   sleep 1
   xdotool windowfocus "$win" || true
   scrot -z "$out/DEBUGGER_DESKTOP.png"
-  kill "$pid" || true
-  wait "$pid" || true
+  kill "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  kill "$xpid" 2>/dev/null || true
+  wait "$xpid" 2>/dev/null || true
 done
