@@ -1,0 +1,35 @@
+# ROM DEVELOPMENT II → MAIN III: PLAY1-X precomputed asymmetric PF2 microprobe, physical fail
+**2026-11-21 | DEVELOPER_OBSERVED | PLAY1_X_FAIL_FOR_TESTED_IMPLEMENTATION**
+
+## Authority / byte provenance
+PLAY1-X is authorized **only** through [MAIN III's exact order](https://github.com/Odourman/the-skraun/blob/main/handoff/MAIN_III_TO_ROM_DEVELOPMENT_II_PLAY1_X_ASYMMETRIC_PF_HALO_MICROPROBE_AUTHORIZED_2026-11-21.md) and [Issue #38](https://github.com/Odourman/the-skraun/issues/38). New isolated branch `experiment/play1-x-precomputed-asymmetric-halo-20261121` was created from **exact frozen PLAY1-H commit `79b9739e77741c74ae5228f3c63d64449af7bc9f`**. The base original 4096-byte ROM SHA256 `6e5e203ff2715fac650b76a620bc1e3e3b0084d67e82452842edd7b5e1903bca`, original ASM SHA256 `0aa5cf5d14e1eba0b786965fe316327810de01d36a4a32202651e06f36255c16`. Base PR #37 was not edited. PLAY1-X draft PR #39; neither main nor any older branch was merged.
+
+## One implemented physical strategy (plus one local -3-cycle correction)
+- Preserve original `CTRLPF=$11` mirror of all four static collision obstacles and original U1-LEG1 A/B P0 (three sizes), R3 P1, BL orb, joystick, FIRE, Y-pointer, target logic.
+- One extra **precomputed L3 right-half PF2 193-row ROM table** at `$F900`, substituted for unused legacy `PlayPF0`. When `Level=3 && HaloFrames>0 && PlayerX>=100`, frame-VBLANK preselects `HaloRightPtr=(F890+PlayerY)`; otherwise right PF2 reuses original Y-shifted `HaloRowPtr`. Thus one coarse X bucket, not full continuous X.
+- Kernel tries a second `LDA (HaloRightPtr),Y; STA PF2` within the physical scanline, without touching P1/P0 mask data or `CTRLPF`. Initial version included a 3-cycle `BIT JoyState` for beam phase and was truly DASM/STELLA tested at [run #44936576202](https://github.com/Odourman/the-skraun/actions/runs/44936576202): **PAL***, active sprite misrender, actual debugger `WSync C.77`. A local fix removed that BIT, final ASM in this PR, actually built and captured at [run #44936786678](https://github.com/Odourman/the-skraun/actions/runs/44936786678). No second architecture family, mapper or artwork.
+
+## Exact final ROM and authentic original test evidence
+- Actual assembled standard 4KiB image `experiments/play1_x_single_arena.bin`, **4096 bytes**, SHA256 **`d4a83d0b41ba6850e4b7686feed41c6da136dd95adb6f5184ed5d0f93536cde3`**.
+- Actual source `experiments/play1_x_single_arena.asm` SHA256 **`b8c89c205aef9dc99d75ab156bd7882bfa3dd98c515917780bd3098a04f45730`**. Listing `.lst`, symbols `.sym`, DASM build output and `experiments/play1_x_SHA256SUMS.txt` committed on same branch by genuine DASM freeze workflow.
+- Rebuild: `dasm experiments/play1_x_single_arena.asm -f3 -oexperiments/play1_x_single_arena.bin -lexperiments/play1_x_single_arena.lst -sexperiments/play1_x_single_arena.sym`, then `sha256sum -c experiments/play1_x_SHA256SUMS.txt`.
+- Real Stella 6.7.1 from ubuntu-24.04 GitHub Actions, 9 actual joystick/FIRE scenes, screenshots `DEBUGGER_DESKTOP.png` and 320x228 `ACTUAL_STELLA_TIA.png`, input files, emulator logs and same binary hash: [second final ROM experiment run #44936786678](https://github.com/Odourman/the-skraun/actions/runs/44936786678). Artifact `PLAY1X-authentic-DASM-Stella-ABC`, **358935 bytes**, ZIP SHA256 **`49e2e689c074c1f77ac1b4647fbfeb0bb42529258feb7e88d6650e0d683e1bec`**. First initial run original artifact **361431 bytes** SHA256 **`2cb748fe08f2dbdd5429501dcf02abfbf43e8e13cc37029676dbfbb84d0887d8`**. No injected gameplay RAM. CI green on diagnostic runs meant data capture only, never pixel correctness. The updated `tests/play1x_pixels.py` fails closed for physically invalid screenshots.
+
+## Actual physical first failure (stronger than colour/count)
+| Actual Stella 6.7.1 scene | Debugger observed frame scanlines | Required NTSC | P0 physical bbox (TV width×height) | U1 requirement | P1 original blue pixels |
+|---|---:|---:|---:|---:|---:|
+| L1 baseline after -3cy | **273** | 262 | **16×23** | 16×12 TV | **168**, expected 120 |
+| L2 FIRE after -3cy | **285** | 262 | **32×47** | 32×24 TV | **144**, expected 120 |
+| L3 FIRE at X104 after -3cy | **297** | 262 | **64×71** | 64×36 TV | P1 target already disappeared; original pre-hit source not preserved at L1/L2 |
+
+These measurements were read from actual Stella Debugger GUI `Scn Ln 0 / 273, 285, 297` and original TIA RGB masks, not just automated source tables. Each extra physical line corresponds to a 6507 sprite-active loop iteration spilling past 76 CPU cycles. The initial 3-cycle-filler variant physically displayed `PAL*` and an invalid visual image. Final variant happens to print `NTSC*` but **is not 262 scanlines**. Do not relabel it as original-NTSC-compatible.
+
+### SOURCE_STATIC worst-case CPU vs beam
+Real final DASM listing shows for a sprite-active physical line after WSYNC:
+`STA GRP0` completes c3; `STA PF1` c10; `STA PF0` c15; `STA PF2(left)` c27 plus page penalty; `STA ENABL` c35 plus penalties; `STA PF2(right)` c43 plus penalties; `STA GRP1` c50 plus penalties. Sprite row calculation + branch + Gfx load + loop + next `STA WSYNC` costs at least to **c81**, **5 cycles beyond 76** with source-only minimum, and up to approximately **c84** on certain indexed page crossings; physical Stella confirms frame overshoot in the tested case. Initial version with 3-cycle alignment reached source minimum c84 plus penalties. It is therefore not credible to add yet another PF operation inside the same 76-cycle row as a local patch. The second PF2 write is also early relative to right-half beam and may distort the left edge.
+
+### Mask comparisons NOT a pass
+Final ROM's diagnostic original RGB script reported **4208** P0/P1-excluded gold pixel changes at nominal X A→B; **0** at B→C although player moved 8 more X units, consistent with coarse `PlayerX>=100` branch. B→D Y movement produced **2304** gold differences. The upper fixed obstacle TIA row y65 had **0** gold differences during nominal X. However **same-level/same-height/FIRE actual PLAY1 conditions are invalid due to 273/285/297 raster output and source sprite corruption**. Thus the 4208 cannot count as a correct visually centered moving gold halo. No sound complete renderer, dynamic range/thickness or valid response latency has been proven. One L3 wall attempt was recorded, but correct full-body collision across the invalid frame cannot be claimed PASS.
+
+## Resource and strict end
+**RIOT statically allocated $80–$AB inclusive = 44 bytes**, plus approximately 4-byte source-inferred JSR return stack for tested control path, live highwater **NOT_TESTED**; 128B not exhausted. ROM fits **4KiB**, no mapper. **Hard first gate is 6507/beam timing plus original bitmap distortion**, not ROM or RIOT overflow. No full physical 262-line NTSC / R3/P0 regression PASS. **Verdict `PLAY1_X_FAIL_FOR_TESTED_IMPLEMENTATION`**, not proof of fundamental TIA unsatisfiability or authorization for PLAY1-X2. Preserve frozen playable PLAY1-H as existing baseline, main and older PRs unchanged, PR#39 draft unmerged, ROM DEVELOPMENT II STOP. MAIN III decides separately whether any new approach is authorized.

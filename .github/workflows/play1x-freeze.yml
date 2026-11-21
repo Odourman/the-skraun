@@ -1,0 +1,39 @@
+name: PLAY1-X freeze exact original DASM 4KiB negative microprobe ROM
+on:
+  push:
+    branches: [experiment/play1-x-precomputed-asymmetric-halo-20261121]
+    paths: [.github/workflows/play1x-freeze.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/play1-x-precomputed-asymmetric-halo-20261121
+          persist-credentials: true
+      - name: Install real DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Exact source/ROM SHA and real listing
+        run: |
+          set -euo pipefail
+          dasm experiments/play1_x_single_arena.asm -f3 -oexperiments/play1_x_single_arena.bin -lexperiments/play1_x_single_arena.lst -sexperiments/play1_x_single_arena.sym 2>&1 | tee experiments/play1_x_DASM_BUILD.log
+          test "$(stat -c %s experiments/play1_x_single_arena.bin)" -eq 4096
+          echo 'b8c89c205aef9dc99d75ab156bd7882bfa3dd98c515917780bd3098a04f45730  experiments/play1_x_single_arena.asm' | sha256sum -c -
+          echo 'd4a83d0b41ba6850e4b7686feed41c6da136dd95adb6f5184ed5d0f93536cde3  experiments/play1_x_single_arena.bin' | sha256sum -c -
+          sha256sum experiments/play1_x_single_arena.asm experiments/play1_x_single_arena.bin > experiments/play1_x_SHA256SUMS.txt
+      - name: Commit only ROM/listing/symbols and manifest to isolated PLAY1-X branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/play1_x_single_arena.bin experiments/play1_x_single_arena.lst experiments/play1_x_single_arena.sym experiments/play1_x_SHA256SUMS.txt experiments/play1_x_DASM_BUILD.log
+          git commit -m 'artifact(PLAY1-X): 4096B DASM real-Stella negative microprobe, never main'
+          git fetch origin experiment/play1-x-precomputed-asymmetric-halo-20261121
+          git rebase origin/experiment/play1-x-precomputed-asymmetric-halo-20261121
+          git push origin HEAD:refs/heads/experiment/play1-x-precomputed-asymmetric-halo-20261121

@@ -2,6 +2,11 @@ name: PLAY1-X original DASM 4KiB + real Stella A-B-C scanline probe
 on:
   push:
     branches: [experiment/play1-x-precomputed-asymmetric-halo-20261121]
+    paths:
+      - experiments/play1_x_single_arena.asm
+      - scripts/play1x_stella_capture.sh
+      - tests/play1x_pixels.py
+      - .github/workflows/play1x-real.yml
   workflow_dispatch:
 permissions:
   contents: read

@@ -43,3 +43,27 @@ for a,b in pairs[:3]:
  print("UPPER_OBSTACLE",a,b,int(np.logical_xor(fixed_a[65],fixed_b[65]).sum()))
 (root/"PLAY1X_DIAGNOSTIC_PIXELS.json").write_text(json.dumps({"scenes":data,"pairs":results},indent=2))
 print("DIAGNOSTIC_ONLY: no gameplay or beam PASS is implied by artifacts or this script.")
+
+# Fail-closed developer regression: an authentic capture is not sprite/gameplay PASS.
+expected_dims={"baseline":(16,12),"L1_fire":(16,12),
+               "pickup_L2_off":(32,24),"L2_fire":(32,24),
+               "A_L3_fire":(64,36),"B_L3_x104":(64,36),
+               "C_L3_x112":(64,36),"D_L3_y104":(64,36),
+               "E_L3_wall":(64,36)}
+failures=[]
+for name,dim in expected_dims.items():
+ b=data[name]["p0_bbox"]
+ got=(b[2]-b[0],b[3]-b[1]) if b else None
+ if got!=dim:failures.append(f"{name} P0 got {got}, required {dim}")
+ if "NTSC" not in data[name]["display"]:
+  failures.append(f"{name} wrong physical format {data[name]['display']}")
+for name in ["baseline","L1_fire","pickup_L2_off","L2_fire"]:
+ if data[name]["p1_blue_n"]!=120:
+  failures.append(f"{name} original R3 P1 = {data[name]['p1_blue_n']} TV pixels, required 120")
+if results["B_L3_x104->C_L3_x112"]["unoccluded_changes"]==0:
+ failures.append("X phase B->C: zero non-occluded gold changes (only one coarse X bucket)")
+if failures:
+ print("PLAY1_X_FAIL_FOR_TESTED_IMPLEMENTATION, not a general TIA impossibility:")
+ for i,msg in enumerate(failures,1): print(f"FIRST/ADDITIONAL FAILURE {i}: {msg}")
+ raise SystemExit(1)
+print("PLAY1_X_BOUNDED_PIXEL_REGRESSION_PASS only; full timing is NOT proven by this script")
