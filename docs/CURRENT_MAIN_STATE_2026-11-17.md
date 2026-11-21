@@ -2,6 +2,10 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 USER REAFFIRMED L3 AGILITY + HALO GROWTH (ISSUE #23)
+
+**User preference while waiting RESEARCH II:** Skraun must move smoothly among sparse obstacles, even at level3; body should not be unnecessarily large. User asks whether halo grows: **YES, source canon #03 says thicker and greater outer reach each level**; exact radii not frozen. MAIN notes a possible later visual choice: body size can be more restrained than halo radius while keeping level3 distinct/powerful, subject to separate user choice after movement/contrast proof. Original U1-LEG1 8×12 A/B remains frozen; L2 16×24, L3 32×36 are preliminary, 16×20/32×30 already unapproved candidates. These do not resolve N6 three-enemy same-Y P1 difficulty automatically. **Tracking note:** [L3 movement gate issue #23](https://github.com/Odourman/the-skraun/issues/23#issuecomment-7063397203). RESEARCH II N6-C work scope and N7 NOT AUTHORIZED unchanged.
+
 ## MAIN III 2026-11-21 RESEARCH II source-only N6-C handoff delivered
 
 **Next role routing (after user asked who should receive next work):** RESEARCH II, NOT ROM DEVELOPMENT. Published a focused N6-C [RESEARCH II handoff](../handoff/RESEARCH_II_N6C_P1_TIMING_AND_INTEGRATED_KERNEL_SOURCE_ONLY_2026-11-21.md), notified [RESEARCH-only PR #26](https://github.com/Odourman/the-skraun/pull/26#issuecomment-7063279415), and logged it on [N6-C Issue #30](https://github.com/Odourman/the-skraun/issues/30#issuecomment-7063280190). Target exact beam/cycle-timed P1 independent X/Y when P0 busy in S2-close/S3, combined with B gold PF, BL orb, M0 arrow, sword telegraph, 76cy and RIOT 128B incl stack; return a bounded physical schedule or first reproducible counterexample. **Separate RESEARCH II chat not automatically launched or notified by GitHub; requires user to invoke/submit link in that chat.** No source evidence that the role has begun. N6-C still OPEN, N7 explicitly NOT AUTHORIZED, no ROM nor independent Verification started.
