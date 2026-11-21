@@ -1,0 +1,35 @@
+{
+  "R3_git_blob": "3c9ed79078eee6a0c63100614a593f92e240b5e8",
+  "source_only": true,
+  "not_TIA_emulated": true,
+  "new_N7_ROM_authorized": false,
+  "scene_store_gaps": {
+    "S1": {
+      "naive_fail": 0,
+      "optimistic_preloaded_fail": 0
+    },
+    "S2-permuted": {
+      "naive_fail": 0,
+      "optimistic_preloaded_fail": 0
+    },
+    "S2-close": {
+      "naive_fail": 7,
+      "optimistic_preloaded_fail": 0
+    },
+    "S3": {
+      "naive_fail": 3,
+      "optimistic_preloaded_fail": 0
+    }
+  },
+  "F2_main_preposition_conflicts": {
+    "S1": 5,
+    "S2-close": 5,
+    "S3": 5
+  },
+  "disposition": {
+    "F1_P0_only": "COUNTEREXAMPLE S1/S3 16 of 16 P0 occupied (MAIN source)",
+    "F2_regular_main_only": "COUNTEREXAMPLE 5 of 16 backward preposition resets",
+    "F2_NUSIZ_retrigger": "NOT_YET_DETERMINED",
+    "full_engine": "NOT_YET_DETERMINED"
+  }
+}
