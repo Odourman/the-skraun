@@ -163,9 +163,9 @@ PhaseGood:
         sta HaloRowPtr+1
         jmp HaloPointerReady
 HaloPointerOff:
-        lda #$BE
+        lda #$01
         sta HaloRowPtr
-        lda #$FD
+        lda #$FF
         sta HaloRowPtr+1
 HaloPointerReady:
         lda PlayerX
@@ -252,9 +252,9 @@ NextLine:
         sta OrbRowPtr+1
         jmp OrbSelected
 SelectOrbZero:
-        lda #$BE
+        lda #$01
         sta OrbRowPtr
-        lda #$FD
+        lda #$FF
         sta OrbRowPtr+1
 OrbSelected:
 OverScanWait:
@@ -786,8 +786,8 @@ RecoverTable:
         dc.b 0,60,36,15
 HaloMaskTable:
         dc.b 0,$03,$1F,$FF
-HaloBaseLo: dc.b 0,$B0,$C0,$10
-HaloBaseHi: dc.b 0,$F7,$FA,$FE
+HaloBaseLo: dc.b 0,$B0,$C0,$D0
+HaloBaseHi: dc.b 0,$F7,$FA,$FD
 
 ; Source original R3 K1 exact eight bytes $18,$3C,$7E,$DB,$5A,$24,$66,$42,
 ; each displayed twice, in decreasing scanline X index order.
@@ -912,9 +912,12 @@ OrbScan:
         ds 63,0           ; guarantee FDC1..FDFF zeros for OFF pointer
 
         ; level3 Y-motion template with full two-sided guards in ROM
+        ; Original last BL table extends to FDFF. FE00..FE3F is
+        ; zero guard. L3 table starts FE40; FF01..FFFB is a
+        ; permanent 251-byte zero profile for OFF halo and OFF BL.
         ORG $FE00
-        ds 128,0
-        ORG $FE80
+        ds 64,0
+        ORG $FE40
 HaloL3Rows:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
@@ -933,7 +936,7 @@ HaloL3Rows:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00
-        ds 187,0
+        ds 251,0
         ORG $FFFC
         dc.w Reset
         dc.w Reset
