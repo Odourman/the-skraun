@@ -2,6 +2,16 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 N6 USER FEEDBACK: BLUE KNIGHTS, MELEE SWORD, CHEAP HALO, WORLD/GOLD ORB
+
+**User design inputs, source-only (NOT implementation GO):** technical-cheapest visibly meaningful 360° halo contour requested (not mandatory perfect circle); **three independent simultaneous enemies remain requirement** pending serious combined kernel work; **light-blue knight armour preferred to previous red candidate** — use exactly one identical light-blue TIA value for both knights, no user-final NTSC code yet, test visibility in mountain/night + gray Skraun + camo ranger; **orb world color when B halo OFF, gold when ON**, simple small BL form, optional deliberate glitter/blink; simplify PF obstacles with eight unique open map layouts; static dream spirals; ask feasibility of reducing visual height for L2/L3 while preserving user-approved U1-LEG1 8×12 A/B min original source; near-melee sword graphics research initiated. User's blank '8.' contains no additional request; not interpreted as authorization.
+
+**Research summary:** [full original statement + verified 1983 IEEE Boxing NUSIZ punch, Activision Whitehead, Kung Fu Master manual, Adventure ASM, Stella Guide and ranked technical sword architectures](MAIN_III_N6_USER_FEEDBACK_MELEE_SWORD_REFERENCE_AND_CREATIVE_TEST_MATRIX_2026-11-21.md). Prefer no extra TIA object: P1 knight sprite poses (idle, raised telegraph, slash, recovery) + separate narrow software hitbox; optionally investigate M1 for one visible sword in shared light-blue COLUP1. M1 is NOT an 8-bit sprite or free independent color; extra sword cannot be guaranteed for both knights when simultaneous attacks, no gameplay staggering authorized. Boxing's on-the-fly NUSIZ extension is documented historically but not integrated Skraun.
+
+**Potential lower-impact physical scale trial only:** U1-LEG1 min L1 8x12 unchanged; proposed L2 16x20/L3 32x30 via variable raster row repetition of all twelve original mask rows **instead of 16x24/32x36**. Changes proportions and needs user review; no change to approved art/canon. Check whether 6 fewer level3 P0 physical rows reduces P1 overlap vs source raster/collisions; may have no effect in worst same-Y enemy band.
+
+**N6 B status unchanged:** colour B remains comparative study, N6-C unified 76-cycle+beam+128B+BL/M0/P1/arrow/HUD proof OPEN; no N7, new DASM/Stella, locked new knights palette, art or map changes, mapper or independent Verification.
+
 ## MAIN III 2026-11-21 N6-B USER-SELECTED COLOR TRIAL + CREATIVE REVIEW
 
 **New explicit user direction:** "Ok, vi testar det" follows MAIN suggestion to TEST color option B: PF world color when halo inactive; when halo is active, the entire *arena PF* changes to GOLD, including obstacles, with halo source-mask OR scenery. This is a **comparative N6 design/source-only test approval, not permanent canon or later N7 ROM authorization**. User asks MAIN to review which other creative design choices have meaningful Atari technical leverage. Full [ranked creative fallback + N6-B source-derived analysis](MAIN_III_N6_B_GOLD_PLAYFIELD_CREATIVE_REVIEW_2026-11-21.md).
