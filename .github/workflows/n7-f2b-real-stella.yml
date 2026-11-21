@@ -1,0 +1,50 @@
+name: N7 F2b original-TIA NTSC physical probe
+on:
+  push:
+    branches:
+      - experiment/n7-f2b-three-enemy-retrigger-20261121
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  f2b-dasm-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native DASM, Stella 6.7.1 and X11 screenshot tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+          command -v dasm
+          command -v stella
+          mkdir -p build/n7
+          stella -help 2>&1 | head -n 15 || true
+      - name: Assemble authentic standalone 4 KiB NTSC ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/n7_f2b_minimal_ntsc.asm -f3 -obuild/n7/n7-f2b-ntsc.bin -lbuild/n7/n7-f2b-ntsc.lst -sbuild/n7/n7-f2b-ntsc.sym 2>&1 | tee build/n7/DASM_BUILD.log
+          test "$(stat -c %s build/n7/n7-f2b-ntsc.bin)" -eq 4096
+          sha256sum build/n7/n7-f2b-ntsc.bin experiments/n7_f2b_minimal_ntsc.asm > build/n7/SHA256SUMS
+          stella -rominfo build/n7/n7-f2b-ntsc.bin > build/n7/STELLA_ROM_INFO.txt 2>&1 || true
+      - name: Actual Stella debugger 12 consecutive one-frame advances (S2)
+        run: |
+          set -euo pipefail
+          chmod +x scripts/n7_f2b_stella_capture.sh
+          scripts/n7_f2b_stella_capture.sh
+      - name: Inspect authentic captured frames, prove artifacts are not black
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/n7_f2b_analyse.py build/n7 | tee build/n7/PIXEL_SELF_TEST.txt
+      - name: Retain original ROM, source, listing, logs, debugger images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n7-f2b-physical-stella-first-probe
+          path: |
+            build/n7/
+            experiments/n7_f2b_minimal_ntsc.asm
+            scripts/n7_f2b_stella_capture.sh
+            tests/n7_f2b_analyse.py
+          if-no-files-found: warn
