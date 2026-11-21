@@ -37,6 +37,18 @@ jobs:
         run: |
           set -euo pipefail
           /usr/bin/python3 tests/n7_f2b_analyse.py build/n7 | tee build/n7/PIXEL_SELF_TEST.txt
+      - name: Source-exact R3 bitmap, X and color oracle – expected FAIL
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/n7_f2b_source_pixel_oracle.py build/n7/stella-s2-12 | tee build/n7/N7_REAL_PIXEL_ORACLE.log
+          /usr/bin/python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('build/n7/N7_F2B_TRUE_PIXEL_SOURCE_ORACLE.json').read_text())
+          assert r['verdict']=='F2b_FAIL_FOR_TESTED_SCENE',r['verdict']
+          assert len(r['frames'])==12,len(r['frames'])
+          print('EXPECTED NEGATIVE CONTROL: 12 genuine Stella frames fail full three-actor truth.')
+          PY
       - name: Retain original ROM, source, listing, logs, debugger images
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,4 +59,5 @@ jobs:
             experiments/n7_f2b_minimal_ntsc.asm
             scripts/n7_f2b_stella_capture.sh
             tests/n7_f2b_analyse.py
+            tests/n7_f2b_source_pixel_oracle.py
           if-no-files-found: warn
