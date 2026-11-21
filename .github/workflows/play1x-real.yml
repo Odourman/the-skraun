@@ -1,0 +1,41 @@
+name: PLAY1-X original DASM 4KiB + real Stella A-B-C scanline probe
+on:
+  push:
+    branches: [experiment/play1-x-precomputed-asymmetric-halo-20261121]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original Atari 2600 tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+          mkdir -p build/play1x
+      - name: Assemble actual 6507 4KiB and retain listing/sha
+        run: |
+          set -euo pipefail
+          dasm experiments/play1_x_single_arena.asm -f3 -obuild/play1x/play1x.bin -lbuild/play1x/play1x.lst -sbuild/play1x/play1x.sym 2>&1 | tee build/play1x/DASM.log
+          test "$(stat -c %s build/play1x/play1x.bin)" -eq 4096
+          sha256sum experiments/play1_x_single_arena.asm build/play1x/play1x.bin > build/play1x/SHA256SUMS
+      - name: Genuine Stella debugger joystick and FIRE – three X, one Y
+        run: bash scripts/play1x_stella_capture.sh
+      - name: Physical screenshot RGB geometry, not a mockup or source-only oracle
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/play1x_pixels.py | tee build/play1x/PIXELS.log
+      - name: Keep full real ROM/ASM/LST/SYM/screenshot/input/cycle evidence even on FAIL
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLAY1X-authentic-DASM-Stella-ABC
+          path: |
+            build/play1x/
+            experiments/play1_x_single_arena.asm
+            scripts/play1x_stella_capture.sh
+            tests/play1x_pixels.py
+          if-no-files-found: warn
