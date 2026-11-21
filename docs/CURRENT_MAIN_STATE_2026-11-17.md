@@ -2,6 +2,16 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 ChatGPT Project Source refresh prepared – UI replacement still required
+
+**User raised legitimate staleness of ChatGPT Project Sources and Project Instructions.** MAIN checked old Drive 'Aktuell projektstatus och nästa utvecklingsgrind' (started 2026-11-16, last modified 2026-11-17) and root README, which still contained historic horizontal quadruped and pre-N7 status. Produced **new dated navigation snapshots**, not independent gameplay authority:
+- [Project Source 00: Start Here](PROJECT_SOURCE_00_START_HERE_2026-11-21.md)
+- [Project Source 01: Gameplay/canon](PROJECT_SOURCE_01_GAME_CANON_2026-11-21.md)
+- [Project Source 02: Tech status/gates](PROJECT_SOURCE_02_STATUS_GATES_AND_ROLES_2026-11-21.md)
+- [Suggested ChatGPT Project Instructions](CHATGPT_PROJECT_INSTRUCTIONS_SUGGESTED_2026-11-21.md).
+
+Root README updated with latest-link warning and obsolete historical status. **Limit:** connected tools cannot inspect or replace actual ChatGPT Project settings/Project Sources membership. GitHub publication DOES NOT mean the user's ChatGPT Project UI instructions/files changed. User must manually replace obsolete Project uploads and paste/update instructions. MAIN must not delete underlying source evidence or rewrite earlier proofs. At snapshot N7/F2b [#31](https://github.com/Odourman/the-skraun/issues/31) authorized but no ROM deliverable logged, N6-C [#30](https://github.com/Odourman/the-skraun/issues/30) OPEN, N8 NOT authorized. All later developments must be checked live before describing them as current.
+
 ## MAIN III 2026-11-21 USER-APPROVED MINIMAL N7/F2b – ROM DEVELOPMENT II handoff PUBLISHED, ROM NOT YET BUILT
 
 **User command:** "Ok, bra fortsätt" was given directly after MAIN III explicitly proposed the **one minimal N7 F2b ROM** as the next separate authorization. MAIN treats this as approval for **only** the targeted original-Atari-2600 NTSC 4K DASM/Stella F2b diagnostic (three free independently colored/bitmapped enemy X in same Y while P0 L3 Skraun remains), not N8, complete game, graphics redesign, or any cartridge mapper change. Full [binding N7 ROM DEVELOPMENT II work order](../handoff/MAIN_III_TO_ROM_DEVELOPMENT_II_N7_F2B_MINIMAL_NTSC_DIAGNOSTIC_AUTHORIZED_2026-11-21.md), [N7 issue #31](https://github.com/Odourman/the-skraun/issues/31), [N6-C issue #30 update](https://github.com/Odourman/the-skraun/issues/30#issuecomment-7063555659), [ROM DEV migration PR #29 notification](https://github.com/Odourman/the-skraun/pull/29#issuecomment-7063556505).
