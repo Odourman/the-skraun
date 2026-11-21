@@ -168,6 +168,21 @@ HaloPointerOff:
         lda #$FD
         sta HaloRowPtr+1
 HaloPointerReady:
+        ; Bounded TEST X candidate: repoint right half from mirror to repeat
+        ; as PlayerX crosses threshold. CRITICAL: this also changes PF1
+        ; scenery reflection; a true playable PASS MUST reject that regression.
+        lda HaloFrames
+        beq XYMirror
+        lda PlayerX
+        cmp #100
+        bcc XYMirror
+        lda #$10
+        sta CTRLPF
+        jmp XYModeDone
+XYMirror:
+        lda #$11
+        sta CTRLPF
+XYModeDone:
         lda PlayerX
         sec
         sbc HalfW
