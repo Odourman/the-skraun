@@ -235,8 +235,7 @@ Visible:
         ; ONE asymmetric-X physical strategy: second PF2 value after left
         ; PF2 starts but before beam enters right PF2. No CTRLPF change.
         lda (HaloRightPtr),y
-        bit JoyState     ; 3 cycles, beam-slot alignment diagnostic
-        sta PF2          ; right-half mask near colorclock 148
+        sta PF2          ; -3 cycles: urgent timing budget, beam phase retested          ; right-half mask near colorclock 148
         lda DummyScan,x
         sta GRP1         ; original R3 P1 at x125
         ; IMPORTANT: this adds a real indexed read+TIA write on a nearly
