@@ -2,16 +2,15 @@
 
 **Snapshot:** 2026-11-21. Aktuell status måste alltid verifieras mot live GitHub före handling. **Inga regler i denna text auktoriserar implementation utöver befintlig N7/F2b-order.**
 
-## 0. SENARE UPPDATERING 2026-11-21: N7/F2b FAKTISKT LEVERERAD — ROM DEVELOPMENT II FAIL, MAIN/VERIFICATION EJ SLUTFÖRD
+## 0. SENASTE MAIN III-RECEIPT 2026-11-21 – F2b begränsad FAIL, separat verifiering
 
-**Prioritera detta avsnitt framför äldre snapshotrader i samma dokument.** Efter att denna Project Source ursprungligen skrevs publicerade ROM DEVELOPMENT II en fryst N7/F2b diagnostikleverans:
-- [N7 issue #31 mottagningskommentar](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7063794600), [draft PR #32](https://github.com/Odourman/the-skraun/pull/32), branch `experiment/n7-f2b-three-enemy-retrigger-20261121`, commit `25e5e22ab6eb91aeb69c0926ffa0a822b4fc201d`.
-- [Utvecklarens slutrapport](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/docs/n7_f2b/ROMDEV_N7_F2B_HANDOFF.md), [PLAYTEST](https://github.com/Odourman/the-skraun/blob/experiment/n7-f2b-three-enemy-retrigger-20261121/PLAYTEST_N7_F2B.md) och [riktiga Stella testkörningen](https://github.com/Odourman/the-skraun/actions/runs/44911856432).
-- 4 096-byte NTSC DASM-ROM byggd, slut-ROM SHA256 `d15c4805b06c562cb76369dfe3efff3a8c9537f28de4945196d198957fc5368f`. Två begränsade F2b-varianter prövades i **S2-close**, andra efter en NOP-borttagning; utvecklarens slutsats `F2b_FAIL_FOR_TESTED_SCENE`: 0/12 fullständigt source-exakta bildrutor per aktör, en P1-bandrad hoppade fortfarande från scanline131 till133. **Inte ett universellt bevis att alla TIA/F2b-arkitekturer är omöjliga.**
-- S2 permutation, S3 P0 L3, faktisk PF B/ON, orb/pil/svärd/HUD och full 128B RAM/stack PASS **inte utförda eller bevisade** p.g.a. beslutat STOP. Build och egna Stella/CI är **ROM DEVELOPMENT egenkontroll, inte MAIN-granskning eller independent Verification**. MAIN III har ännu inte accepterat/avvisat denna ROM-leverans genom separat dokumenterat beslut.
-- **Status vid denna uppdatering:** `N7_F2B_DEVELOPER_DELIVERED_FAIL_TESTED_SCENE / MAIN_REVIEW_PENDING / N6_C_FULL_ENGINE_OPEN / N8_NOT_AUTHORIZED / NO_MAIN_MERGE / VERIFICATION_NOT_AUTHORIZED`. ROM DEVELOPMENT II har stoppat ytterligare arbete enligt sin arbetsorder.
+**Färdig avgränsad N7/F2b:** ROM DEVELOPMENT II levererade två snäva S2-close 4KiB NTSC DASM/Stella-varianter; huvud-ROM 4 096 byte SHA256 `d15c4805b06c562cb76369dfe3efff3a8c9537f28de4945196d198957fc5368f`, gren `experiment/n7-f2b-three-enemy-retrigger-20261121`, commit `25e5e22ab6eb91aeb69c0926ffa0a822b4fc201d`; [Issue #31](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7063794600), [draft PR #32](https://github.com/Odourman/the-skraun/pull/32).
 
-Detta är en **daterad ny status**, inte en ny implementationsauktorisation. När MAIN granskar #31 eller andra nya commits ändras status utifrån de nya primärkällorna.
+**MAIN III har faktiskt läst ZIP-bytefilen och 12 Stella-TIA-captures**, kontrollerat ZIP SHA/CRC och ROM/ASM SHA samt separat omräknat source-pixlar på X67/X83/X101: K1 **0/120**, K2 **10/136**, Ranger **0/112** förväntade pixlar i varje ruta, **0/12 fullständigt korrekta figurframställningar**. [MAIN granskning](MAIN_III_N7_F2B_DEVELOPER_DELIVERY_REVIEW_2026-11-21.md) och [Issue #31 MAIN-comment](https://github.com/Odourman/the-skraun/issues/31#issuecomment-7064050703).
+
+**Beslut:** `N7_TESTED_S2_FAIL / MAIN_REVIEW_ACCEPTED_BOUNDED_NEGATIVE / INDEPENDENT_VERIFICATION_ORDERED_NOT_YET_RUN / N6_C_FULLSCENE_OPEN / N8_NOT_AUTHORIZED`. Endast två faktiskt implementerade F2b-varianter i S2; inget generellt förbud mot tre fiender. S2-permutation, S3-P0, PF B/ON, M0/BL/HUD och fysisk 76cy/128B-fullscen **ej testade efter STOP**.
+
+**MAIN har gett VERIFICATION II en SEPARAT, tydligt avgränsad read-only order**: [handoff](../handoff/MAIN_III_TO_VERIFICATION_II_N7_F2B_FROZEN_NEGATIVE_INDEPENDENT_AUDIT_2026-11-21.md), [Issue #33](https://github.com/Odourman/the-skraun/issues/33). Verifieringschatten har inte startats automatiskt och det finns ännu inte någon oberoende resultatrapport. Ingen ny N7/N8-ROM, merge, ny art/gameplay tillåten.
 
 ## 1. Snapshot av verklig status
 
@@ -21,9 +20,9 @@ Detta är en **daterad ny status**, inte en ny implementationsauktorisation. Nä
 | Äldre P01/P02/R3 | Delvisa autentiska DASM/Stella-egenkontroller, *inte* en godkänd fullscen; R3 same-Y 20Hz och PF-konflikter otillräckliga | [CURRENT_MAIN_STATE](CURRENT_MAIN_STATE_2026-11-17.md), [N5](MAIN_III_N5_P1_SAME_Y_FEASIBILITY_AND_GAME_DECISION_2026-11-17.md) |
 | N6-C full scen | **OPEN**: endast source-only delmodeller, inga bevis för gemensam beam-safe 76c/128B-grafikmotor | [#30](https://github.com/Odourman/the-skraun/issues/30), [MAIN-review](MAIN_III_N6C_RESEARCH_II_REVIEW_AND_NEXT_GATE_2026-11-21.md) |
 | RESEARCH II | Källbaserad rapport från separat gren, bounded results accepted av MAIN | [Issue #30 RESEARCH](https://github.com/Odourman/the-skraun/issues/30#issuecomment-7063415027), [MAIN-review](MAIN_III_N6C_RESEARCH_II_REVIEW_AND_NEXT_GATE_2026-11-21.md) |
-| N7/F2b | **Explicit godkänt för ROM DEVELOPMENT II, en minimal diagnostisk 4K NTSC ROM – ännu inte utfört vid denna snapshot** | [#31](https://github.com/Odourman/the-skraun/issues/31), [bindande handoff](../handoff/MAIN_III_TO_ROM_DEVELOPMENT_II_N7_F2B_MINIMAL_NTSC_DIAGNOSTIC_AUTHORIZED_2026-11-21.md) |
+| N7/F2b | **Byggd och testad S2-close: avgränsad utvecklar-Fail, accepterad av MAIN; oberoende #33 inväntas** | [#31](https://github.com/Odourman/the-skraun/issues/31), [bindande handoff](../handoff/MAIN_III_TO_ROM_DEVELOPMENT_II_N7_F2B_MINIMAL_NTSC_DIAGNOSTIC_AUTHORIZED_2026-11-21.md) |
 | N8/full spelmotor/merge/extra mapper | **Inte auktoriserat** | [#31](https://github.com/Odourman/the-skraun/issues/31) |
-| Oberoende N7 Verification | **Inte auktoriserad/utförd**; framtida separat order efter fryst utvecklarleverans | [#31](https://github.com/Odourman/the-skraun/issues/31) |
+| Oberoende N7 Verification | **Auktoriserad genom separat MAIN-handoff, ännu inte utförd** | [#33](https://github.com/Odourman/the-skraun/issues/33) |
 | L3-banornas rörlighet | Bindande krav men faktisk 8-kartors kollisionsverifiering ännu OPEN | [#23](https://github.com/Odourman/the-skraun/issues/23) |
 | Andra tester | Global visuell grind #15, ART1 L3 första-radproblem #19, P01 independens #1 kvar öppen/ej slutgiltigt PASS | [Issues](https://github.com/Odourman/the-skraun/issues) |
 
