@@ -291,20 +291,18 @@ PF_B84_Right:  dc.b $40,$30,$00
 
         ORG $F700
 P0Top:
-; 78 entries, indexed x=78..1, arena y0..77.
-        dc.b $A98AC6,$10F43C,$10F43C,$10F43C,$10C94E,$10C94E,$10C94E,$F6D42,$F6D42,$F6D42,$10F446,$10F446
-        dc.b $10F446,$18704,$18704,$18704
+; 78 entries, x=78..1, arena Y0..77
+        dc.b $FE,$7C,$7C,$7C,$66,$66,$66,$5A,$5A,$5A,$7E,$7E
+        dc.b $7E,$24,$24,$24
         ds 62,0
-
 P0Band:
-; 16 entries, indexed x=16..1, arena y78..93.
-        dc.b $A7D924,$A7D924,$10C944,$10C944,$10C944,$1B1FC,$1B1FC,$1B1FC,$1B1FC,$1B1FC,$1B1FC,$1B1FD
-        dc.b $1B1FD,$1B1FD,$A98AC6,$A98AC6
-
+; 16 entries, x=16..1, arena Y78..93
+        dc.b $C4,$C4,$64,$64,$64,$3C,$3C,$3C,$3C,$3C,$3C,$3D
+        dc.b $3D,$3D,$FE,$FE
 P0Bottom:
-; 82 entries, indexed x=82..1, arena y94..175.
+; 82 entries, x=82..1, arena Y94..175
         ds 78,0
-        dc.b $6E,$6E,$6E,$A7D924
+        dc.b $06,$06,$06,$C4
         ORG $F800
 R3K1Doubled:
         dc.b $42,$42,$66,$66,$24,$24,$5A,$5A,$DB,$DB,$7E,$7E
