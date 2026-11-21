@@ -1,0 +1,39 @@
+name: PLAY1 real joystick, orb, L3, FIRE gameplay regression
+on:
+  push:
+    branches: [experiment/play1-single-arena-orb-halo-20261121]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gameplay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM/Stella GUI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+          mkdir -p build/play1
+      - name: Build and retain exact original-6507 test ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/play1_single_arena.asm -f3 -obuild/play1/play1.bin -lbuild/play1/play1.lst -sbuild/play1/play1.sym
+          test "$(stat -c %s build/play1/play1.bin)" -eq 4096
+          sha256sum experiments/play1_single_arena.asm build/play1/play1.bin > build/play1/SHA256SUMS
+      - name: Drive actual Stella 6.7.1 joysticks and FIRE, no RAM shortcuts
+        run: bash scripts/play1_gameplay_capture.sh
+      - name: Measure physical TIA sprites after gameplay
+        run: /usr/bin/python3 tests/play1_gameplay_audit.py build/play1 | tee build/play1/GAMEPLAY_AUDIT.log
+      - name: Preserve actual TIA/debugger screenshots/scripts and ROM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLAY1-real-joystick-orb-halo-gameplay
+          path: |
+            build/play1
+            experiments/play1_single_arena.asm
+            scripts/play1_gameplay_capture.sh
+            tests/play1_gameplay_audit.py
+          if-no-files-found: warn

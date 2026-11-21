@@ -1,0 +1,220 @@
+name: P01-COL1 REAL DASM + Stella isolated self-test
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/p01_col1_single_arena.asm'
+      - 'tests/col1_source_oracle.py'
+      - 'tests/col1_cpu_runtime.py'
+      - '.github/workflows/p01-col1-stella.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  p01-col1-actual-hardware-proxy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual DASM + Stella debugger/X11 capture tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot x11-utils python3-pil
+          mkdir -p build/col1
+          dasm 2>&1 | head -n 6 || true
+      - name: Source collision/model/art validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/col1_source_oracle.py | tee build/col1/COL1_SOURCE_ORACLE.log
+      - name: Assemble true NTSC 4KiB ROM, preserve listing and symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+          dasm experiments/p01_col1_single_arena.asm -f3 -obuild/col1/p01-col1.bin -lbuild/col1/p01-col1.lst -sbuild/col1/p01-col1.sym | tee build/col1/DASM_BUILD.log
+          test "$(stat -c %s build/col1/p01-col1.bin)" -eq 4096
+          sha256sum build/col1/p01-col1.bin | tee build/col1/ROM_SHA256.txt
+          stella -rominfo build/col1/p01-col1.bin > build/col1/STELLA_ROM_INFO.txt 2>&1 || true
+      - name: Compiled ROM 6502 instruction, RIOT timer and joystick self-test (model)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tests/col1_cpu_runtime.py build/col1/p01-col1.bin | tee build/col1/COL1_6502_ROM_MODEL.log
+      - name: Real Stella screenshot and debugger spotcheck in Xvfb
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy
+          export SDL_VIDEODRIVER=x11
+          export SDL_RENDER_DRIVER=software
+          xvfb-run -a -s "-screen 0 1280x900x24" bash -c '
+            set -eu
+            stella -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$PWD/build/col1" -sssingle 1 -ss1x 1 "$PWD/build/col1/p01-col1.bin" > build/col1/STELLA_RUNTIME.log 2>&1 &
+            pid=$!
+            # Stella Linux FAQ documents up to 5-10s ROM launch delays.
+            # Keep diagnostic results FAIL-CLOSED, but wait up to 30s.
+            wid=""
+            for attempt in $(seq 1 30); do
+              xdotool search --onlyvisible --name Stella > build/col1/STELLA_WINDOWS.txt 2>/dev/null || true
+              wid=$(head -n1 build/col1/STELLA_WINDOWS.txt || true)
+              if [ -n "$wid" ]; then
+                printf "Stella window %s visible on attempt %s\n" "$wid" "$attempt" > build/col1/STELLA_LAUNCH_STATUS.txt
+                break
+              fi
+              if ! kill -0 "$pid" 2>/dev/null; then
+                printf "Stella process died before a window appeared at attempt %s\n" "$attempt" > build/col1/STELLA_LAUNCH_STATUS.txt
+                break
+              fi
+              sleep 1
+            done
+            ps -p "$pid" -o pid,stat,etime,args > build/col1/STELLA_PROCESS.txt || true
+            xwininfo -root -tree > build/col1/STELLA_XWINDOWS.txt || true
+            test -n "$wid" || { echo "NO real Stella window after polling"; cat build/col1/STELLA_LAUNCH_STATUS.txt || true; cat build/col1/STELLA_RUNTIME.log; exit 1; }
+            xdotool windowfocus "$wid" || true
+            sleep 1
+            xdotool key --window "$wid" F12
+            sleep 1
+            ls -l build/col1/*.png > build/col1/PNG_FILES.txt
+            cp build/col1/p01-col1.png build/col1/actual_level1_start.png
+            xdotool keydown --window "$wid" F1
+            sleep 0.35
+            xdotool keyup --window "$wid" F1
+            sleep 1.2
+            xdotool key --window "$wid" F12
+            sleep 0.7
+            cp build/col1/p01-col1.png build/col1/actual_level2_start.png
+            xdotool keydown --window "$wid" F1
+            sleep 0.35
+            xdotool keyup --window "$wid" F1
+            sleep 1.2
+            xdotool key --window "$wid" F12
+            sleep 0.7
+            cp build/col1/p01-col1.png build/col1/actual_level3_start.png
+            xdotool keydown --window "$wid" Right
+            sleep 0.8
+            xdotool keyup --window "$wid" Right
+            sleep 0.5
+            xdotool key --window "$wid" F12
+            sleep 0.7
+            cp build/col1/p01-col1.png build/col1/actual_level3_right.png
+            # Capture real LEFT facing and moving A/B with no bitmap modification.
+            xdotool keydown --window "$wid" Left
+            sleep 0.25
+            for ix in $(seq 1 10); do
+              xdotool key --window "$wid" F12
+              sleep 0.16
+              cp build/col1/p01-col1.png "build/col1/left_walk_$ix.png"
+            done
+            xdotool keyup --window "$wid" Left
+            sleep 0.5
+            xdotool key --window "$wid" F12
+            sleep 0.5
+            cp build/col1/p01-col1.png build/col1/left_idle.png
+            scrot -z build/col1/STELLA_DESKTOP.png
+            kill "$pid" || true
+            wait "$pid" || true
+          '
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          paths=sorted(Path('build/col1').glob('actual_level*.png'))
+          assert len(paths)==4, f'Expected 4 authentic Stella screenshots, got {paths}'
+          expected=[(16,12),(32,24),(64,36),(64,36)]
+          boxes=[]
+          for p,size in zip(paths,expected):
+              im=Image.open(p).convert('RGB')
+              cols=len(set(im.getdata()))
+              coords=[(x,y) for y in range(im.height) for x in range(im.width)
+                      if all(z>150 for z in im.getpixel((x,y)))
+                      and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
+              assert coords, f'No gray P0 pixels in actual Stella screenshot: {p}'
+              box=(min(x for x,y in coords),min(y for x,y in coords),
+                   max(x for x,y in coords)+1,max(y for x,y in coords)+1)
+              got=(box[2]-box[0],box[3]-box[1])
+              print('Stella actual:',p,im.size,'unique:',cols,'sprite bbox:',box,'expected:',size)
+              assert im.width>=160 and im.height>=192 and cols>=3, f'Blank/unusable {p}'
+              assert got==size,(p,got,size)
+              boxes.append(box)
+          # Alphabetic glob sort is right BEFORE start: verify right moved away from start.
+          assert boxes[-2][0]>=boxes[-1][0]+8,('Right joystick did not move level3 P0',boxes)
+          assert boxes[-2][1]==boxes[-1][1],('Right joystick unexpectedly moved sprite Y',boxes)
+          # Pixel-exact original user-accepted U1-LEG1 A frame, future visual RIGHT
+          # is the HORIZONTAL MIRROR of the ORIGINAL source RIGHT.
+          original_right=[
+              '00100100','01111110','01011010','01100110',
+              '00111110','01111111','10111100','00111100',
+              '00111100','00100110','00100011','01100000']
+          source_right=[v[::-1] for v in original_right]
+          for p,box,(w,h) in zip(paths,boxes,expected):
+              image=Image.open(p).convert('RGB')
+              hrepeat=h//12
+              bit_width=w//8
+              actual=[]
+              for screen_row in range(h):
+                  y=box[1]+screen_row
+                  bits=''
+                  for bit in range(8):
+                      run=[image.getpixel((box[0]+bit*bit_width+offset,y))
+                           for offset in range(bit_width)]
+                      grey=lambda color: all(z>150 for z in color) and max(color)-min(color)<20
+                      active=[grey(v) for v in run]
+                      assert all(q==active[0] for q in active),('Mid-sprite GRP0 corruption',p,screen_row,bit,active)
+                      bits+=('1' if active[0] else '0')
+                  actual.append(bits)
+              expected_bits=[bits for bits in source_right for _ in range(hrepeat)]
+              assert actual==expected_bits,('Pixel-shape not original source bitmap',p,
+                 [(i,a,b) for i,(a,b) in enumerate(zip(actual,expected_bits)) if a!=b][:7])
+          print('PASS: all 4 actual Stella images have byte-exact user-approved U1-LEG1 A shape, L1/L2/L3, no row corruption.')
+          original_B_left=[
+              '00100100','01111110','01011010','01100110',
+              '00111110','01111111','01111101','00111100',
+              '00111100','01100100','11000100','00000110']
+          def level3_bits(path):
+              im=Image.open(path).convert('RGB')
+              coords=[(x,y) for y in range(im.height) for x in range(im.width)
+                      if all(v>150 for v in im.getpixel((x,y)))
+                      and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
+              assert coords,('No level3 gray sprite',path)
+              bx0=min(x for x,y in coords);by0=min(y for x,y in coords)
+              bx1=max(x for x,y in coords)+1;by1=max(y for x,y in coords)+1
+              assert (bx1-bx0,by1-by0)==(64,36),(path,(bx0,by0,bx1,by1))
+              ret=[]
+              for yy in range(by0,by1):
+                  row=''
+                  for bit in range(8):
+                      pix=[im.getpixel((bx0+bit*8+dx,yy)) for dx in range(8)]
+                      val=[all(z>150 for z in t) and max(t)-min(t)<20 for t in pix]
+                      assert all(v==val[0] for v in val),('P0 x4 fill disrupted',path,yy,bit)
+                      row+=str(int(val[0]))
+                  ret.append(row)
+              return ret
+          A=[z for z in original_right for _ in range(3)]
+          B=[z for z in original_B_left for _ in range(3)]
+          assert level3_bits(Path('build/col1/left_idle.png'))==A,'After Left button release P0 should be source A-LEFT'
+          samples=list(Path('build/col1').glob('left_walk_*.png'))
+          assert len(samples)==10,samples
+          walking=[level3_bits(p) for p in samples]
+          assert all(bits in (A,B) for bits in walking),'Wrong source art in moving LEFT frames'
+          assert A in walking and B in walking,'Both approved A and B poses must appear in actual Stella left-facing walking captures'
+          print('PASS: authentic Stella LEFT A/B walking, idle LEFT A, no midpixel corruption, level3 32x36 logical')
+
+          Path('build/col1/STELLA_PIXEL_AUDIT.txt').write_text(
+              'Genuine Stella screenshots, gray P0 output bbox (physical pixel units)\n'+
+              '\n'.join(str((str(p),b)) for p,b in zip(paths,boxes))+'\n')
+          print('PASS: actual Stella visual sprite dimension/orientation smoke and right input; 262-lines debugger not yet proven.')
+          PY
+      - name: Upload complete development self-test, even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-skraun-p01-col1-first-real-ntsc-rom
+          path: |
+            build/col1/
+            experiments/p01_col1_single_arena.asm
+            tests/col1_source_oracle.py
+            tests/col1_cpu_runtime.py
+          if-no-files-found: warn
