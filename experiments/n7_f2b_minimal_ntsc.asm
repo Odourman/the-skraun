@@ -171,7 +171,6 @@ P1Band:
         nop
         nop
         nop
-        nop
         sta GRP1
         bit FrameNumber
         sta RESP1
