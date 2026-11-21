@@ -12,13 +12,17 @@ for name in names:
  im=Image.open(f).convert('RGB').crop((121,115,441,343))
  im.save(root/name/'ACTUAL_STELLA_TIA.png')
  a=np.asarray(im)
- gold=(a[:,:,0]==234)&(a[:,:,1]==194)&(a[:,:,2]==84)
- gray=(a[:,:,0]==210)&(a[:,:,1]==210)&(a[:,:,2]==209)
- blue=(a[:,:,0]==121)&(a[:,:,1]==194)&(a[:,:,2]==251)
+ # Both genuine Stella NTSC and erroneous PAL autodetection palettes are
+ # measured so a timing failure still produces diagnostic pixel evidence.
+ gold=np.isin(a[:,:,0],[234,255]) & (a[:,:,1]>180) & (a[:,:,2]<160)
+ gray=((a[:,:,0]==210)&(a[:,:,1]==210)&(a[:,:,2]==209))|((a[:,:,0]==173)&(a[:,:,1]==173)&(a[:,:,2]==171))
+ blue=((a[:,:,0]==121)&(a[:,:,1]==194)&(a[:,:,2]==251))|((a[:,:,0]==173)&(a[:,:,1]==255)&(a[:,:,2]==255))
  def bbox(mask):
   yy,xx=np.where(mask)
   return [int(xx.min()),int(yy.min()),int(xx.max()+1),int(yy.max()+1)] if len(xx) else None
- data[name]={'P0':bbox(gray),'P1':bbox(blue),'gold_bbox':bbox(gold),'gold_n':int(gold.sum()),'blue_n':int(blue.sum()),'rgb_sha256':hashlib.sha256(a.tobytes()).hexdigest()}
+ log=(root/name/'STELLA.log').read_text()
+ displayformat=next((x.strip() for x in log.splitlines() if 'Display Format:' in x),'NOT FOUND')
+ data[name]={'P0':bbox(gray),'P1':bbox(blue),'gold_bbox':bbox(gold),'gold_n':int(gold.sum()),'blue_n':int(blue.sum()),'display_format':displayformat,'rgb_sha256':hashlib.sha256(a.tobytes()).hexdigest()}
  pix[name]=(gold,gray,blue)
  print(name,data[name])
 assert data['baseline']['P0'] and data['baseline']['blue_n']>0
@@ -39,3 +43,5 @@ for k,a,b in [('x','A_L3_on','B_L3_right8'),('y','B_L3_right8','C_L3_right8_down
  print('REAL_TIA_A_B_C',k,result[k])
 (root/'PLAY1H_REAL_PIXEL_AUDIT.json').write_text(json.dumps({'scenes':data,'unoccluded_diffs':result},indent=2))
 print('This script tests actual pixels; nonzero position-dependence alone does NOT prove geometric 360 halo.')
+formats={x['display_format'] for x in data.values()}
+assert all('NTSC' in x for x in formats),('NTSC frame discipline FAILED, actual Stella autodetected',formats)
