@@ -1,0 +1,37 @@
+name: PLAY1-H freeze exact genuine DASM/Stella-tested NTSC ROM
+on:
+  push:
+    branches: [experiment/play1-h-moving-visible-halo-20261121]
+    paths: [.github/workflows/play1h-freeze.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/play1-h-moving-visible-halo-20261121
+          persist-credentials: true
+      - name: Install genuine DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Rebuild exactly the frozen Y-follow 4KiB source
+        run: |
+          set -euo pipefail
+          dasm experiments/play1_h_single_arena.asm -f3 -oexperiments/play1_h_single_arena.bin -lexperiments/play1_h_single_arena.lst -sexperiments/play1_h_single_arena.sym 2>&1 | tee experiments/play1_h_DASM_BUILD.log
+          test "$(stat -c %s experiments/play1_h_single_arena.bin)" -eq 4096
+          echo '58abc9f1e5effca906e4e450038269422deca525ab31b9ea271dcde3ebad1b77  experiments/play1_h_single_arena.asm' | sha256sum -c -
+          echo 'dee028be4080b658f5541134ba62bdd778510a8b76ae08855fa6fad59ba97420  experiments/play1_h_single_arena.bin' | sha256sum -c -
+          sha256sum experiments/play1_h_single_arena.asm experiments/play1_h_single_arena.bin > experiments/play1_h_SHA256SUMS.txt
+      - name: Commit only authentic built ROM, listing, symbols, hashes into isolated experiment
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/play1_h_single_arena.bin experiments/play1_h_single_arena.lst experiments/play1_h_single_arena.sym experiments/play1_h_DASM_BUILD.log experiments/play1_h_SHA256SUMS.txt
+          git commit -m 'artifact(PLAY1-H): freeze 4096B real Stella-tested Y-follow PARTIAL ROM'
+          git push origin HEAD:refs/heads/experiment/play1-h-moving-visible-halo-20261121
