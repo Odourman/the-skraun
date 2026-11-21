@@ -2,6 +2,14 @@
 **Kontrollerad 2026-11-17 av MAIN II. Ny MAIN III måste alltid verifiera live GitHub och Google Drive.** Detta är ett kort mottagningsindex, inte ett nytillkommet gameplay- eller implementationsbeslut.
 
 
+## MAIN III 2026-11-21 N6-B USER-SELECTED COLOR TRIAL + CREATIVE REVIEW
+
+**New explicit user direction:** "Ok, vi testar det" follows MAIN suggestion to TEST color option B: PF world color when halo inactive; when halo is active, the entire *arena PF* changes to GOLD, including obstacles, with halo source-mask OR scenery. This is a **comparative N6 design/source-only test approval, not permanent canon or later N7 ROM authorization**. User asks MAIN to review which other creative design choices have meaningful Atari technical leverage. Full [ranked creative fallback + N6-B source-derived analysis](MAIN_III_N6_B_GOLD_PLAYFIELD_CREATIVE_REVIEW_2026-11-21.md).
+
+R3 exact reused N6 source counts on the same 13 X ×176 physical rows: PF OFF scenery-only **2496** min changed PF bytes, PF ON gold OR halo+scenery **4400**; ON still **419/2288** rows needing 6 PF byte writes, and **104** exact PF-cell overlaps where same gold conceals halo vs stone identity. The FOUR intra-scanline colour switches of direct separate gold-and-world-hue N4 X80/X84 are absent in B's uniform arena-color model, but this has no actual cycle/deadline or visual GO. Orb as BL world color OFF, gold ON only a contrast/readability candidate; no final palette locked. Retain A original/C single world-hue as control cases and prioritize simplifying halo PF geometry, obstacle layouts and enemy sprite height before major gameplay change like reducing active knights.
+
+**NO N7**, no new DASM/Stella, art, sprite, mapper, approval/merge or independent Verification; N6-C unified 76c/128B/beam/colorclock+real S0–S9 remains OPEN.
+
 ## MAIN III N6 STARTED – combined COLOR/OBJECT architecture A+B source models completed, C physical gate OPEN (2026-11-21)
 
 **User authorization in this conversation:** start **N6 source-only** to work out actual colour choices and shared TIA object/graphics architecture before any ROM. Additional *binding later user design decision*: Ranger camouflages into its current world's environment (explicit forest green, dream purple like spirals); older 'green in all worlds' superseded for color only. [User Ranger design addendum](MAIN_III_USER_DECISION_RANGER_WORLD_CAMOUFLAGE_2026-11-21.md), [design decisions updated with dated appendix](DESIGN_DECISIONS_01-60_2026-11-16.md). Mountain/night palette/TIA register bytes still only unapproved candidates; U1-LEG1 pixel art and AI fixed.
