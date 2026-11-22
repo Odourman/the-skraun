@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/gameplay2/scenes "$HOME/.config/stella"
 n=0
-for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_warning sword_hit gameover_before gameover_restart bonus_2000; do
+for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_warning sword_hit damage_level2 life_lost_after_kill gameover_before gameover_restart bonus_2000; do
  n=$((n+1))
  export DISPLAY=":$((100+n))"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "build/gameplay2/XVFB_$scene.log" 2>&1 &
@@ -58,6 +58,18 @@ for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_w
     sword_warning|sword_hit)
       echo 'joy0Right #0';echo 'frame #25';echo 'joy0Right #1'
       if [ "$scene" = sword_warning ];then echo 'frame #10';else echo 'frame #37';fi
+      ;;
+    damage_level2|life_lost_after_kill)
+      # Pick up exactly one orb, kill one P1 knight, then deliberately
+      # stand in the sword attack zone without holding FIRE.
+      echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
+      echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
+      echo 'joy0Fire #0';echo 'frame #2';echo 'joy0Fire #1'
+      if [ "$scene" = damage_level2 ];then
+        echo 'frame #85'
+      else
+        echo 'frame #170'
+      fi
       ;;
     gameover_before|gameover_restart)
       echo 'joy0Right #0';echo 'frame #30';echo 'joy0Right #1'
