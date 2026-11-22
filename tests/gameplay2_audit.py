@@ -28,12 +28,17 @@ for name in names:
     actual=alt if alt.exists() and alt.stat().st_size else sess
     sess_data=actual.read_text(errors='replace') if actual.exists() else ''
     formats=[x.strip() for x in (root/name/'STELLA.log').read_text(errors='replace').splitlines() if 'Display Format:' in x]
-    reports[name]={'P0_bbox':box(gray),'P0_gray_pixels':int(gray.sum()),
+    # Physical Stella debugger CLI executes AFTER the replay, never edits ROM or RAM.
+    # _scanEnd is the completed-frame scanline count (requires 262 for NTSC).
+    m=re.search(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',sess_data)
+    scanlines=int(m.group(1)) if m else None
+    reports[name]={'scanlines_last_complete_frame':scanlines,'P0_bbox':box(gray),'P0_gray_pixels':int(gray.sum()),
         'P1_blue_pixels':int(blue.sum()),'gold_pixels':int(gold.sum()),
         'rgb_sha256':hashlib.sha256(a.tobytes()).hexdigest(),
         'format_logs':formats[:2],'session_exists':bool(sess_data),
         'session_tail':sess_data[-1800:]}
     print('PHYSICAL_TIA',name,json.dumps({k:v for k,v in reports[name].items() if k!='session_tail'}))
+    assert scanlines==262,('NTSC_FRAME_NOT_262',name,scanlines)
 def dim(k):
     b=reports[k]['P0_bbox']
     return None if b is None else (b[2]-b[0],b[3]-b[1])
@@ -45,10 +50,11 @@ assert reports['start']['gold_pixels']==0,'gold attack leaked off state'
 assert reports['sword_warning']['P1_blue_pixels']==0,'P1 warning still original blue'
 assert dim('stage2_L3')==(64,36),('true second orb not yielding L3 in physical Stella',dim('stage2_L3'))
 assert reports['stage2_L3']['P0_gray_pixels']==1176,'L3 gray pixels incorrect for frozen bitmap x4/y3'
+assert reports['stage2_L3']['gold_pixels']>0,'no real gold FIRE while moving on L3'
 reportfile=Path('build/gameplay2/PHYSICAL_AUDIT.json')
 reportfile.write_text(json.dumps(reports,indent=2))
 print('PASS: bounded authentic Stella base sprite, orb L2 and L3 through real stage visits, knight/warning')
 for name in ('stage1_score_checkpoint','fight_stage1','stage2_L3','bonus_2000'):
     print('NOT VERIFIED UNLESS SESSION SHOWS EXPECTED RAM:',name,'P0_DIM',dim(name),
           'SESSION',reports[name]['session_exists'])
-print('PHYSICAL 262-SCANLINE: NOT VERIFIED without readable _scanEnd frame trace.')
+print('GAMEPLAY2_PHYSICAL_262_NTSC_BOUNDED_PASS: actual Stella debugger scanEnd==262 in each tested scenario; worstcase beam still OPEN')
