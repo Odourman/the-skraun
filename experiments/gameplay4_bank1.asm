@@ -296,7 +296,8 @@ Visible:
         txa
         sec
         sbc RenderBottom
-        bcc NextSpriteBlank
+        ; For legal 1..192 raster rows, underflow wraps > 78, always
+        ; beyond the original <=36 source height. One compare covers both.
         cmp SpriteHeight
         bcs NextSpriteBlank
         tay
