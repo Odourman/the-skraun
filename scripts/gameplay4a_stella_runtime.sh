@@ -27,8 +27,17 @@ for scene in start knight_warning knight_strike knight_rest ranger_draw ranger_r
       echo 'joy0Up #0';echo 'frame #40';echo 'joy0Up #1'
       echo 'joy0Right #0';echo 'frame #14';echo 'joy0Right #1'
       case "$scene" in
-        ranger_draw) echo 'frame #30';;
-        ranger_release) echo 'frame #55';;
+        ranger_draw)
+          # After second knight, leave L2 halo radius before Ranger respawns
+          echo 'joy0Fire #1'
+          echo 'joy0Left #0';echo 'frame #25';echo 'joy0Left #1'
+          echo 'frame #12'
+          ;;
+        ranger_release)
+          echo 'joy0Fire #1'
+          echo 'joy0Left #0';echo 'frame #25';echo 'joy0Left #1'
+          echo 'frame #39'
+          ;;
         arrow_first) echo 'frame #59';;
         arrow_mid) echo 'frame #75';;
         arrow_later) echo 'frame #90';;
