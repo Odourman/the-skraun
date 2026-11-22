@@ -1,0 +1,48 @@
+name: GAMEPLAY-1 freeze authentic F8 DASM ROM into isolated experiment
+on:
+  push:
+    branches: [experiment/gameplay1-accelerated-full-prototype-20261122]
+    paths:
+      - docs/gameplay1/FREEZE_REQUEST.txt
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/gameplay1-accelerated-full-prototype-20261122
+          persist-credentials: true
+      - name: Install authentic DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Reproduce, size-check and freeze the actual F8 binary
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay1
+          dasm experiments/gameplay1_bank0.asm -f3 -obuild/gameplay1/bank0.bin -lbuild/gameplay1/bank0.lst -sbuild/gameplay1/bank0.sym 2>&1 | tee build/gameplay1/DASM0.log
+          dasm experiments/gameplay1_bank1.asm -f3 -obuild/gameplay1/bank1.bin -lbuild/gameplay1/bank1.lst -sbuild/gameplay1/bank1.sym 2>&1 | tee build/gameplay1/DASM1.log
+          test "$(stat -c %s build/gameplay1/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay1/bank1.bin)" -eq 4096
+          cat build/gameplay1/bank0.bin build/gameplay1/bank1.bin > experiments/gameplay1_f8_ntsc.bin
+          test "$(stat -c %s experiments/gameplay1_f8_ntsc.bin)" -eq 8192
+          sha256sum experiments/gameplay1_bank0.asm experiments/gameplay1_bank1.asm experiments/gameplay1_f8_ntsc.bin > experiments/gameplay1_SHA256SUMS.txt
+          cp build/gameplay1/bank0.lst experiments/gameplay1_bank0.lst
+          cp build/gameplay1/bank1.lst experiments/gameplay1_bank1.lst
+          cp build/gameplay1/bank0.sym experiments/gameplay1_bank0.sym
+          cp build/gameplay1/bank1.sym experiments/gameplay1_bank1.sym
+          cp build/gameplay1/DASM0.log experiments/gameplay1_DASM_bank0.log
+          cp build/gameplay1/DASM1.log experiments/gameplay1_DASM_bank1.log
+      - name: Commit only exact real ROM, listing, symbols and SHA to new experiment
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/gameplay1_f8_ntsc.bin experiments/gameplay1_SHA256SUMS.txt experiments/gameplay1_bank0.lst experiments/gameplay1_bank1.lst experiments/gameplay1_bank0.sym experiments/gameplay1_bank1.sym experiments/gameplay1_DASM_bank0.log experiments/gameplay1_DASM_bank1.log
+          git commit -m 'artifact(GAMEPLAY-1): freeze authentic F8 8192B DASM checkpoint'
+          git fetch origin experiment/gameplay1-accelerated-full-prototype-20261122
+          git rebase origin/experiment/gameplay1-accelerated-full-prototype-20261122
+          git push origin HEAD:refs/heads/experiment/gameplay1-accelerated-full-prototype-20261122
