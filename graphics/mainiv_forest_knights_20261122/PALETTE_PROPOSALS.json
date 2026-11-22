@@ -1,0 +1,46 @@
+{
+  "status": "illustrative RGB and provisional NTSC register candidates, NOT palette calibrated",
+  "COLUP0_SKRAUN": {
+    "byte": "$0C",
+    "RGB": [
+      210,
+      210,
+      209
+    ],
+    "provenance": "unchanged frozen U1 source visual identity"
+  },
+  "COLUP1_KNIGHT": {
+    "byte": "$9E",
+    "RGB": [
+      132,
+      210,
+      247
+    ],
+    "provenance": "GAMEPLAY-1 draft PR#41 provisional light blue"
+  },
+  "COLUBK_FOREST": {
+    "byte_proposal": "$C2",
+    "RGB": [
+      18,
+      39,
+      30
+    ]
+  },
+  "COLUPF_FOREST": {
+    "byte_proposal": "$C8",
+    "RGB": [
+      102,
+      148,
+      77
+    ]
+  },
+  "COLUPF_HALO_B_ON": {
+    "byte": "$2E",
+    "RGB": [
+      238,
+      191,
+      69
+    ],
+    "note": "ENTIRE playfield + BL in gold, not separate tree colour"
+  }
+}
