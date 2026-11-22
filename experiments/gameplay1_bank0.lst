@@ -1,0 +1,539 @@
+------- FILE experiments/gameplay1_bank0.asm LEVEL 1 PASS 2
+      1  10000 ????						; GAMEPLAY-1 experimental F8 BANK 0. New gameplay state, no production claim.
+      2  10000 ????						; F8 bank 1 is the exact PLAY1-H visible kernel lineage.
+      3  10000 ????						; THIS IS NOT A THREE-VISIBLE-ENEMY RENDERER OR 8 FINAL ARENAS.
+      4  10000 ????				       processor	6502
+      5  10000 ????		00 07	    COLUP1     =	$07
+      6  10000 ????		00 08	    COLUPF     =	$08
+      7  10000 ????		00 09	    COLUBK     =	$09
+      8  10000 ????		00 0a	    CTRLPF     =	$0A
+      9  10000 ????		00 15	    AUDC0      =	$15
+     10  10000 ????		00 17	    AUDF0      =	$17
+     11  10000 ????		00 19	    AUDV0      =	$19
+     12  10000 ????		00 80	    PlayerX    =	$80
+     13  10000 ????		00 81	    PlayerY    =	$81
+     14  10000 ????		00 82	    Level      =	$82
+     15  10000 ????		00 8d	    FrameCount =	$8D
+     16  10000 ????		00 84	    SwitchState =	$84
+     17  10000 ????		00 9c	    OrbMask    =	$9C
+     18  10000 ????		00 9d	    OrbTimer   =	$9D
+     19  10000 ????		00 9e	    HaloFrames =	$9E
+     20  10000 ????		00 a1	    TargetAlive =	$A1
+     21  10000 ????		00 a2	    TargetFlash =	$A2
+     22  10000 ????		00 aa	    Stage      =	$AA
+     23  10000 ????		00 ab	    StageDir   =	$AB
+     24  10000 ????		00 ac	    Lives      =	$AC
+     25  10000 ????		00 ad	    ScoreLo    =	$AD
+     26  10000 ????		00 ae	    ScoreHi    =	$AE
+     27  10000 ????		00 af	    KnightX    =	$AF
+     28  10000 ????		00 b0	    SwordWarn  =	$B0
+     29  10000 ????		00 b1	    SwordStrike =	$B1
+     30  10000 ????		00 b2	    SwordRest  =	$B2
+     31  10000 ????		00 b3	    Invulnerable =	$B3
+     32  10000 ????		00 b4	    StageKills =	$B4
+     33  10000 ????		00 b5	    KillsNeed  =	$B5
+     34  10000 ????		00 b6	    BonusCount =	$B6
+     35  10000 ????		00 b7	    SoundFrames =	$B7
+     36  10000 ????		00 b8	    RangerX    =	$B8
+     37  10000 ????		00 b9	    RangerY    =	$B9
+     38  10000 ????		00 ba	    OrbX       =	$BA
+     39  10000 ????		00 bb	    OrbDirty   =	$BB
+     40  10000 ????		00 bc	    BonusLo    =	$BC	; points since last 2,000-point extra life
+     41  10000 ????		00 bd	    BonusHi    =	$BD
+     42  10000 ????
+     43  10000 ????				       SEG	GameCode
+     44  f000					      ORG	$F000
+     45  f000		       00 00 00 00*	      ds	256,0	; explicit first-bank start for exact 4096 bytes
+     46  f100					      ORG	$F100
+     47  f100				   GameBankTick
+     48  f100		       a5 aa		      lda	Stage
+     49  f102		       d0 03		      bne	GameInitialized
+     50  f104		       20 3c f1 	      jsr	InitializeGame
+     51  f107				   GameInitialized
+     52  f107		       a5 ac		      lda	Lives
+     53  f109		       d0 03		      bne	Running
+     54  f10b		       4c cf f3 	      jmp	GameOver
+     55  f10e				   Running
+     56  f10e		       a5 b3		      lda	Invulnerable
+     57  f110		       f0 02		      beq	InvulnDone
+     58  f112		       c6 b3		      dec	Invulnerable
+     59  f114				   InvulnDone
+     60  f114		       a5 a1		      lda	TargetAlive
+     61  f116		       d0 06		      bne	KnightAlive
+     62  f118		       20 a1 f1 	      jsr	TargetEliminated
+     63  f11b		       4c 30 f1 	      jmp	AfterKnight
+     64  f11e				   KnightAlive
+     65  f11e		       a5 b4		      lda	StageKills
+     66  f120		       18		      clc
+     67  f121		       69 01		      adc	#1
+     68  f123		       c5 b5		      cmp	KillsNeed
+     69  f125		       d0 06		      bne	KnightOnly
+     70  f127		       20 84 f2 	      jsr	RangerProxyAI
+     71  f12a		       4c 30 f1 	      jmp	AfterKnight
+     72  f12d				   KnightOnly
+     73  f12d		       20 a5 f2 	      jsr	KnightAI
+     74  f130				   AfterKnight
+     75  f130		       20 60 f3 	      jsr	RangerFleeDiagnostic
+     76  f133		       20 aa f3 	      jsr	SetWorldColors
+     77  f136		       20 bf f3 	      jsr	UpdateSound
+     78  f139		       4c 90 f6 	      jmp	GameBankReturn
+     79  f13c
+     80  f13c				   InitializeGame
+     81  f13c		       a9 01		      lda	#1
+     82  f13e		       85 aa		      sta	Stage
+     83  f140		       85 ab		      sta	StageDir
+     84  f142		       85 a1		      sta	TargetAlive
+     85  f144		       85 82		      sta	Level
+     86  f146		       a9 03		      lda	#3
+     87  f148		       85 ac		      sta	Lives
+     88  f14a		       a9 00		      lda	#0
+     89  f14c		       85 ad		      sta	ScoreLo
+     90  f14e		       85 ae		      sta	ScoreHi
+     91  f150		       85 b4		      sta	StageKills
+     92  f152		       85 b6		      sta	BonusCount
+     93  f154		       85 bc		      sta	BonusLo
+     94  f156		       85 bd		      sta	BonusHi
+     95  f158		       85 b0		      sta	SwordWarn
+     96  f15a		       85 b1		      sta	SwordStrike
+     97  f15c		       85 b2		      sta	SwordRest
+     98  f15e		       85 b3		      sta	Invulnerable
+     99  f160		       85 b7		      sta	SoundFrames
+    100  f162		       a9 7d		      lda	#125
+    101  f164		       85 af		      sta	KnightX
+    102  f166		       a9 91		      lda	#145
+    103  f168		       85 b8		      sta	RangerX
+    104  f16a		       a9 40		      lda	#64
+    105  f16c		       85 b9		      sta	RangerY
+    106  f16e		       a9 02		      lda	#2
+    107  f170		       85 9c		      sta	OrbMask
+    108  f172		       a9 00		      lda	#0
+    109  f174		       85 9d		      sta	OrbTimer
+    110  f176		       a9 50		      lda	#80
+    111  f178		       85 80		      sta	PlayerX
+    112  f17a		       a9 58		      lda	#88
+    113  f17c		       85 81		      sta	PlayerY
+    114  f17e		       20 88 f1 	      jsr	SetWaveTarget
+    115  f181		       20 86 f3 	      jsr	InstallStageLayout
+    116  f184		       20 7a f3 	      jsr	PlaceStageOrb
+    117  f187		       60		      rts
+    118  f188
+    119  f188				   SetWaveTarget
+    120  f188							; Diagnostic sequential dummy count = knights + ranger slot.
+    121  f188							; Does NOT mean multiple physical enemies are implemented.
+    122  f188		       a5 aa		      lda	Stage
+    123  f18a		       c9 05		      cmp	#5
+    124  f18c		       90 09		      bcc	BeforeDream
+    125  f18e		       c9 07		      cmp	#7
+    126  f190		       90 0a		      bcc	DreamCount
+    127  f192		       a9 05		      lda	#5
+    128  f194		       85 b5		      sta	KillsNeed
+    129  f196		       60		      rts
+    130  f197				   BeforeDream
+    131  f197		       a9 03		      lda	#3
+    132  f199		       85 b5		      sta	KillsNeed
+    133  f19b		       60		      rts
+    134  f19c				   DreamCount
+    135  f19c		       a9 04		      lda	#4
+    136  f19e		       85 b5		      sta	KillsNeed
+    137  f1a0		       60		      rts
+    138  f1a1
+    139  f1a1				   TargetEliminated
+    140  f1a1		       a5 a2		      lda	TargetFlash
+    141  f1a3		       d0 73		      bne	TargetDeadWait
+    142  f1a5							; Two sequential 100-point P1 knight proxies, final ranger
+    143  f1a5							; proxy of each stage awards 250. Not simultaneous opponents.
+    144  f1a5		       a5 b4		      lda	StageKills
+    145  f1a7		       18		      clc
+    146  f1a8		       69 01		      adc	#1
+    147  f1aa		       c5 b5		      cmp	KillsNeed
+    148  f1ac		       f0 05		      beq	AwardRanger
+    149  f1ae		       a2 64		      ldx	#100
+    150  f1b0		       4c b5 f1 	      jmp	AwardReady
+    151  f1b3				   AwardRanger
+    152  f1b3		       a2 fa		      ldx	#250
+    153  f1b5				   AwardReady
+    154  f1b5		       8a		      txa
+    155  f1b6		       18		      clc
+    156  f1b7		       65 ad		      adc	ScoreLo
+    157  f1b9		       85 ad		      sta	ScoreLo
+    158  f1bb		       a5 ae		      lda	ScoreHi
+    159  f1bd		       69 00		      adc	#0
+    160  f1bf		       85 ae		      sta	ScoreHi
+    161  f1c1		       8a		      txa
+    162  f1c2		       18		      clc
+    163  f1c3		       65 bc		      adc	BonusLo
+    164  f1c5		       85 bc		      sta	BonusLo
+    165  f1c7		       a5 bd		      lda	BonusHi
+    166  f1c9		       69 00		      adc	#0
+    167  f1cb		       85 bd		      sta	BonusHi
+    168  f1cd		       a5 bd		      lda	BonusHi
+    169  f1cf		       c9 07		      cmp	#$07
+    170  f1d1		       90 17		      bcc	NoBonus
+    171  f1d3		       d0 06		      bne	BonusEarned
+    172  f1d5		       a5 bc		      lda	BonusLo
+    173  f1d7		       c9 d0		      cmp	#$D0
+    174  f1d9		       90 0f		      bcc	NoBonus
+    175  f1db				   BonusEarned
+    176  f1db		       38		      sec
+    177  f1dc		       a5 bc		      lda	BonusLo
+    178  f1de		       e9 d0		      sbc	#$D0
+    179  f1e0		       85 bc		      sta	BonusLo
+    180  f1e2		       a5 bd		      lda	BonusHi
+    181  f1e4		       e9 07		      sbc	#$07
+    182  f1e6		       85 bd		      sta	BonusHi
+    183  f1e8		       e6 ac		      inc	Lives
+    184  f1ea				   NoBonus
+    185  f1ea		       e6 b4		      inc	StageKills
+    186  f1ec		       a9 0d		      lda	#13
+    187  f1ee		       85 b7		      sta	SoundFrames
+    188  f1f0		       a9 04		      lda	#4
+    189  f1f2		       85 15		      sta	AUDC0
+    190  f1f4		       a9 10		      lda	#16
+    191  f1f6		       85 17		      sta	AUDF0
+    192  f1f8		       a5 b4		      lda	StageKills
+    193  f1fa		       c5 b5		      cmp	KillsNeed
+    194  f1fc		       90 06		      bcc	MoreTargets
+    195  f1fe		       20 19 f2 	      jsr	NextStage
+    196  f201		       4c 18 f2 	      jmp	TargetDeadWait
+    197  f204				   MoreTargets
+    198  f204		       a9 01		      lda	#1
+    199  f206		       85 a1		      sta	TargetAlive
+    200  f208		       a9 7d		      lda	#125
+    201  f20a		       85 af		      sta	KnightX
+    202  f20c		       a9 00		      lda	#0
+    203  f20e		       85 b0		      sta	SwordWarn
+    204  f210		       85 b1		      sta	SwordStrike
+    205  f212		       85 b2		      sta	SwordRest
+    206  f214		       a9 9e		      lda	#$9E
+    207  f216		       85 07		      sta	COLUP1
+    208  f218				   TargetDeadWait
+    209  f218		       60		      rts
+    210  f219
+    211  f219				   NextStage
+    212  f219							; Pendulum 1..8..1, no difficulty escalation by cycle.
+    213  f219		       a5 ab		      lda	StageDir
+    214  f21b		       30 14		      bmi	StageReverse
+    215  f21d		       a5 aa		      lda	Stage
+    216  f21f		       c9 08		      cmp	#8
+    217  f221		       d0 09		      bne	StageForward
+    218  f223		       a9 ff		      lda	#$FF
+    219  f225		       85 ab		      sta	StageDir
+    220  f227		       c6 aa		      dec	Stage
+    221  f229		       4c 42 f2 	      jmp	SetNewStage
+    222  f22c				   StageForward
+    223  f22c		       e6 aa		      inc	Stage
+    224  f22e		       4c 42 f2 	      jmp	SetNewStage
+    225  f231				   StageReverse
+    226  f231		       a5 aa		      lda	Stage
+    227  f233		       c9 01		      cmp	#1
+    228  f235		       d0 09		      bne	StageBackOne
+    229  f237		       a9 01		      lda	#1
+    230  f239		       85 ab		      sta	StageDir
+    231  f23b		       e6 aa		      inc	Stage
+    232  f23d		       4c 42 f2 	      jmp	SetNewStage
+    233  f240				   StageBackOne
+    234  f240		       c6 aa		      dec	Stage
+    235  f242				   SetNewStage
+    236  f242		       a9 00		      lda	#0
+    237  f244		       85 b4		      sta	StageKills
+    238  f246		       85 b0		      sta	SwordWarn
+    239  f248		       85 b1		      sta	SwordStrike
+    240  f24a		       85 b2		      sta	SwordRest
+    241  f24c		       85 9d		      sta	OrbTimer
+    242  f24e		       a9 02		      lda	#2
+    243  f250		       85 9c		      sta	OrbMask
+    244  f252		       a9 01		      lda	#1
+    245  f254		       85 a1		      sta	TargetAlive
+    246  f256		       a9 7d		      lda	#125
+    247  f258		       85 af		      sta	KnightX
+    248  f25a		       a9 50		      lda	#80
+    249  f25c		       85 80		      sta	PlayerX
+    250  f25e		       a9 58		      lda	#88
+    251  f260		       85 81		      sta	PlayerY
+    252  f262		       a9 91		      lda	#145
+    253  f264		       85 b8		      sta	RangerX
+    254  f266		       a9 40		      lda	#64
+    255  f268		       85 b9		      sta	RangerY
+    256  f26a		       a9 9e		      lda	#$9E
+    257  f26c		       85 07		      sta	COLUP1
+    258  f26e		       a9 18		      lda	#24
+    259  f270		       85 b7		      sta	SoundFrames
+    260  f272		       a9 0c		      lda	#12
+    261  f274		       85 17		      sta	AUDF0
+    262  f276		       a9 06		      lda	#6
+    263  f278		       85 15		      sta	AUDC0
+    264  f27a		       20 88 f1 	      jsr	SetWaveTarget
+    265  f27d		       20 86 f3 	      jsr	InstallStageLayout
+    266  f280		       20 7a f3 	      jsr	PlaceStageOrb
+    267  f283		       60		      rts
+    268  f284
+    269  f284				   RangerProxyAI
+    270  f284							; A SINGLE world-camouflaged P1 proxy occupying the final wave slot.
+    271  f284							; The P1 art remains the frozen blue-knight bitmap with world color;
+    272  f284							; no Ranger-specific graphics, bow or arrow are claimed implemented.
+    273  f284		       a6 aa		      ldx	Stage
+    274  f286		       bd e4 f3 	      lda	WorldPFColors,x
+    275  f289		       85 07		      sta	COLUP1
+    276  f28b		       a5 8d		      lda	FrameCount
+    277  f28d		       29 07		      and	#7
+    278  f28f		       d0 13		      bne	RangerProxyDone
+    279  f291		       a5 af		      lda	KnightX
+    280  f293		       c5 80		      cmp	PlayerX
+    281  f295		       b0 07		      bcs	RangerStepRight
+    282  f297		       c9 1a		      cmp	#26
+    283  f299		       90 09		      bcc	RangerProxyDone
+    284  f29b		       c6 af		      dec	KnightX
+    285  f29d		       60		      rts
+    286  f29e				   RangerStepRight
+    287  f29e		       c9 86		      cmp	#134
+    288  f2a0		       b0 02		      bcs	RangerProxyDone
+    289  f2a2		       e6 af		      inc	KnightX
+    290  f2a4				   RangerProxyDone
+    291  f2a4		       60		      rts
+    292  f2a5
+    293  f2a5				   KnightAI
+    294  f2a5							; Single P1 training knight X chase; Y remains static at arena 96.
+    295  f2a5							; Sword is logical, warning indicated by changing P1 color.
+    296  f2a5		       a5 b0		      lda	SwordWarn
+    297  f2a7		       f0 11		      beq	NoWarning
+    298  f2a9		       c6 b0		      dec	SwordWarn
+    299  f2ab		       a9 2e		      lda	#$2E
+    300  f2ad		       85 07		      sta	COLUP1
+    301  f2af		       a5 b0		      lda	SwordWarn
+    302  f2b1		       d0 62		      bne	KnightDone
+    303  f2b3		       a9 07		      lda	#7
+    304  f2b5		       85 b1		      sta	SwordStrike
+    305  f2b7		       4c 15 f3 	      jmp	KnightDone
+    306  f2ba				   NoWarning
+    307  f2ba		       a5 b1		      lda	SwordStrike
+    308  f2bc		       f0 1d		      beq	NoStrike
+    309  f2be		       c6 b1		      dec	SwordStrike
+    310  f2c0		       a9 4e		      lda	#$4E
+    311  f2c2		       85 07		      sta	COLUP1
+    312  f2c4		       20 16 f3 	      jsr	CloseForSword
+    313  f2c7		       f0 07		      beq	StrikeFinished
+    314  f2c9		       a5 b3		      lda	Invulnerable
+    315  f2cb		       d0 03		      bne	StrikeFinished
+    316  f2cd		       20 3c f3 	      jsr	ApplySwordDamage
+    317  f2d0				   StrikeFinished
+    318  f2d0		       a5 b1		      lda	SwordStrike
+    319  f2d2		       d0 41		      bne	KnightDone
+    320  f2d4		       a9 3c		      lda	#60
+    321  f2d6		       85 b2		      sta	SwordRest
+    322  f2d8		       4c 15 f3 	      jmp	KnightDone
+    323  f2db				   NoStrike
+    324  f2db		       a5 b2		      lda	SwordRest
+    325  f2dd		       f0 09		      beq	ReadyKnight
+    326  f2df		       c6 b2		      dec	SwordRest
+    327  f2e1		       a9 9e		      lda	#$9E
+    328  f2e3		       85 07		      sta	COLUP1
+    329  f2e5		       4c 15 f3 	      jmp	KnightDone
+    330  f2e8				   ReadyKnight
+    331  f2e8		       a9 9e		      lda	#$9E
+    332  f2ea		       85 07		      sta	COLUP1
+    333  f2ec		       20 16 f3 	      jsr	CloseForSword
+    334  f2ef		       f0 07		      beq	ChaseKnight
+    335  f2f1		       a9 18		      lda	#24
+    336  f2f3		       85 b0		      sta	SwordWarn
+    337  f2f5		       4c 15 f3 	      jmp	KnightDone
+    338  f2f8				   ChaseKnight
+    339  f2f8		       a5 8d		      lda	FrameCount
+    340  f2fa		       29 03		      and	#3
+    341  f2fc		       d0 17		      bne	KnightDone
+    342  f2fe		       a5 af		      lda	KnightX
+    343  f300		       c5 80		      cmp	PlayerX
+    344  f302		       f0 11		      beq	KnightDone
+    345  f304		       90 09		      bcc	KnightChaseRight
+    346  f306		       c9 1f		      cmp	#31
+    347  f308		       90 0b		      bcc	KnightDone
+    348  f30a		       c6 af		      dec	KnightX
+    349  f30c		       4c 15 f3 	      jmp	KnightDone
+    350  f30f				   KnightChaseRight
+    351  f30f		       c9 91		      cmp	#145
+    352  f311		       b0 02		      bcs	KnightDone
+    353  f313		       e6 af		      inc	KnightX
+    354  f315				   KnightDone
+    355  f315		       60		      rts
+    356  f316
+    357  f316				   CloseForSword
+    358  f316		       a5 80		      lda	PlayerX
+    359  f318		       38		      sec
+    360  f319		       e5 af		      sbc	KnightX
+    361  f31b		       b0 05		      bcs	SwordAbsX
+    362  f31d		       49 ff		      eor	#$FF
+    363  f31f		       18		      clc
+    364  f320		       69 01		      adc	#1
+    365  f322				   SwordAbsX
+    366  f322		       c9 0e		      cmp	#14
+    367  f324		       b0 13		      bcs	SwordNotClose
+    368  f326		       a5 81		      lda	PlayerY
+    369  f328		       38		      sec
+    370  f329		       e9 60		      sbc	#96
+    371  f32b		       b0 05		      bcs	SwordAbsY
+    372  f32d		       49 ff		      eor	#$FF
+    373  f32f		       18		      clc
+    374  f330		       69 01		      adc	#1
+    375  f332				   SwordAbsY
+    376  f332		       c9 14		      cmp	#20
+    377  f334		       b0 03		      bcs	SwordNotClose
+    378  f336		       a9 01		      lda	#1
+    379  f338		       60		      rts
+    380  f339				   SwordNotClose
+    381  f339		       a9 00		      lda	#0
+    382  f33b		       60		      rts
+    383  f33c
+    384  f33c				   ApplySwordDamage
+    385  f33c							; Never hurt player from knight body contact.
+    386  f33c		       a9 2d		      lda	#45
+    387  f33e		       85 b3		      sta	Invulnerable
+    388  f340		       a9 10		      lda	#16
+    389  f342		       85 b7		      sta	SoundFrames
+    390  f344		       a9 02		      lda	#2
+    391  f346		       85 15		      sta	AUDC0
+    392  f348		       a9 08		      lda	#8
+    393  f34a		       85 17		      sta	AUDF0
+    394  f34c		       a5 82		      lda	Level
+    395  f34e		       c9 01		      cmp	#1
+    396  f350		       f0 03		      beq	LoseLife
+    397  f352		       c6 82		      dec	Level
+    398  f354		       60		      rts
+    399  f355				   LoseLife
+    400  f355		       c6 ac		      dec	Lives
+    401  f357		       a9 50		      lda	#80
+    402  f359		       85 80		      sta	PlayerX
+    403  f35b		       a9 58		      lda	#88
+    404  f35d		       85 81		      sta	PlayerY
+    405  f35f		       60		      rts
+    406  f360
+    407  f360				   RangerFleeDiagnostic
+    408  f360							; Position bookkeeping only: NO ranger sprite, arrow or damage.
+    409  f360							; Not counted as physically realized ranger behavior.
+    410  f360		       a5 8d		      lda	FrameCount
+    411  f362		       29 07		      and	#7
+    412  f364		       d0 13		      bne	RangerDone
+    413  f366		       a5 b8		      lda	RangerX
+    414  f368		       c5 80		      cmp	PlayerX
+    415  f36a		       b0 07		      bcs	RangerRight
+    416  f36c		       c9 12		      cmp	#18
+    417  f36e		       90 09		      bcc	RangerDone
+    418  f370		       c6 b8		      dec	RangerX
+    419  f372		       60		      rts
+    420  f373				   RangerRight
+    421  f373		       c9 8e		      cmp	#142
+    422  f375		       b0 02		      bcs	RangerDone
+    423  f377		       e6 b8		      inc	RangerX
+    424  f379				   RangerDone
+    425  f379		       60		      rts
+    426  f37a
+    427  f37a							; Two *intentionally distinct provisional layouts* at stage boundaries.
+    428  f37a							; Unlike rejected PLAY1-H mirror hack, this is not an X-halo trick:
+    429  f37a							; we switch geometry together with its exact collision tables.
+    430  f37a				   PlaceStageOrb
+    431  f37a		       a6 aa		      ldx	Stage
+    432  f37c		       bd f6 f3 	      lda	StageOrbX,x
+    433  f37f		       85 ba		      sta	OrbX
+    434  f381		       a9 01		      lda	#1
+    435  f383		       85 bb		      sta	OrbDirty	; ball repositioned once OFFSCREEN by bank1
+    436  f385		       60		      rts
+    437  f386
+    438  f386				   InstallStageLayout
+    439  f386		       a5 aa		      lda	Stage
+    440  f388		       29 01		      and	#1
+    441  f38a		       f0 0f		      beq	InstallRepeat
+    442  f38c		       a2 2f		      ldx	#47
+    443  f38e				   CopyMirror
+    444  f38e		       bd ff f3 	      lda	MirrorRects,x
+    445  f391		       95 c0		      sta	$C0,x
+    446  f393		       ca		      dex
+    447  f394		       10 f8		      bpl	CopyMirror
+    448  f396		       a9 11		      lda	#$11
+    449  f398		       85 0a		      sta	CTRLPF	; mirrored obstacle layout, original PLAY1-H
+    450  f39a		       60		      rts
+    451  f39b				   InstallRepeat
+    452  f39b		       a2 2f		      ldx	#47
+    453  f39d				   CopyRepeat
+    454  f39d		       bd 2f f4 	      lda	RepeatRects,x
+    455  f3a0		       95 c0		      sta	$C0,x
+    456  f3a2		       ca		      dex
+    457  f3a3		       10 f8		      bpl	CopyRepeat
+    458  f3a5		       a9 10		      lda	#$10
+    459  f3a7		       85 0a		      sta	CTRLPF	; repeated obstacle layout, changed at stage boundary
+    460  f3a9		       60		      rts
+    461  f3aa
+    462  f3aa				   SetWorldColors
+    463  f3aa							; Eight provisional color identities, but ONE common obstacle map.
+    464  f3aa							; World PF must become gold under active halo (PLAY1-H test B).
+    465  f3aa		       a6 aa		      ldx	Stage
+    466  f3ac		       a5 9e		      lda	HaloFrames
+    467  f3ae		       d0 05		      bne	ColorHaloActive
+    468  f3b0		       bd e4 f3 	      lda	WorldPFColors,x
+    469  f3b3		       85 08		      sta	COLUPF
+    470  f3b5				   ColorHaloActive
+    471  f3b5		       a5 a2		      lda	TargetFlash
+    472  f3b7		       d0 05		      bne	ColorKeepFlash
+    473  f3b9		       bd ed f3 	      lda	WorldBGColors,x
+    474  f3bc		       85 09		      sta	COLUBK
+    475  f3be				   ColorKeepFlash
+    476  f3be		       60		      rts
+    477  f3bf
+    478  f3bf				   UpdateSound
+    479  f3bf		       a5 b7		      lda	SoundFrames
+    480  f3c1		       f0 07		      beq	SoundMute
+    481  f3c3		       c6 b7		      dec	SoundFrames
+    482  f3c5		       a9 07		      lda	#7
+    483  f3c7		       85 19		      sta	AUDV0
+    484  f3c9		       60		      rts
+    485  f3ca				   SoundMute
+    486  f3ca		       a9 00		      lda	#0
+    487  f3cc		       85 19		      sta	AUDV0
+    488  f3ce		       60		      rts
+    489  f3cf
+    490  f3cf				   GameOver
+    491  f3cf		       a9 42		      lda	#$42
+    492  f3d1		       85 09		      sta	COLUBK
+    493  f3d3		       a9 00		      lda	#0
+    494  f3d5		       85 19		      sta	AUDV0
+    495  f3d7		       a5 84		      lda	SwitchState
+    496  f3d9		       29 01		      and	#1	; physical console RESET switch, active low
+    497  f3db		       d0 04		      bne	GameOverStay
+    498  f3dd		       a9 00		      lda	#0
+    499  f3df		       85 aa		      sta	Stage	; next tick initializes new game
+    500  f3e1				   GameOverStay
+    501  f3e1		       4c 90 f6 	      jmp	GameBankReturn
+    502  f3e4
+    503  f3e4				   WorldPFColors
+    504  f3e4		       00 c6 c8 36*	      dc.b	$00,$C6,$C8,$36,$38,$56,$58,$06,$08
+    505  f3ed				   WorldBGColors
+    506  f3ed		       00 00 00 02*	      dc.b	$00,$00,$00,$02,$02,$04,$04,$00,$00
+    507  f3f6
+    508  f3f6							; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
+    509  f3f6							; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
+    510  f3f6				   StageOrbX
+    511  f3f6		       00 60 58 50*	      dc.b	0,96,88,80,104,92,84,100,76
+    512  f3ff
+    513  f3ff				   MirrorRects
+    514  f3ff		       05 24 0f 3a*	      dc.b	5,36,15,58,125,156,15,58,17,52,127,162,109,144,127,162
+    515  f40f		       01 28 09 40*	      dc.b	1,40,9,64,121,160,9,64,13,56,121,168,105,148,121,168
+    516  f41f		       00 30 03 46*	      dc.b	0,48,3,70,113,160,3,70,5,64,115,174,97,156,115,174
+    517  f42f							; Mirror bit off: right-side obstacle copies begin at x92 and x104.
+    518  f42f				   RepeatRects
+    519  f42f		       05 24 0f 3a*	      dc.b	5,36,15,58,85,116,15,58,17,52,127,162,97,132,127,162
+    520  f43f		       01 28 09 40*	      dc.b	1,40,9,64,81,120,9,64,13,56,121,168,93,136,121,168
+    521  f44f		       00 30 03 46*	      dc.b	0,48,3,70,73,128,3,70,5,64,115,174,85,144,115,174
+    522  f45f
+    523  f45f							; Exact corresponding shared-address bank trampolines.
+    524  f680					      ORG	$F680
+    525  f680				   GameBankEnter
+    526  f680		       ad f8 ff 	      lda	$FFF8
+    527  f683		       4c 00 f1 	      jmp	GameBankTick
+    528  f690					      ORG	$F690
+    529  f690				   GameBankReturn
+    530  f690		       ad f9 ff 	      lda	$FFF9
+    531  f693		       60		      rts
+    532  f6a0					      ORG	$F6A0
+    533  f6a0				   GameBankReset
+    534  f6a0		       ad f9 ff 	      lda	$FFF9
+    535  f6a3		       4c 00 f0 	      jmp	$F000
+    536  fffc					      ORG	$FFFC
+    537  fffc		       a0 f6		      dc.w	GameBankReset
+    538  fffe		       a0 f6		      dc.w	GameBankReset
