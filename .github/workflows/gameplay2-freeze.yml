@@ -1,0 +1,42 @@
+name: GAMEPLAY-2 freeze genuine DASM F8 NTSC experiment
+on:
+  push:
+    branches: [experiment/gameplay2-complete-stage-20261122]
+    paths: [docs/gameplay2/FREEZE_REQUEST.txt]
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/gameplay2-complete-stage-20261122
+          persist-credentials: true
+      - name: Install DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Build exact 8192B conventional F8 ROM with reproducible SHA
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay2
+          dasm experiments/gameplay2_bank0.asm -f3 -oexperiments/gameplay2_bank0.bin -lexperiments/gameplay2_bank0.lst -sexperiments/gameplay2_bank0.sym 2>&1 | tee experiments/gameplay2_DASM0.log
+          dasm experiments/gameplay2_bank1.asm -f3 -oexperiments/gameplay2_bank1.bin -lexperiments/gameplay2_bank1.lst -sexperiments/gameplay2_bank1.sym 2>&1 | tee experiments/gameplay2_DASM1.log
+          test "$(stat -c %s experiments/gameplay2_bank0.bin)" -eq 4096
+          test "$(stat -c %s experiments/gameplay2_bank1.bin)" -eq 4096
+          cat experiments/gameplay2_bank0.bin experiments/gameplay2_bank1.bin > experiments/gameplay2_f8_ntsc.bin
+          test "$(stat -c %s experiments/gameplay2_f8_ntsc.bin)" -eq 8192
+          sha256sum experiments/gameplay2_bank0.asm experiments/gameplay2_bank1.asm experiments/gameplay2_f8_ntsc.bin > experiments/gameplay2_SHA256SUMS.txt
+          sha256sum -c experiments/gameplay2_SHA256SUMS.txt
+      - name: Commit the real binary and source checksums on isolated experimental branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/gameplay2_bank0.bin experiments/gameplay2_bank1.bin experiments/gameplay2_f8_ntsc.bin experiments/gameplay2_SHA256SUMS.txt experiments/gameplay2_bank0.lst experiments/gameplay2_bank1.lst experiments/gameplay2_bank0.sym experiments/gameplay2_bank1.sym experiments/gameplay2_DASM0.log experiments/gameplay2_DASM1.log
+          git commit -m 'artifact(GAMEPLAY-2): freeze original F8 8192-byte executable and exact build evidence'
+          git fetch origin experiment/gameplay2-complete-stage-20261122
+          git rebase origin/experiment/gameplay2-complete-stage-20261122
+          git push origin HEAD:refs/heads/experiment/gameplay2-complete-stage-20261122

@@ -1,0 +1,7 @@
+GAMEPLAY-2 user-authorized one-shot experimental ROM freeze, 2026-11-22.
+Source: experiments/gameplay2_bank0.asm + experiments/gameplay2_bank1.asm.
+Build two authentic DASM 4096-byte F8 banks, 8192B ROM, listings, symbols and SHA256.
+The first tested physical Stella sessions showed 261 lines. A measured correction added
+one extra overscan WSYNC and actual Stella _scanEnd read 262 in tested scenes.
+Keep original GAMEPLAY-1 commit 7f289a536c375bf760428274280179cfe15a6a62 frozen.
+No main merge, no unrelated mapper, no independent Verification.
