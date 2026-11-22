@@ -838,7 +838,7 @@ AttackOff:
         lda #$86
         sta COLUPF       ; blue diagnostic world PF+orb when inactive
         lda #0
-        sta HaloVisualMask
+        ; retired unread HaloVisualMask storage, now used by KnightDir
 AttackRadius:
         ldx Level
         lda RadiusTable,x
