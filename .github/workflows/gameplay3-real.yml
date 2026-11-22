@@ -47,6 +47,18 @@ jobs:
           set -euo pipefail
           bash scripts/gameplay3_stella_art.sh
           /usr/bin/python3 tests/gameplay3_real_art_pixels.py | tee build/gameplay3/ART_PIXEL_AUDIT.log
+      - name: Bounded two actual P1 triple-renderer hypotheses (NO fictional independent actors)
+        run: |
+          set -euo pipefail
+          python3 scripts/gameplay3_build_three_hypotheses.py
+          for src in build/gameplay3/hypotheses/*.asm; do
+            p="${src%.asm}"
+            dasm "$src" -f3 -o"$p".bank1.bin -l"$p".lst -s"$p".sym > "$p".DASM.log 2>&1
+            cat build/gameplay3/bank0.bin "$p".bank1.bin > "$p".bin
+            test "$(stat -c %s "$p".bin)" -eq 8192
+          done
+          bash scripts/gameplay3_stella_three_hypotheses.sh
+          /usr/bin/python3 tests/gameplay3_three_hypotheses_audit.py | tee build/gameplay3/HYPOTHESES_REAL.log
       - name: Bounded authentic previous GAMEPLAY-2 joystick/orb/L3/stage regression
         run: |
           set -euo pipefail
@@ -74,5 +86,8 @@ jobs:
             scripts/gameplay3_generate_art_roms.py
             scripts/gameplay3_stella_art.sh
             scripts/gameplay3_stella_regression.sh
+            scripts/gameplay3_build_three_hypotheses.py
+            scripts/gameplay3_stella_three_hypotheses.sh
+            tests/gameplay3_three_hypotheses_audit.py
             tests/gameplay3_real_art_pixels.py
           if-no-files-found: warn
