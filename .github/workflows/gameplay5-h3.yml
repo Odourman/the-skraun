@@ -1,0 +1,68 @@
+name: GAMEPLAY-5 D real 2-knights + Ranger physical owner trial H3 sameY and separatedY
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+    paths: [experiments/gameplay5h3_bank0.asm, experiments/gameplay5h3_same_bank1.asm, experiments/gameplay5h3_sep_bank1.asm, scripts/gameplay5_h3_stella.sh, .github/workflows/gameplay5-h3.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  H3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install authentic DASM Stella debugger GUI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Assemble both full F8 H3 materially new renderer approaches
+        run: |
+          set -euo pipefail
+          for mode in same sep;do
+            out="build/gameplay5/h3/$mode";mkdir -p "$out"
+            dasm experiments/gameplay5h3_bank0.asm -f3 -o"$out/bank0.bin" -l"$out/bank0.lst" -s"$out/bank0.sym" 2>&1 | tee "$out/DASM0.log"
+            dasm "experiments/gameplay5h3_${mode}_bank1.asm" -f3 -o"$out/bank1.bin" -l"$out/bank1.lst" -s"$out/bank1.sym" 2>&1 | tee "$out/DASM1.log"
+            test "$(stat -c %s "$out/bank0.bin")" -eq 4096
+            test "$(stat -c %s "$out/bank1.bin")" -eq 4096
+            cat "$out/bank0.bin" "$out/bank1.bin" > "$out/f8.bin"
+            test "$(stat -c %s "$out/f8.bin")" -eq 8192
+            sha256sum "$out/bank0.bin" "$out/bank1.bin" "$out/f8.bin" > "$out/SHA256SUMS"
+          done
+      - name: Real Stella P0 L2+physical P1 source/color/RESP1 and NTSC counts
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay5_h3_stella.sh
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re,json,numpy as np
+          root=Path('build/gameplay5/h3/scenes'); d={}
+          for mode in ('same','sep'):
+            for scene in ('start','L2'):
+              p=root/f'{mode}_{scene}'
+              src=(p/'SESSION_TYPED.txt').read_text(errors='replace')
+              m=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',src)
+              scan=int(m[-1]) if m else None
+              im=np.asarray(Image.open(p/'DEBUGGER_DESKTOP.png').convert('RGB').crop((121,115,441,343)))
+              Image.fromarray(im).save(p/'REAL_TIA_320x228.png')
+              blue=int(np.all(im==[121,194,251],axis=2).sum())
+              green=int(np.all(im==[61,151,60],axis=2).sum())
+              d[f'{mode}_{scene}']={'frame_lines':scan,'blue_pixels':blue,'forest_green_pixels':green}
+              print('H3_GENUINE_PHYSICAL',mode,scene,d[f'{mode}_{scene}'])
+          (root/'H3_REAL_PIXELS_AND_FRAMES.json').write_text(json.dumps(d,indent=2))
+          if any(t['frame_lines'] is None for t in d.values()):
+            raise SystemExit('Cannot claim hardware PASS without real raster measurement')
+          PY
+      - name: Always preserve failed actual assembler logs ROMs debugger screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY5-H3-REAL-THREE-ACTOR-OWNER-SCHEDULER
+          path: |
+            build/gameplay5/h3/
+            experiments/gameplay5h3_bank0.asm
+            experiments/gameplay5h3_same_bank1.asm
+            experiments/gameplay5h3_sep_bank1.asm
+            scripts/gameplay5_h3_stella.sh
+          if-no-files-found: warn
