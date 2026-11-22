@@ -14,6 +14,13 @@ a=src.replace("        jsr SelectEnemyArt ; offscreen identity/pose, never after
  "        jsr SelectEnemyArt ; offscreen identity/pose, never after GRP1 beam deadline\n        lda #$03\n        sta NUSIZ1     ; three copies, close spacing, one P1 bitmap (NOT 3 identities)")
 a=a.replace("        lda KnightX       ; diagnostic P1 knight follows X",
             "        lda #67            ; H1 stress positions approx x67,x83,x99, not Ranger101")
+# Early-GRP1 hypothesis: x67 copy needs byte BEFORE beam x67, so perform
+# GRP1 immediately after GRP0, postponing PF1/PF0 by 7 cycles.
+# This deliberately risks PF beam deadlines; it MUST be measured.
+a=a.replace("        sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)",
+            "        sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)\\n        lda DummyScan,x\\n        sta GRP1          ; early x67 before P1 beam, 7c PF delay risk")
+a=a.replace("        lda (EnemyRowPtr),y\\n        sta GRP1", 
+            "        ; H1 P1 already loaded before beam, no late double GRP1 write")
 assert a!=src
 (root/"H1_sameY_three_NUSIZ_copies.asm").write_text(a)
 # H2 separated-Y: one hardcoded 193-entry P1 scan table with 3 distinct art
