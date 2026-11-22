@@ -37,6 +37,8 @@ RangerX     = $B8
 RangerY     = $B9
 OrbX        = $BA
 OrbDirty    = $BB
+BonusLo     = $BC  ; points since last 2,000-point extra life
+BonusHi     = $BD
 
         SEG GameCode
         ORG $F000
@@ -60,6 +62,14 @@ InvulnDone:
         jsr TargetEliminated
         jmp AfterKnight
 KnightAlive:
+        lda StageKills
+        clc
+        adc #1
+        cmp KillsNeed
+        bne KnightOnly
+        jsr RangerProxyAI
+        jmp AfterKnight
+KnightOnly:
         jsr KnightAI
 AfterKnight:
         jsr RangerFleeDiagnostic
@@ -80,6 +90,8 @@ InitializeGame:
         sta ScoreHi
         sta StageKills
         sta BonusCount
+        sta BonusLo
+        sta BonusHi
         sta SwordWarn
         sta SwordStrike
         sta SwordRest
@@ -127,24 +139,50 @@ DreamCount:
 TargetEliminated:
         lda TargetFlash
         bne TargetDeadWait
-        ; One original P1 target physically killed by existing halo logic.
-        ; 100 pts per diagnostic knight, ranger award NOT implemented.
+        ; Two sequential 100-point P1 knight proxies, final ranger
+        ; proxy of each stage awards 250. Not simultaneous opponents.
+        lda StageKills
         clc
-        lda ScoreLo
-        adc #100
+        adc #1
+        cmp KillsNeed
+        beq AwardRanger
+        ldx #100
+        jmp AwardReady
+AwardRanger:
+        ldx #250
+AwardReady:
+        txa
+        clc
+        adc ScoreLo
         sta ScoreLo
         lda ScoreHi
         adc #0
         sta ScoreHi
-        inc StageKills
-        inc BonusCount
-        lda BonusCount
-        cmp #20
-        bne NoBonus
-        lda #0
-        sta BonusCount
+        txa
+        clc
+        adc BonusLo
+        sta BonusLo
+        lda BonusHi
+        adc #0
+        sta BonusHi
+        lda BonusHi
+        cmp #$07
+        bcc NoBonus
+        bne BonusEarned
+        lda BonusLo
+        cmp #$D0
+        bcc NoBonus
+BonusEarned:
+        sec
+        lda BonusLo
+        sbc #$D0
+        sta BonusLo
+        lda BonusHi
+        sbc #$07
+        sta BonusHi
         inc Lives
 NoBonus:
+        inc StageKills
         lda #13
         sta SoundFrames
         lda #4
@@ -226,6 +264,30 @@ SetNewStage:
         jsr SetWaveTarget
         jsr InstallStageLayout
         jsr PlaceStageOrb
+        rts
+
+RangerProxyAI:
+        ; A SINGLE world-camouflaged P1 proxy occupying the final wave slot.
+        ; The P1 art remains the frozen blue-knight bitmap with world color;
+        ; no Ranger-specific graphics, bow or arrow are claimed implemented.
+        ldx Stage
+        lda WorldPFColors,x
+        sta COLUP1
+        lda FrameCount
+        and #7
+        bne RangerProxyDone
+        lda KnightX
+        cmp PlayerX
+        bcs RangerStepRight
+        cmp #26
+        bcc RangerProxyDone
+        dec KnightX
+        rts
+RangerStepRight:
+        cmp #134
+        bcs RangerProxyDone
+        inc KnightX
+RangerProxyDone:
         rts
 
 KnightAI:
