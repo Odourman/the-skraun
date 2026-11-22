@@ -1,0 +1,7 @@
+GAMEPLAY-3 one-shot genuine F8 DASM binary freeze authorized 2026-11-22.
+Parent immutable GAMEPLAY-2 commit 18f385f2f7665d68e8542f2abb155105702dd267.
+Do NOT edit GAMEPLAY-2, main, U1 source or run independent Verification.
+Build 4096-byte bank0 + 4096-byte bank1 and SHA-256 manifest.
+Preserve exact primary K1T neutral/warning and R1 neutral playable checkpoint.
+All six source masks separately physical pixels PASS in twelve diagnostic F8 ROMs.
+H1/H2 triple-rendering trials did not prove 3 independent same-Y actors.

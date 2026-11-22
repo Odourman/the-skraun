@@ -1,0 +1,41 @@
+name: GAMEPLAY-3 one-shot freeze real DASM 8KiB F8 ROM
+on:
+  push:
+    branches: [experiment/gameplay3-physical-enemies-20261122]
+    paths: [docs/gameplay3/FREEZE_REQUEST.txt]
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/gameplay3-physical-enemies-20261122
+          persist-credentials: true
+      - name: Install genuine DASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Real reproducible original F8 native ROM build and immutable SHA checks
+        run: |
+          set -euo pipefail
+          dasm experiments/gameplay3_bank0.asm -f3 -oexperiments/gameplay3_bank0.bin -lexperiments/gameplay3_bank0.lst -sexperiments/gameplay3_bank0.sym 2>&1 | tee experiments/gameplay3_DASM0.log
+          dasm experiments/gameplay3_bank1.asm -f3 -oexperiments/gameplay3_bank1.bin -lexperiments/gameplay3_bank1.lst -sexperiments/gameplay3_bank1.sym 2>&1 | tee experiments/gameplay3_DASM1.log
+          test "$(stat -c %s experiments/gameplay3_bank0.bin)" -eq 4096
+          test "$(stat -c %s experiments/gameplay3_bank1.bin)" -eq 4096
+          cat experiments/gameplay3_bank0.bin experiments/gameplay3_bank1.bin > experiments/gameplay3_f8_ntsc.bin
+          test "$(stat -c %s experiments/gameplay3_f8_ntsc.bin)" -eq 8192
+          sha256sum experiments/gameplay3_bank0.asm experiments/gameplay3_bank1.asm experiments/gameplay3_f8_ntsc.bin > experiments/gameplay3_SHA256SUMS.txt
+          sha256sum -c experiments/gameplay3_SHA256SUMS.txt
+      - name: Commit real executable, exact masks, CPU assembler listings and SHA to experiment only
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/gameplay3_bank0.bin experiments/gameplay3_bank1.bin experiments/gameplay3_f8_ntsc.bin experiments/gameplay3_SHA256SUMS.txt experiments/gameplay3_bank0.lst experiments/gameplay3_bank1.lst experiments/gameplay3_bank0.sym experiments/gameplay3_bank1.sym experiments/gameplay3_DASM0.log experiments/gameplay3_DASM1.log
+          git commit -m 'artifact(GAMEPLAY-3): genuine physical K1T-R1 F8 8192B ROM and DASM SHA evidence'
+          git fetch origin experiment/gameplay3-physical-enemies-20261122
+          git rebase origin/experiment/gameplay3-physical-enemies-20261122
+          git push origin HEAD:refs/heads/experiment/gameplay3-physical-enemies-20261122
