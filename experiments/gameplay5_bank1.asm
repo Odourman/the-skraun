@@ -323,7 +323,7 @@ VisibleDone:
         sta PF1
         sta PF2
         sta WSYNC
-        lda #34             ; ~29 raster lines of overscan incl update work
+        lda #33             ; GAMEPLAY-5 A 5/5 real Ranger 262: timer33 + original 2 WSYNC
         sta TIM64T
         jsr UpdateOrb
         jsr UpdateAttack
