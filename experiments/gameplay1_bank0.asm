@@ -35,6 +35,8 @@ BonusCount  = $B6
 SoundFrames = $B7
 RangerX     = $B8
 RangerY     = $B9
+OrbX        = $BA
+OrbDirty    = $BB
 
         SEG GameCode
         ORG $F000
@@ -99,6 +101,7 @@ InitializeGame:
         sta PlayerY
         jsr SetWaveTarget
         jsr InstallStageLayout
+        jsr PlaceStageOrb
         rts
 
 SetWaveTarget:
@@ -222,6 +225,7 @@ SetNewStage:
         sta AUDC0
         jsr SetWaveTarget
         jsr InstallStageLayout
+        jsr PlaceStageOrb
         rts
 
 KnightAI:
@@ -361,6 +365,14 @@ RangerDone:
 ; Two *intentionally distinct provisional layouts* at stage boundaries.
 ; Unlike rejected PLAY1-H mirror hack, this is not an X-halo trick:
 ; we switch geometry together with its exact collision tables.
+PlaceStageOrb:
+        ldx Stage
+        lda StageOrbX,x
+        sta OrbX
+        lda #1
+        sta OrbDirty     ; ball repositioned once OFFSCREEN by bank1
+        rts
+
 InstallStageLayout:
         lda Stage
         and #1
@@ -433,6 +445,9 @@ WorldBGColors:
 
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
+StageOrbX:
+        dc.b 0,96,88,80,104,92,84,100,76
+
 MirrorRects:
         dc.b 5,36,15,58,125,156,15,58,17,52,127,162,109,144,127,162
         dc.b 1,40,9,64,121,160,9,64,13,56,121,168,105,148,121,168
