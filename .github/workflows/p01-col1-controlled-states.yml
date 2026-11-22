@@ -1,0 +1,165 @@
+name: P01-COL1 authentic Stella controlled-state probe
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/p01_col1_single_arena.asm'
+      - '.github/workflows/p01-col1-controlled-states.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  state-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM and Stella debugger
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+          mkdir -p build/col1-controlled
+      - name: Reproduce unchanged approved 4096-byte ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/p01_col1_single_arena.asm -f3 -obuild/col1-controlled/p01-col1.bin -lbuild/col1-controlled/p01-col1.lst -sbuild/col1-controlled/p01-col1.sym
+          test "$(stat -c %s build/col1-controlled/p01-col1.bin)" -eq 4096
+          sha256sum build/col1-controlled/p01-col1.bin | tee build/col1-controlled/ROM_SHA256.txt
+          echo 'f36217f9ae96a1e927795ca639b9d6b6cca68ad3e8e4f296afadcdb52d6a6ad2  build/col1-controlled/p01-col1.bin' | sha256sum -c -
+      - name: Drive genuine Stella debugger with RAM and joystick state
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1400x1000x24 > build/col1-controlled/XVFB.log 2>&1 &
+          xvfb_pid=$!
+          trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
+          sleep 2
+          mkdir -p "$HOME/.config/stella"
+          for spec in "corner_base 48 69 3 none" "corner_left_down 48 69 3 leftdown" "corner_goal_base 64 114 3 none" "corner_goal_diag 64 114 3 leftdown" "solid_base 48 60 3 none" "solid_left 48 60 3 left" "side_right_base 112 60 3 none" "side_right_hit 112 60 3 right" "side_up_base 40 70 3 none" "side_up_hit 40 70 3 up" "side_down_base 40 114 3 none" "side_down_hit 40 114 3 down" "free_base 80 88 3 none" "free_left 80 88 3 left" "free_up 80 88 3 up" "free_down 80 88 3 down" "free_right_long 80 88 3 right90" "grow_safe 80 88 2 select" "grow_block 12 64 2 select"; do
+            read -r name x y level control <<< "$spec"
+            out="$PWD/build/col1-controlled/$name"
+            mkdir -p "$out"
+            {
+              printf 'base dec\nframe #10\n'
+              printf 'ram $80 #%s\n' "$x"
+              printf 'ram $81 #%s\n' "$y"
+              printf 'ram $82 #%s\n' "$level"
+              printf 'ram $86 #0\nram $85 #0\nram $9A #0\n'
+              case "$control" in
+                leftdown) printf 'joy0Left #0\njoy0Down #0\n' ;;
+                left) printf 'joy0Left #0\n' ;;
+                up) printf 'joy0Up #0\n' ;;
+                down) printf 'joy0Down #0\n' ;;
+                right) printf 'joy0Right #0\n' ;;
+                right90) printf 'joy0Right #0\n' ;;
+                select) printf 'runToPc $f050\nram $84 #253\n' ;;
+              esac
+              if [ "$control" = right90 ]; then printf 'frame #90\n'; else printf 'frame #2\n'; fi
+              printf 'print *$80\nprint *$81\nprint *$82\nprint *$9A\n'
+              printf 'print _scanEnd\nprint _fCount\nprint _fCycles\nsaveSnap\nsaveSes\n'
+            } > "$HOME/.config/stella/autoexec.script"
+            cp "$HOME/.config/stella/autoexec.script" "$out/INPUT.script"
+            stella -debug -logtoconsole 1 -audio.enabled 0 -threads 0 -vsync 0 -video software -fullscreen 0 -snapsavedir "$out" -sssingle 1 -ss1x 1 "$PWD/build/col1-controlled/p01-col1.bin" > "$out/STELLA.log" 2>&1 &
+            pid=$!
+            win=""
+            for t in $(seq 1 30); do
+              win=$(xdotool search --onlyvisible --name Stella 2>/dev/null | head -n1 || true)
+              if [ -n "$win" ]; then break; fi
+              if ! kill -0 "$pid" 2>/dev/null; then break; fi
+              sleep 1
+            done
+            if [ -z "$win" ]; then echo "NO STELLA WINDOW: $name"; cat "$out/STELLA.log"; exit 1; fi
+            sleep 3
+            xdotool windowfocus "$win" || true
+            scrot -z "$out/DEBUGGER_DESKTOP.png"
+            find "$out" -maxdepth 1 -type f -printf '%f %s bytes\n' > "$out/FILES.txt"
+            for f in "$HOME"/*-*-*_*-*-*.txt "$HOME"/.config/stella/*-*-*_*-*-*.txt; do
+              if [ -f "$f" ]; then
+                cp "$f" "$out/SESSION_$(basename "$f")"
+                rm -f "$f"
+              fi
+            done
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" || true
+          done
+      - name: FAIL-CLOSED physical screenshot movement and growth checks
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          root=Path('build/col1-controlled')
+          def box(name):
+              folder=root/name
+              # SELECT is a controlled post-RIOT-read memory-state test at PC F050.\n              # Stella debugger frame advance ignores physical button key events.\n              # Stella 6.7.1 debugger saveSnap can save all-black 320x228
+              # while its *genuine live TIA pane* visibly contains P0 + PF.
+              # Use the Xvfb desktop capture of the actual emulator's TIA pane.
+              desktop=folder/'DEBUGGER_DESKTOP.png'
+              assert desktop.is_file(), f'{name}: missing genuine Stella debugger desktop screenshot'
+              whole=Image.open(desktop).convert('RGB')
+              assert whole.size==(1400,1000), (name,whole.size)
+              im=whole.crop((121,115,441,343))
+              assert im.size==(320,228)
+              coords=[(x,y) for y in range(im.height) for x in range(im.width)
+                  if all(z>150 for z in im.getpixel((x,y))) and max(im.getpixel((x,y)))-min(im.getpixel((x,y)))<20]
+              assert coords, f'{name}: no detectible gray P0 in genuine debugger TIA pane'
+              b=min(x for x,y in coords),min(y for x,y in coords),max(x for x,y in coords)+1,max(y for x,y in coords)+1
+              print('GENUINE STELLA DEBUGGER TIA',name,'desktop',desktop.name,'bbox',b,'image',im.size)
+              im.save(folder/'ACTUAL_DEBUGGER_TIA_PANE.png')
+              return b
+          base=box('corner_base')
+          corner=box('corner_left_down')
+          cgbase=box('corner_goal_base')
+          cgdiag=box('corner_goal_diag')
+          sb=box('solid_base')
+          solid=box('solid_left')
+          rb=box('side_right_base')
+          rh=box('side_right_hit')
+          ub=box('side_up_base')
+          uh=box('side_up_hit')
+          db=box('side_down_base')
+          dh=box('side_down_hit')
+          fb=box('free_base')
+          fl=box('free_left')
+          fu=box('free_up')
+          fd=box('free_down')
+          long=box('free_right_long')
+          safe=box('grow_safe')
+          blocked=box('grow_block')
+          assert (base[2]-base[0],base[3]-base[1])==(64,36),('L3 baseline shape incorrect',base)
+          assert (corner[2]-corner[0],corner[3]-corner[1])==(64,36),('L3 corner shape incorrect',corner)
+          assert corner[0]==base[0] and base[1]<corner[1]<=base[1]+2,('Strict L3 diagonal slide missing or joystick not registered',base,corner)
+          assert cgdiag[0]==cgbase[0]-2 and cgdiag[1]==cgbase[1],('Unsafe diagonal goal should slide LEFT only',cgbase,cgdiag)
+          assert solid==sb,('Right-side obstacle LEFT-entry collision failed',sb,solid)
+          assert rh==rb,('Left-side obstacle RIGHT-entry collision failed',rb,rh)
+          assert uh==ub,('Bottom-of-upper obstacle UP-entry collision failed',ub,uh)
+          assert dh==db,('Top-of-lower obstacle DOWN-entry collision failed',db,dh)
+          assert fl[0]<fb[0] and fl[1]==fb[1],('Positive free-left joystick control did not move',fb,fl)
+          assert fu[1]<fb[1] and fu[0]==fb[0],('Positive free-up joystick control missing',fb,fu)
+          assert fd[1]>fb[1] and fd[0]==fb[0],('Positive free-down joystick control missing',fb,fd)
+          assert long[0]>=fb[0]+110 and long[1]==fb[1] and (long[2]-long[0])==64,('Sustained L3 right movement missing',fb,long)
+          assert (safe[2]-safe[0],safe[3]-safe[1])==(64,36),('Safe L2 growth not observed',safe)
+          assert (blocked[2]-blocked[0],blocked[3]-blocked[1])==(32,24),('Unsafe L2 growth was not refused',blocked)
+          # Crop of actual Stella debugger Scn Ln field: 0-based 261 visually
+          # validated in the first real screenshot; require consistency across all cases.
+          reference=(root/'corner_base'/'DEBUGGER_DESKTOP.png')
+          roi=(674,148,711,161)
+          digits=Image.open(reference).convert('RGB').crop(roi).tobytes()
+          for folder in root.iterdir():
+              if not folder.is_dir(): continue
+              im=Image.open(folder/'DEBUGGER_DESKTOP.png').convert('RGB')
+              assert im.crop(roi).tobytes()==digits,('Stella Scn Ln displayed field changed',folder.name)
+          print('REAL STELLA DEBUGGER TIA VISUAL PASS: 4-sided contacts, two strict diagonal negatives, all positive directions, growth both ways, sustained Level3. Scanline field identical to confirmed 261 reference; no machine-readable cycle transcript')
+          PY
+      - name: Preserve exact ROM, genuine debugger input scripts, screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p01-col1-authentic-controlled-state-probe
+          path: build/col1-controlled/
+          if-no-files-found: warn

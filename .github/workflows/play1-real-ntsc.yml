@@ -1,0 +1,44 @@
+name: PLAY1 real NTSC DASM build + authentic Stella screen
+on:
+  push:
+    branches: [experiment/play1-single-arena-orb-halo-20261121]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dasm-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original 6507 build/emulator tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil
+          mkdir -p build/play1
+      - name: Assemble 4096-byte standard NTSC ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/play1_single_arena.asm -f3 -obuild/play1/play1.bin -lbuild/play1/play1.lst -sbuild/play1/play1.sym 2>&1 | tee build/play1/DASM_BUILD.log
+          test "$(stat -c %s build/play1/play1.bin)" -eq 4096
+          sha256sum experiments/play1_single_arena.asm build/play1/play1.bin > build/play1/SHA256SUMS
+          stella -rominfo build/play1/play1.bin > build/play1/STELLA_ROMINFO.log 2>&1 || true
+      - name: Real Stella debugger visible images and 12 successive frames
+        run: |
+          set -euo pipefail
+          bash scripts/play1_stella_capture.sh
+      - name: Collect native image checks
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/play1_image_audit.py build/play1 | tee build/play1/IMAGE_AUDIT.log
+      - name: Save true ROM/listing/logs/debugger screenshots regardless
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PLAY1-real-DASM-Stella-source
+          path: |
+            build/play1/
+            experiments/play1_single_arena.asm
+            scripts/play1_stella_capture.sh
+            tests/play1_image_audit.py
+          if-no-files-found: warn

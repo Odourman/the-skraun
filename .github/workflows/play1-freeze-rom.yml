@@ -1,0 +1,35 @@
+name: PLAY1 freeze actual original 4KiB NTSC ROM, DASM listing and symbols
+on:
+  push:
+    branches: [experiment/play1-single-arena-orb-halo-20261121]
+    paths: [.github/workflows/play1-freeze-rom.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  freeze-play1-rom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/play1-single-arena-orb-halo-20261121
+          persist-credentials: true
+      - name: Assemble and SHA-verify the real tested ROM
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm
+          dasm experiments/play1_single_arena.asm -f3 -oexperiments/play1_single_arena.bin -lexperiments/play1_single_arena.lst -sexperiments/play1_single_arena.sym 2>&1 | tee experiments/play1_DASM_BUILD.log
+          test "$(stat -c %s experiments/play1_single_arena.bin)" -eq 4096
+          echo 'cbc296309d60a35debb7bd6980ea5f61db5101bff48c4397f4c5569a8d33aedd  experiments/play1_single_arena.bin' | sha256sum -c -
+          echo '69898159cd4261a7f77365ef7e21da1bb30194770762f4f7292c9f52b542f606  experiments/play1_single_arena.asm' | sha256sum -c -
+          sha256sum experiments/play1_single_arena.asm experiments/play1_single_arena.bin > experiments/play1_SHA256SUMS.txt
+      - name: Commit only frozen ROM/listing/hash into PLAY1 draft branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/play1_single_arena.bin experiments/play1_single_arena.lst experiments/play1_single_arena.sym experiments/play1_SHA256SUMS.txt experiments/play1_DASM_BUILD.log
+          git commit -m 'artifact(PLAY1): freeze 4096B real Stella-tested ROM and DASM artifacts'
+          git push origin HEAD:refs/heads/experiment/play1-single-arena-orb-halo-20261121
