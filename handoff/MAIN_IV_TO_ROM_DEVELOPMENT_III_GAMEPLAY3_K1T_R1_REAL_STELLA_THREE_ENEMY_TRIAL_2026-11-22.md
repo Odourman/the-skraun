@@ -1,7 +1,7 @@
 # MAIN IV → ROM DEVELOPMENT III | GAMEPLAY-3: REAL K1-T / R1 PHYSICAL STELLA + THREE ENEMY TRIAL
 **Date:** 2026-11-22  
 **Authority:** User explicitly approved the visual direction and asked to try realizing the sprites in ROM: "Nu ser de bra ut. Jag gillar det. Låt oss försöka göra dem till verklighet." This is a NEW separate **bounded implementation order**, not automatic continuation of GAMEPLAY-2.  
-**Tracking:** [Issue #undefined](https://github.com/Odourman/the-skraun/issues/undefined)  
+**Tracking:** [Issue #undefined](https://github.com/Odourman/the-skraun/issues/43)  
 **Status:** AUTHORIZED_TO_ROM_DEVELOPMENT_III / NOT_STARTED_BY_MAIN / MAIN_UNCHANGED
 
 ## 1. Goal
