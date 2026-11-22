@@ -486,10 +486,7 @@ YGoalCheck:
 MoveYDone:
         rts
 
-; SELECT cycles L1->L2->L3->L1 only when proposed larger size is clear.
-; A blocked gr; Removed legacy DebugLevel SELECT cheat to free real F8 ROM space for M0.
-nly F01-inspired reflection-friendly scene, NOT canonical.
-CandidateValid:
+; GAMEPLAY-5 M0: retired noncanonical SELECT grow/level-cheat.\nCandidateValid:
         ldx TestLevel
         lda TryX
         cmp MinCX,x
