@@ -808,7 +808,7 @@ OrbAbsY:
         lda #0
         sta OrbMask
         lda #0
-        sta OrbTimer           ; consumed orb stays absent for entire visit
+        ; consumed orb stays absent for whole stage visit; old OrbTimer retired
 OrbDone:
         rts
 
