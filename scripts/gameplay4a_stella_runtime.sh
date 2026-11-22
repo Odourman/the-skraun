@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/gameplay4/checkpoint_A/scenes "$HOME/.config/stella"
 i=0
-for scene in start knight_warning knight_strike knight_rest ranger_draw ranger_release stage2_L3 gameover_restart;do
+for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger_phase12 ranger_phase22 ranger_phase29 ranger_phase35 ranger_draw ranger_release stage2_L3 gameover_restart;do
  i=$((i+1));export DISPLAY=":$((200+i))"
  out="$PWD/build/gameplay4/checkpoint_A/scenes/$scene";mkdir -p "$out"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "$out/XVFB.log" 2>&1 &
@@ -20,13 +20,18 @@ for scene in start knight_warning knight_strike knight_rest ranger_draw ranger_r
       if [ "$scene" = knight_strike ];then echo 'frame #30';fi
       if [ "$scene" = knight_rest ];then echo 'frame #44';fi
       ;;
-    ranger_draw|ranger_release|arrow_first|arrow_mid|arrow_later|stage2_L3)
+    ranger_phase4|ranger_phase12|ranger_phase22|ranger_phase29|ranger_phase35|ranger_draw|ranger_release|arrow_first|arrow_mid|arrow_later|stage2_L3)
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       echo 'joy0Fire #0'
       echo 'joy0Up #0';echo 'frame #40';echo 'joy0Up #1'
       echo 'joy0Right #0';echo 'frame #14';echo 'joy0Right #1'
       case "$scene" in
+        ranger_phase4) echo 'frame #4';;
+        ranger_phase12) echo 'frame #12';;
+        ranger_phase22) echo 'frame #22';;
+        ranger_phase29) echo 'frame #29';;
+        ranger_phase35) echo 'frame #35';;
         ranger_draw)
           # After second knight, leave L2 halo radius before Ranger respawns
           echo 'joy0Fire #1'
