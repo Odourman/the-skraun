@@ -1,0 +1,66 @@
+name: GAMEPLAY-5 real Stella NTSC 33-3 and 32-4 overscan differential
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+    paths: [scripts/gameplay5_timing_sweep.py, .github/workflows/gameplay5-timing-sweep.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  timing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM and Stella
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Generate and build exactly two genuine F8 NTSC timer repartition variants
+        run: |
+          set -euo pipefail
+          python3 scripts/gameplay5_timing_sweep.py
+          for n in 33 32;do
+            root="build/gameplay5/timing/timer$n"
+            dasm "$root/bank0.asm" -f3 -o"$root/bank0.bin" -l"$root/bank0.lst" -s"$root/bank0.sym" 2>&1 | tee "$root/DASM0.log"
+            dasm "$root/bank1.asm" -f3 -o"$root/bank1.bin" -l"$root/bank1.lst" -s"$root/bank1.sym" 2>&1 | tee "$root/DASM1.log"
+            test "$(stat -c %s "$root/bank0.bin")" -eq 4096
+            test "$(stat -c %s "$root/bank1.bin")" -eq 4096
+            cat "$root/bank0.bin" "$root/bank1.bin" > "$root/f8.bin"
+            test "$(stat -c %s "$root/f8.bin")" -eq 8192
+            sha256sum "$root/bank0.asm" "$root/bank1.asm" "$root/f8.bin" > "$root/SHA256SUMS.txt"
+          done
+      - name: True Stella frame 18-21-24-27-30 compare for both variants
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay5_ranger_differential.sh build/gameplay5/timing/timer33/f8.bin timer33
+          bash scripts/gameplay5_ranger_differential.sh build/gameplay5/timing/timer32/f8.bin timer32
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          import re,json
+          r=Path('build/gameplay5/scenes')
+          o={}
+          for tag in ('timer33','timer32'):
+            o[tag]={}
+            for n in (18,21,24,27,30):
+              p=r/tag/f'ranger_{n}'/'SESSION_TYPED.txt'
+              s=p.read_text(errors='replace') if p.exists() else ''
+              x=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',s)
+              val=int(x[-1]) if x else None
+              o[tag][str(n)]=val
+              print('PHYSICAL',tag,n,'lines',val)
+          (r/'TIMER_REAL_MEASUREMENT.json').write_text(json.dumps(o,indent=2))
+          if any(v is None for q in o.values() for v in q.values()):
+            raise ValueError('Stella source trace missing, cannot report NTSC PASS')
+          PY
+      - name: Preserve real DASM timings and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY5-A-TRUE-OVERSCAN-REPARTITION
+          path: |
+            build/gameplay5/timing/
+            build/gameplay5/scenes/
+            scripts/gameplay5_timing_sweep.py
+            scripts/gameplay5_ranger_differential.sh
+          if-no-files-found: warn

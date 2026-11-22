@@ -1,0 +1,6 @@
+ONE-SHOT GAMEPLAY-5 ROM checkpoint freeze 2026-11-22; authorization MAIN IV Issue #48.
+Immutable 4A base bc2ef9249b4e13701647850d89cb631c43190c65, SHA 8bb19a9d58b6a4f608f1ab10adbb622b9e70d0f44b39e247c68feb3a974427bd.
+Preferred native playable source exact GAMEPLAY5 A/C 33×64 timer + 2WSYNC, source-fixed sword LOS, 60f i-frames and 120f stage transition.
+13/13 real Stella scenes _scanEnd=262, exact player/K1 mask source, no physically failed M0 arrow or H3 kernel in playable binary.
+Expected 8192B ROM SHA b31e508e8947052b88fa50fb173106dcbe8e7d5f416eb3740e5f29088526bdca.
+No main merge; do not authorize later stage.

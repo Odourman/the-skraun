@@ -1,0 +1,68 @@
+name: GAMEPLAY-5 actual 13-scene full-play NTSC renderer regression
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+    paths: [experiments/gameplay5_bank0.asm, experiments/gameplay5_bank1.asm, scripts/gameplay5_stella_regression.sh, .github/workflows/gameplay5-regression.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual DASM Stella 6.7.1 debugger and screenshots
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Recompile 4096+4096 bytes, freeze hash
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay5/candidate
+          dasm experiments/gameplay5_bank0.asm -f3 -obuild/gameplay5/candidate/bank0.bin -lbuild/gameplay5/candidate/bank0.lst -sbuild/gameplay5/candidate/bank0.sym 2>&1 | tee build/gameplay5/candidate/DASM0.log
+          dasm experiments/gameplay5_bank1.asm -f3 -obuild/gameplay5/candidate/bank1.bin -lbuild/gameplay5/candidate/bank1.lst -sbuild/gameplay5/candidate/bank1.sym 2>&1 | tee build/gameplay5/candidate/DASM1.log
+          test "$(stat -c %s build/gameplay5/candidate/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay5/candidate/bank1.bin)" -eq 4096
+          cat build/gameplay5/candidate/bank0.bin build/gameplay5/candidate/bank1.bin > build/gameplay5/candidate/f8.bin
+          test "$(stat -c %s build/gameplay5/candidate/f8.bin)" -eq 8192
+          sha256sum experiments/gameplay5_bank0.asm experiments/gameplay5_bank1.asm build/gameplay5/candidate/f8.bin > build/gameplay5/candidate/SHA256SUMS
+      - name: Real normal-play K1/R1/orb/level3 GAME OVER 13-scene Stella timings
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay5_stella_regression.sh
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re,json,numpy as np,hashlib
+          r=Path('build/gameplay5/regression/scenes')
+          names=['start','knight_warning','knight_strike','knight_rest','ranger_phase4','ranger_phase12','ranger_phase22','ranger_phase29','ranger_phase35','ranger_draw','ranger_release','stage2_L3','gameover_restart']
+          o={}
+          for n in names:
+            p=r/n
+            s=(p/'SESSION_TYPED.txt').read_text(errors='replace') if (p/'SESSION_TYPED.txt').exists() else ''
+            match=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',s)
+            lines=int(match[-1]) if match else None
+            im=np.asarray(Image.open(p/'DEBUGGER_DESKTOP.png').convert('RGB').crop((121,115,441,343)))
+            Image.fromarray(im).save(p/'REAL_TIA_320x228.png')
+            g=int(np.all(im==[210,210,209],axis=2).sum())
+            b=int(np.all(im==[121,194,251],axis=2).sum())
+            gr=int(np.all(im==[61,151,60],axis=2).sum())
+            o[n]={'scanlines':lines,'player_gray_pixels':g,'blue_P1_pixels':b,'forest_green_pixels':gr,'pixel_sha256':hashlib.sha256(im.tobytes()).hexdigest()}
+            print('ACTUAL_STELLA_PLAYTEST',n,json.dumps(o[n]))
+          (r/'REAL_13_SCENE_AUDIT.json').write_text(json.dumps(o,indent=2))
+          if any(x['scanlines'] is None for x in o.values()):
+            raise SystemExit('NOT_VERIFIED: missing actual frame scanline evidence')
+          if any(x['scanlines']!=262 for x in o.values()):
+            raise SystemExit('BOUNDED_NTSC_FRAME_FAIL: at least one true Stella scene !=262')
+          PY
+      - name: Always archive actual .bin .lst .sym debugger desktop pixels state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY5-REAL-13SCENE-K1T-R1-U1-L3
+          path: |
+            build/gameplay5/candidate/
+            build/gameplay5/regression/
+            scripts/gameplay5_stella_regression.sh
+          if-no-files-found: warn

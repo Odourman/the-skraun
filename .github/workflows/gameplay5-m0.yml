@@ -1,0 +1,45 @@
+name: GAMEPLAY-5 B real DASM Stella M0 two-edge Ranger projectile trial
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+    paths: [experiments/gameplay5m0_bank0.asm, experiments/gameplay5m0_bank1.asm, scripts/gameplay5_m0_stella.sh, .github/workflows/gameplay5-m0.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  m0:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM Stella 6.7.1 and GUI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Assemble genuine 8192-byte F8 missile0 experiment
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay5/m0
+          dasm experiments/gameplay5m0_bank0.asm -f3 -obuild/gameplay5/m0/bank0.bin -lbuild/gameplay5/m0/bank0.lst -sbuild/gameplay5/m0/bank0.sym 2>&1 | tee build/gameplay5/m0/DASM0.log
+          dasm experiments/gameplay5m0_bank1.asm -f3 -obuild/gameplay5/m0/bank1.bin -lbuild/gameplay5/m0/bank1.lst -sbuild/gameplay5/m0/bank1.sym 2>&1 | tee build/gameplay5/m0/DASM1.log
+          test "$(stat -c %s build/gameplay5/m0/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay5/m0/bank1.bin)" -eq 4096
+          cat build/gameplay5/m0/bank0.bin build/gameplay5/m0/bank1.bin > build/gameplay5/m0/f8.bin
+          test "$(stat -c %s build/gameplay5/m0/f8.bin)" -eq 8192
+          sha256sum experiments/gameplay5m0_bank0.asm experiments/gameplay5m0_bank1.asm build/gameplay5/m0/f8.bin > build/gameplay5/m0/SHA256SUMS.txt
+      - name: Genuine normal-gameplay Ranger release, M0 physical arrow positions and scanlines
+        run: |
+          bash scripts/gameplay5_m0_stella.sh
+          /usr/bin/python3 scripts/gameplay5_m0_audit.py
+      - name: Preserve authentic ROM source TIA screenshots and logs on success or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY5-M0-TWO-EDGE-ACTUAL-DASM-STELLA
+          path: |
+            build/gameplay5/m0/
+            scripts/gameplay5_m0_stella.sh
+            scripts/gameplay5_m0_audit.py
+            experiments/gameplay5m0_bank0.asm
+            experiments/gameplay5m0_bank1.asm
+          if-no-files-found: warn
