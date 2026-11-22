@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/gameplay2/scenes "$HOME/.config/stella"
 n=0
-for scene in start orb_L2 fight_stage1 stage2_L3 sword_warning sword_hit gameover_restart; do
+for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_warning sword_hit gameover_before gameover_restart bonus_2000; do
  n=$((n+1))
  export DISPLAY=":$((100+n))"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "build/gameplay2/XVFB_$scene.log" 2>&1 &
@@ -21,13 +21,25 @@ for scene in start orb_L2 fight_stage1 stage2_L3 sword_warning sword_hit gameove
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       ;;
-    fight_stage1|stage2_L3)
+    fight_stage1|stage2_L3|stage1_score_checkpoint|bonus_2000)
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       echo 'joy0Fire #0'
       echo 'joy0Up #0';echo 'frame #40';echo 'joy0Up #1'
       echo 'joy0Right #0';echo 'frame #14';echo 'joy0Right #1'
-      echo 'frame #420'
+      if [ "$scene" = stage1_score_checkpoint ];then
+        echo 'frame #110'
+      elif [ "$scene" = bonus_2000 ];then
+        echo 'frame #220'
+        # Real no-RAM-input four more stage visits in the same executable.
+        for k in 1 2 3 4 5; do
+          echo 'joy0Right #0';echo 'frame #30';echo 'joy0Right #1'
+          echo 'joy0Up #0';echo 'frame #16';echo 'joy0Up #1'
+          echo 'frame #240'
+        done
+      else
+        echo 'frame #420'
+      fi
       if [ "$scene" = stage2_L3 ];then
         echo 'joy0Fire #1'
         # Stage 2 respawns at x80 y88; new BL orb x88,y112 (not x96).
@@ -45,10 +57,12 @@ for scene in start orb_L2 fight_stage1 stage2_L3 sword_warning sword_hit gameove
       echo 'joy0Right #0';echo 'frame #25';echo 'joy0Right #1'
       if [ "$scene" = sword_warning ];then echo 'frame #10';else echo 'frame #37';fi
       ;;
-    gameover_restart)
+    gameover_before|gameover_restart)
       echo 'joy0Right #0';echo 'frame #30';echo 'joy0Right #1'
       echo 'frame #500'
-      echo 'joy0Fire #0';echo 'frame #3';echo 'joy0Fire #1'
+      if [ "$scene" = gameover_restart ];then
+        echo 'joy0Fire #0';echo 'frame #3';echo 'joy0Fire #1'
+      fi
       ;;
    esac
    for x in _scanEnd _scan _sCycles _bank _fCount '*$80' '*$81' '*$82' '*$9C' '*$9E' '*$A1' '*$A2' '*$AA' '*$AB' '*$AC' '*$AD' '*$AE' '*$AF' '*$B0' '*$B1' '*$B3' '*$B4' '*$B5' '*$BC' '*$BD' '*$BE'; do echo "print $x"; done
@@ -67,6 +81,17 @@ for scene in start orb_L2 fight_stage1 stage2_L3 sword_warning sword_hit gameove
  if [ -z "$win" ];then echo "STELLA_WINDOW_FAIL: $scene";cat "$out/STELLA.log"; exit 1;fi
  sleep 1
  scrot -z "$out/DEBUGGER_DESKTOP.png"
+ # Additional real GUI debugger query (never RAM injection). Capture the
+ # actual result of _scanEnd in a separate screenshot for MAIN review.
+ xdotool windowfocus "$win" || true
+ xdotool mousemove 150 618 click 1 || true
+ xdotool type --clearmodifiers --delay 7 'print _scanEnd' || true
+ xdotool key Return || true
+ sleep 0.3
+ scrot -z "$out/SCANEND_DEBUGGER.png" || true
+ xdotool type --clearmodifiers --delay 5 "saveSes $out/SESSION_TYPED.txt" || true
+ xdotool key Return || true
+ sleep 0.2
  find "$HOME" -type f -name '*.txt' -mmin -5 -print0 | while IFS= read -r -d '' f;do
    cp "$f" "$out/$(basename "$f")" 2>/dev/null || true
  done
