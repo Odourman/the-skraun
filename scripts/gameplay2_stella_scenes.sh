@@ -67,10 +67,13 @@ for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3_station
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       echo 'joy0Fire #0';echo 'frame #2';echo 'joy0Fire #1'
+      # Move beyond the level2 halo radius before enemy #2 can respawn,
+      # preserving exactly ONE prior kill. Return later to sword danger.
+      echo 'joy0Left #0';echo 'frame #20';echo 'joy0Left #1'
       if [ "$scene" = damage_level2 ];then
-        echo 'frame #85'
-      else
         echo 'frame #170'
+      else
+        echo 'frame #300'
       fi
       ;;
     gameover_before|gameover_restart)
