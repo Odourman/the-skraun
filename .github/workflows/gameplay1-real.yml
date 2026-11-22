@@ -1,0 +1,57 @@
+name: GAMEPLAY-1 experimental F8 real DASM and Stella smoke
+on:
+  push:
+    branches: [experiment/gameplay1-accelerated-full-prototype-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gameplay1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual 6502 DASM and Stella
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+          mkdir -p build/gameplay1
+      - name: Assemble separate ordinary F8 banks and concatenate 8192-byte cartridge
+        run: |
+          set -euo pipefail
+          dasm experiments/gameplay1_bank0.asm -f3 -obuild/gameplay1/bank0.bin -lbuild/gameplay1/bank0.lst -sbuild/gameplay1/bank0.sym 2>&1 | tee build/gameplay1/DASM_bank0.log
+          dasm experiments/gameplay1_bank1.asm -f3 -obuild/gameplay1/bank1.bin -lbuild/gameplay1/bank1.lst -sbuild/gameplay1/bank1.sym 2>&1 | tee build/gameplay1/DASM_bank1.log
+          test "$(stat -c %s build/gameplay1/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay1/bank1.bin)" -eq 4096
+          cat build/gameplay1/bank0.bin build/gameplay1/bank1.bin > build/gameplay1/gameplay1_f8.bin
+          test "$(stat -c %s build/gameplay1/gameplay1_f8.bin)" -eq 8192
+          sha256sum experiments/gameplay1_bank0.asm experiments/gameplay1_bank1.asm build/gameplay1/*.bin > build/gameplay1/SHA256SUMS
+      - name: Strict frozen source-row and trampoline static checks
+        run: |
+          python3 - <<'PY'
+          import re
+          a=open('experiments/play1_h_single_arena.asm').read()
+          b=open('experiments/gameplay1_bank1.asm').read()
+          for label in ('A_VISUAL_RIGHT','B_VISUAL_RIGHT','A_VISUAL_LEFT','B_VISUAL_LEFT'):
+              pattern=rf'(?m)^{label}:\s*\n((?:\s+dc\.b[^\n]+\n){{3}})'
+              x=re.search(pattern,a)
+              y=re.search(pattern,b)
+              assert x and y and x.group(1)==y.group(1),label
+          assert 'lda $FFF8' in b and 'lda $FFF9' in b
+          assert 'jsr GameBankEnter' in b
+          assert 'sta PF2' in b and b.count('sta PF2')==2  # visible + end clear only
+          print('SOURCE_ONLY: U1 rows exact, single visible PF2 write retained, F8 trampolines present')
+          PY
+      - name: Genuine Stella 6.7.1 gameplay screenshots and debugger
+        run: bash scripts/gameplay1_stella_scenes.sh
+      - name: Preserve raw developer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY1-F8-DASM-Stella-physical
+          path: |
+            build/gameplay1/
+            experiments/gameplay1_bank0.asm
+            experiments/gameplay1_bank1.asm
+            scripts/gameplay1_stella_scenes.sh
+          if-no-files-found: warn
