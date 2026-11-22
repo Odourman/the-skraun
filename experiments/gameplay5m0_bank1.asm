@@ -486,7 +486,8 @@ YGoalCheck:
 MoveYDone:
         rts
 
-; GAMEPLAY-5 M0: retired noncanonical SELECT grow/level-cheat.\nCandidateValid:
+; GAMEPLAY-5 M0: retired noncanonical SELECT grow/level-cheat.
+CandidateValid:
         ldx TestLevel
         lda TryX
         cmp MinCX,x
