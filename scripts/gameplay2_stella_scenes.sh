@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/gameplay2/scenes "$HOME/.config/stella"
 n=0
-for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_warning sword_hit damage_level2 life_lost_after_kill gameover_before gameover_restart bonus_2000; do
+for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3_stationary stage2_L3 sword_warning sword_hit damage_level2 life_lost_after_kill gameover_before gameover_restart bonus_2000; do
  n=$((n+1))
  export DISPLAY=":$((100+n))"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "build/gameplay2/XVFB_$scene.log" 2>&1 &
@@ -21,7 +21,7 @@ for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_w
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       ;;
-    fight_stage1|stage2_L3|stage1_score_checkpoint|bonus_2000)
+    fight_stage1|stage2_L3|stage2_L3_stationary|stage1_score_checkpoint|bonus_2000)
       echo 'joy0Right #0';echo 'frame #16';echo 'joy0Right #1'
       echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
       echo 'joy0Fire #0'
@@ -40,12 +40,14 @@ for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_w
       else
         echo 'frame #420'
       fi
-      if [ "$scene" = stage2_L3 ];then
+      if [ "$scene" = stage2_L3 ] || [ "$scene" = stage2_L3_stationary ];then
         echo 'joy0Fire #1'
         # Stage 2 respawns at x80 y88; new BL orb x88,y112 (not x96).
         # REAL joystick move only, one orb gives exactly one level.
         echo 'joy0Right #0';echo 'frame #8';echo 'joy0Right #1'
         echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
+      fi
+      if [ "$scene" = stage2_L3 ];then
         # L3 moves diagonally during the genuine FIRE attack.
         echo 'frame #65' # let the prior L2 cooldown finish without RAM intervention
         echo 'joy0Fire #0'
