@@ -1,0 +1,54 @@
+name: GAMEPLAY-4 genuine DASM Stella dynamic combat and M1 arrow
+on:
+  push:
+    branches: [experiment/gameplay4-dynamic-combat-arrow-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM and Stella GUI debugger
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Rebuild exact immutable GAMEPLAY-3 F8 starting ROM
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay4/base build/gameplay4
+          dasm experiments/gameplay3_bank0.asm -f3 -obuild/gameplay4/base/bank0.bin -lbuild/gameplay4/base/bank0.lst -sbuild/gameplay4/base/bank0.sym 2>&1 | tee build/gameplay4/base/DASM0.log
+          dasm experiments/gameplay3_bank1.asm -f3 -obuild/gameplay4/base/bank1.bin -lbuild/gameplay4/base/bank1.lst -sbuild/gameplay4/base/bank1.sym 2>&1 | tee build/gameplay4/base/DASM1.log
+          cat build/gameplay4/base/bank0.bin build/gameplay4/base/bank1.bin > build/gameplay4/base/frozen_gameplay3.bin
+          test "$(stat -c %s build/gameplay4/base/frozen_gameplay3.bin)" -eq 8192
+          echo '0d636327a3b7024634c6f251ea327fcbaa0dc3c5e04d602fefe543a072abc02e  build/gameplay4/base/frozen_gameplay3.bin' | sha256sum -c -
+      - name: Genuine DASM build of GAMEPLAY-4 4096+4096 F8, no fake ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/gameplay4_bank0.asm -f3 -obuild/gameplay4/bank0.bin -lbuild/gameplay4/bank0.lst -sbuild/gameplay4/bank0.sym 2>&1 | tee build/gameplay4/DASM0.log
+          dasm experiments/gameplay4_bank1.asm -f3 -obuild/gameplay4/bank1.bin -lbuild/gameplay4/bank1.lst -sbuild/gameplay4/bank1.sym 2>&1 | tee build/gameplay4/DASM1.log
+          test "$(stat -c %s build/gameplay4/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay4/bank1.bin)" -eq 4096
+          cat build/gameplay4/bank0.bin build/gameplay4/bank1.bin > build/gameplay4/gameplay4_f8.bin
+          test "$(stat -c %s build/gameplay4/gameplay4_f8.bin)" -eq 8192
+          sha256sum experiments/gameplay4_bank0.asm experiments/gameplay4_bank1.asm build/gameplay4/gameplay4_f8.bin > build/gameplay4/SHA256SUMS
+          cat build/gameplay4/SHA256SUMS
+      - name: Real Stella gameplay: original controller input, physical screenshot, 262 scanline measurement
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay4_stella_runtime.sh
+          /usr/bin/python3 tests/gameplay4_observations.py | tee build/gameplay4/OBSERVATIONS.log
+      - name: Always archive true failures too, with DASM listings and original Stella screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY4-DASM-STELLA-RUNTIME-COMBAT
+          path: |
+            build/gameplay4/
+            experiments/gameplay4_bank0.asm
+            experiments/gameplay4_bank1.asm
+            scripts/gameplay4_stella_runtime.sh
+            tests/gameplay4_observations.py
+          if-no-files-found: warn
