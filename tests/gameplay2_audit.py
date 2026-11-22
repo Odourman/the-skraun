@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import hashlib, json, re
 root=Path('build/gameplay2/scenes')
-names=('start','orb_L2','stage1_score_checkpoint','fight_stage1','stage2_L3','sword_warning','sword_hit','damage_level2','life_lost_after_kill','gameover_before','gameover_restart','bonus_2000')
+names=('start','orb_L2','stage1_score_checkpoint','fight_stage1','stage2_L3_stationary','stage2_L3','sword_warning','sword_hit','damage_level2','life_lost_after_kill','gameover_before','gameover_restart','bonus_2000')
 reports={}
 def box(mask):
     y,x=np.where(mask)
@@ -51,6 +51,12 @@ assert reports['sword_warning']['P1_blue_pixels']==0,'P1 warning still original 
 assert dim('stage2_L3')==(64,36),('true second orb not yielding L3 in physical Stella',dim('stage2_L3'))
 assert reports['stage2_L3']['P0_gray_pixels']==1176,'L3 gray pixels incorrect for frozen bitmap x4/y3'
 assert reports['stage2_L3']['gold_pixels']>0,'no real gold FIRE while moving on L3'
+assert dim('stage2_L3_stationary')==(64,36),'stationary L3 physical sprite size'
+before=reports['stage2_L3_stationary']['P0_bbox']
+after=reports['stage2_L3']['P0_bbox']
+assert after[0] > before[0], ('L3 did not move right in real Stella',before,after)
+assert after[1] < before[1], ('L3 did not move up in real Stella',before,after)
+print('L3_PHYSICAL_DIAGONAL_DELTA',{'dx_TIA':after[0]-before[0],'dy_scanline':after[1]-before[1]})
 reportfile=Path('build/gameplay2/PHYSICAL_AUDIT.json')
 reportfile.write_text(json.dumps(reports,indent=2))
 print('PASS: bounded authentic Stella base sprite, orb L2 and L3 through real stage visits, knight/warning')
