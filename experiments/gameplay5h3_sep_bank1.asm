@@ -179,7 +179,7 @@ PhaseGood:
         sta MotionDid
         jsr MoveX
         jsr MoveY
-        jsr DebugLevel
+        ; source growth only from actual BL orb
         jsr UpdateScale
         jsr UpdateGait
         jsr SelectEnemyArt ; offscreen identity/pose, never after GRP1 beam deadline
@@ -477,51 +477,7 @@ MoveYDone:
 
 ; SELECT cycles L1->L2->L3->L1 only when proposed larger size is clear.
 ; A blocked grow lights the background red, never embeds body in solids.
-DebugLevel:
-        lda SwitchState
-        and #2
-        bne SelectUp
-        lda PrevSelect
-        bne DebugDone
-        lda #1
-        sta PrevSelect
-        lda Level
-        cmp #3
-        bne TryGrow
-        lda #1
-        sta Level
-        jmp GrowthOK
-TryGrow:
-        clc
-        adc #1
-        sta TestLevel
-        lda PlayerX
-        sta TryX
-        lda PlayerY
-        sta TryY
-        jsr CandidateValid
-        beq GrowthFail
-        inc Level
-GrowthOK:
-        lda #0
-        sta GrowthBlocked
-        sta COLUBK
-        rts
-GrowthFail:
-        lda #1
-        sta GrowthBlocked
-        lda #$42
-        sta COLUBK
-        rts
-SelectUp:
-        lda #0
-        sta PrevSelect
-DebugDone:
-        rts
-
-; For each candidate (TryX,TryY,TestLevel), K0 expanded rectangle
-; tables: xmin inclusive, xmax exclusive, ymin inclusive, ymax exclusive.
-; One source-only F01-inspired reflection-friendly scene, NOT canonical.
+; H3 diagnostic omits SELECT-only growth cheat to afford physically measured P1 owner writes.
 CandidateValid:
         ldx TestLevel
         lda TryX
