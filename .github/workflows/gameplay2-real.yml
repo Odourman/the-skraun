@@ -1,0 +1,60 @@
+name: GAMEPLAY-2 F8 genuine DASM/Stella stage integration
+on:
+  push:
+    branches: [experiment/gameplay2-complete-stage-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gameplay2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM Stella GUI input and image comparison
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Build both F8 banks using real DASM
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay2
+          dasm experiments/gameplay2_bank0.asm -f3 -obuild/gameplay2/bank0.bin -lbuild/gameplay2/bank0.lst -sbuild/gameplay2/bank0.sym 2>&1 | tee build/gameplay2/DASM0.log
+          dasm experiments/gameplay2_bank1.asm -f3 -obuild/gameplay2/bank1.bin -lbuild/gameplay2/bank1.lst -sbuild/gameplay2/bank1.sym 2>&1 | tee build/gameplay2/DASM1.log
+          test "$(stat -c %s build/gameplay2/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay2/bank1.bin)" -eq 4096
+          cat build/gameplay2/bank0.bin build/gameplay2/bank1.bin > build/gameplay2/gameplay2_f8.bin
+          test "$(stat -c %s build/gameplay2/gameplay2_f8.bin)" -eq 8192
+          sha256sum experiments/gameplay2_bank0.asm experiments/gameplay2_bank1.asm build/gameplay2/gameplay2_f8.bin > build/gameplay2/SHA256SUMS
+      - name: Source frozen U1-LEG1 and F8 bank crossing smoke
+        run: |
+          python3 - <<'PY'
+          import re
+          old=open('experiments/gameplay1_bank1.asm').read()
+          now=open('experiments/gameplay2_bank1.asm').read()
+          for label in ('A_VISUAL_RIGHT','B_VISUAL_RIGHT','A_VISUAL_LEFT','B_VISUAL_LEFT'):
+            pat=rf'(?m)^{label}:\s*\n((?:\s+dc\.b[^\n]+\n){{3}})'
+            a,b=re.search(pat,old),re.search(pat,now)
+            assert a and b and a.group(1)==b.group(1),label
+          assert now.count('sta PF2')==3
+          assert 'jsr GameBankEnter' in now
+          assert 'lda $FFF8' in now and 'lda $FFF9' in now
+          print('SOURCE_ONLY F8 bank crossing and exact frozen U1 source PASS; NOT beam verification')
+          PY
+      - name: Physical Stella debugger gameplay sequences and actual pixels
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay2_stella_scenes.sh
+          /usr/bin/python3 tests/gameplay2_audit.py | tee build/gameplay2/AUDIT.log
+      - name: Archive source, exact ROM, debugger screenshots and state logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY2-F8-GENUINE-DASM-STELLA-STAGE
+          path: |
+            build/gameplay2/
+            experiments/gameplay2_bank0.asm
+            experiments/gameplay2_bank1.asm
+            scripts/gameplay2_stella_scenes.sh
+            tests/gameplay2_audit.py
+          if-no-files-found: warn
