@@ -1,0 +1,6 @@
+GAMEPLAY-4 2026-11-22 one-shot frozen checkpoint request, authorized only within MAIN IV Issue #45.
+Source basis: exact GAMEPLAY-3 commit 07de8f907421e22b8b444200389a21c42dca330d.
+Use genuine DASM F8 8192B build from GAMEPLAY4 source via checkpoint-A script.
+A is the last NTSC 262 measured executable; M1 arrow attempted and measured 360/invalid. Do NOT substitute the M1 experiment for this playable ROM.
+Preserve original U1 LEG1 art, orb, lives, L1→L2→L3 and stage loop; no main merge.
+Subsequent review is MAIN IV only. GAMEPLAY4 is not authorization for another triple-enemy renderer.

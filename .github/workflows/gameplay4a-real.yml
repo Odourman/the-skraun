@@ -1,0 +1,60 @@
+name: GAMEPLAY-4 checkpoint A actual playable dynamic sword and bow
+on:
+  push:
+    branches: [experiment/gameplay4-dynamic-combat-arrow-20261122]
+    paths: [.github/workflows/gameplay4a-real.yml, scripts/gameplay4a_stella_runtime.sh, scripts/gameplay4_make_checkpoint_a.py, experiments/gameplay4_bank0.asm, experiments/gameplay4_bank1.asm]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checkpoint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual DASM and Stella debugger
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Generate source-frozen A-stage native K1T-R1 combat (no invisible projectile)
+        run: |
+          set -euo pipefail
+          python3 scripts/gameplay4_make_checkpoint_a.py
+          dasm build/gameplay4/checkpoint_A/bank0.asm -f3 -obuild/gameplay4/checkpoint_A/bank0.bin -lbuild/gameplay4/checkpoint_A/bank0.lst -sbuild/gameplay4/checkpoint_A/bank0.sym 2>&1 | tee build/gameplay4/checkpoint_A/DASM0.log
+          dasm build/gameplay4/checkpoint_A/bank1.asm -f3 -obuild/gameplay4/checkpoint_A/bank1.bin -lbuild/gameplay4/checkpoint_A/bank1.lst -sbuild/gameplay4/checkpoint_A/bank1.sym 2>&1 | tee build/gameplay4/checkpoint_A/DASM1.log
+          test "$(stat -c %s build/gameplay4/checkpoint_A/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay4/checkpoint_A/bank1.bin)" -eq 4096
+          cat build/gameplay4/checkpoint_A/bank0.bin build/gameplay4/checkpoint_A/bank1.bin > build/gameplay4/checkpoint_A/gameplay4a_f8.bin
+          test "$(stat -c %s build/gameplay4/checkpoint_A/gameplay4a_f8.bin)" -eq 8192
+          sha256sum build/gameplay4/checkpoint_A/bank0.asm build/gameplay4/checkpoint_A/bank1.asm build/gameplay4/checkpoint_A/gameplay4a_f8.bin > build/gameplay4/checkpoint_A/SHA256SUMS
+      - name: Test actual TIA native K1T slash and R1 bow and original playable foundation
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay4a_stella_runtime.sh
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re,json
+          p=Path('build/gameplay4/checkpoint_A/scenes')
+          result={}
+          for name in ['start','knight_warning','knight_strike','knight_rest','ranger_draw','ranger_release','stage2_L3','gameover_restart']:
+            f=p/name/'DEBUGGER_DESKTOP.png'
+            assert f.is_file(),name
+            im=Image.open(f).convert('RGB')
+            im.crop((121,115,441,343)).save(p/name/'REAL_TIA_320x228.png')
+            s=(p/name/'SESSION_TYPED.txt').read_text(errors='replace')
+            v=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',s)
+            result[name]={'real_stella_screenshot':True,'scan_end':int(v[-1]) if v else None}
+            print('REAL_CHECKPOINT_A',name,result[name])
+          (p/'CHECKPOINT_A_OBSERVATIONS.json').write_text(json.dumps(result,indent=2))
+          PY
+      - name: Archive actual ROM and reproducible proof on success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY4-CHECKPOINT-A-REAL-DASM-STELLA
+          path: |
+            build/gameplay4/checkpoint_A/
+            scripts/gameplay4_make_checkpoint_a.py
+            scripts/gameplay4a_stella_runtime.sh
+          if-no-files-found: warn

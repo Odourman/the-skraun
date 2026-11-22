@@ -1,0 +1,57 @@
+name: GAMEPLAY-4 frozen R1 release native-source pixel proof
+on:
+  push:
+    branches: [experiment/gameplay4-dynamic-combat-arrow-20261122]
+    paths: [scripts/gameplay4a_ranger_release_focused.sh, .github/workflows/gameplay4a-ranger-release.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual Stella 6.7.1 debugger
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Validate exact committed genuine DASM-made 8192B NTSC ROM
+        run: |
+          set -euo pipefail
+          test "$(stat -c %s experiments/gameplay4a_f8_ntsc.bin)" -eq 8192
+          echo '8bb19a9d58b6a4f608f1ab10adbb622b9e70d0f44b39e247c68feb3a974427bd  experiments/gameplay4a_f8_ntsc.bin' | sha256sum -c -
+      - name: Five real Stella timed Ranger draw and release phases
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay4a_ranger_release_focused.sh
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import numpy as np,re,json
+          root=Path('build/gameplay4/ranger_release')
+          result={}
+          for phase in (18,21,24,27,30):
+            p=root/f'safe_{phase}'
+            src=(p/'SESSION_TYPED.txt').read_text(errors='replace')
+            m=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',src)
+            val=int(m[-1]) if m else None
+            im=np.asarray(Image.open(p/'DEBUGGER_DESKTOP.png').convert('RGB').crop((121,115,441,343)))
+            Image.fromarray(im).save(p/'REAL_TIA_320x228.png')
+            green=np.all(im==[61,151,60],axis=2)
+            at_sprite=int(green[119:135,230:288].sum())
+            valres={'scanlines':val,'R1_near_y96_green_pixels':at_sprite}
+            print('REAL_RANGER_PHASE',phase,valres)
+            result[str(phase)]=valres
+          (root/'PHYSICAL_R1_RELEASE.json').write_text(json.dumps(result,indent=2))
+          PY
+      - name: Preserve real screenshots debugger state original inputs and ROM provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY4-R1-REAL-BOW-PHASES
+          path: |
+            build/gameplay4/ranger_release/
+            scripts/gameplay4a_ranger_release_focused.sh
+            experiments/gameplay4a_SHA256SUMS.txt
+          if-no-files-found: warn
