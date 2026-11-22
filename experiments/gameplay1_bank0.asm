@@ -36,6 +36,8 @@ RangerX     = $B8
 RangerY     = $B9
 
         SEG GameCode
+        ORG $F000
+        ds 256,0       ; explicit first-bank start for exact 4096 bytes
         ORG $F100
 GameBankTick:
         lda Stage
