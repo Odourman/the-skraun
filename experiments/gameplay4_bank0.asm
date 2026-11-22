@@ -633,18 +633,26 @@ UpdateArrow:
         dec ArrowCool
 ArrowCooldownDone:
         lda ArrowDX
-        beq ArrowDone
+        bne ArrowIsActive
+        rts
+ArrowIsActive:
         lda FrameCount
         and #1
-        bne ArrowDone
+        beq ArrowMoveThisFrame
+        rts
+ArrowMoveThisFrame:
         lda ArrowX
         clc
         adc ArrowDX
         sta ArrowX
         cmp #10
-        bcc ArrowDestroy
+        bcs ArrowMinXOK
+        jmp ArrowDestroy
+ArrowMinXOK:
         cmp #151
-        bcs ArrowDestroy
+        bcc ArrowMaxXOK
+        jmp ArrowDestroy
+ArrowMaxXOK:
         lda ArrowY
         clc
         adc ArrowDY
