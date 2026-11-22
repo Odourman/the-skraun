@@ -1,0 +1,5 @@
+GAMEPLAY-1 one-shot experimental artifact freeze request, 2026-11-22.
+Only after bounded successful F8 DASM and Stella 6.7.1 developer runs.
+This commit intentionally triggers .github/workflows/gameplay1-freeze.yml.
+Exact 8KiB banked ROM, source SHA, listing and symbols only.
+No main merge or production/independent-verification claim.
