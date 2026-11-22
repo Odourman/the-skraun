@@ -301,12 +301,16 @@ Visible:
         bcs NextSpriteBlank
         tay
         lda (GfxPtr),y
-        jmp NextLine
-NextSpriteBlank:
-        lda #0
-NextLine:
+        ; HOT P0 ROW: remove unconditional JMP (+3c); duplicate DEX/BNE
+        ; so the GAMEPLAY-4 compact six-pose selection retains hardware raster budget.
         dex
         bne Visible
+        jmp VisibleDone
+NextSpriteBlank:
+        lda #0
+        dex
+        bne Visible
+VisibleDone:
         lda #2
         sta VBLANK
         lda #0
