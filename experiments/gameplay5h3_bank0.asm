@@ -389,76 +389,7 @@ KnightChaseRight:
 KnightDone:
         rts
 
-CloseForSword:
-        lda PlayerX
-        sec
-        sbc KnightX
-        bcs SwordAbsX
-        eor #$FF
-        clc
-        adc #1
-SwordAbsX:
-        cmp #14
-        bcs SwordNotClose
-        lda PlayerY
-        sec
-        sbc #96
-        bcs SwordAbsY
-        eor #$FF
-        clc
-        adc #1
-SwordAbsY:
-        cmp #20
-        bcs SwordNotClose
-        ; Only active strike has a directional hitbox.
-        lda SwordStrike
-        beq SwordCloseOK  ; warning trigger only, never deals damage
-        lda KnightDir
-        bne CheckSwordLeft
-        lda PlayerX
-        cmp KnightX
-        bcc SwordNotClose
-        jmp SwordCloseOK
-CheckSwordLeft:
-        lda PlayerX
-        cmp KnightX
-        bcs SwordNotClose
-SwordCloseOK:
-        ; GAMEPLAY-5 C: no sword THROUGH any real solid rectangle.
-        ; Warning remains proximity-only; damage only active strike + unobstructed.
-        lda SwordStrike
-        beq SwordClear
-        jsr SwordLineClear
-        beq SwordNotClose
-SwordClear:
-        lda #1
-        rts
-SwordNotClose:
-        lda #0
-        rts
-
-ApplySwordDamage:
-        ; Never hurt player from knight body contact.
-        lda #60          ; GAMEPLAY-5 C: ~1s real invulnerability
-        sta Invulnerable
-        lda #16
-        sta SoundFrames
-        lda #2
-        sta AUDC0
-        lda #8
-        sta AUDF0
-        lda Level
-        cmp #1
-        beq LoseLife
-        dec Level
-        rts
-LoseLife:
-        dec Lives
-        lda #80
-        sta PlayerX
-        lda #88
-        sta PlayerY
-        rts
+; H3 ROM P1 owner trial: move 2 offscreen combat subroutines to F900
 
 ; The old unrendered RangerFleeDiagnostic was removed: B8/B9 are now
 ; independently positioned projectile X/Y; actual Ranger stays on P1 KnightX.
@@ -880,6 +811,80 @@ ThreeRangerUp:
         dec $B9
 ThreeAIDone:
         rts
+        ORG $F900
+; Same exact sword/damage source, relocated to free bank0 page for 3-actor AI.
+CloseForSword:
+        lda PlayerX
+        sec
+        sbc KnightX
+        bcs SwordAbsX
+        eor #$FF
+        clc
+        adc #1
+SwordAbsX:
+        cmp #14
+        bcs SwordNotClose
+        lda PlayerY
+        sec
+        sbc #96
+        bcs SwordAbsY
+        eor #$FF
+        clc
+        adc #1
+SwordAbsY:
+        cmp #20
+        bcs SwordNotClose
+        ; Only active strike has a directional hitbox.
+        lda SwordStrike
+        beq SwordCloseOK  ; warning trigger only, never deals damage
+        lda KnightDir
+        bne CheckSwordLeft
+        lda PlayerX
+        cmp KnightX
+        bcc SwordNotClose
+        jmp SwordCloseOK
+CheckSwordLeft:
+        lda PlayerX
+        cmp KnightX
+        bcs SwordNotClose
+SwordCloseOK:
+        ; GAMEPLAY-5 C: no sword THROUGH any real solid rectangle.
+        ; Warning remains proximity-only; damage only active strike + unobstructed.
+        lda SwordStrike
+        beq SwordClear
+        jsr SwordLineClear
+        beq SwordNotClose
+SwordClear:
+        lda #1
+        rts
+SwordNotClose:
+        lda #0
+        rts
+
+ApplySwordDamage:
+        ; Never hurt player from knight body contact.
+        lda #60          ; GAMEPLAY-5 C: ~1s real invulnerability
+        sta Invulnerable
+        lda #16
+        sta SoundFrames
+        lda #2
+        sta AUDC0
+        lda #8
+        sta AUDF0
+        lda Level
+        cmp #1
+        beq LoseLife
+        dec Level
+        rts
+LoseLife:
+        dec Lives
+        lda #80
+        sta PlayerX
+        lda #88
+        sta PlayerY
+        rts
+
+
         ORG $FFFC
         dc.w GameBankReset
         dc.w GameBankReset
