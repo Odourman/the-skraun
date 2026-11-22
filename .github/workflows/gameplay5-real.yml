@@ -1,0 +1,52 @@
+name: GAMEPLAY-5 authentic DASM and Stella frozen vs A+C timing and combat
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physical:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real original-platform assembler and emulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-pil python3-numpy
+      - name: Rebuild exact immutable GAMEPLAY-4A ROM SHA and actual GAMEPLAY-5 banks
+        run: |
+          set -euo pipefail
+          mkdir -p build/gameplay5/{baseline,candidate}
+          dasm experiments/gameplay4a_bank0.asm -f3 -obuild/gameplay5/baseline/bank0.bin -lbuild/gameplay5/baseline/bank0.lst -sbuild/gameplay5/baseline/bank0.sym 2>&1 | tee build/gameplay5/baseline/DASM0.log
+          dasm experiments/gameplay4a_bank1.asm -f3 -obuild/gameplay5/baseline/bank1.bin -lbuild/gameplay5/baseline/bank1.lst -sbuild/gameplay5/baseline/bank1.sym 2>&1 | tee build/gameplay5/baseline/DASM1.log
+          cat build/gameplay5/baseline/bank0.bin build/gameplay5/baseline/bank1.bin > build/gameplay5/baseline/f8.bin
+          test "$(stat -c %s build/gameplay5/baseline/f8.bin)" -eq 8192
+          echo "8bb19a9d58b6a4f608f1ab10adbb622b9e70d0f44b39e247c68feb3a974427bd  build/gameplay5/baseline/f8.bin" | sha256sum -c -
+          dasm experiments/gameplay5_bank0.asm -f3 -obuild/gameplay5/candidate/bank0.bin -lbuild/gameplay5/candidate/bank0.lst -sbuild/gameplay5/candidate/bank0.sym 2>&1 | tee build/gameplay5/candidate/DASM0.log
+          dasm experiments/gameplay5_bank1.asm -f3 -obuild/gameplay5/candidate/bank1.bin -lbuild/gameplay5/candidate/bank1.lst -sbuild/gameplay5/candidate/bank1.sym 2>&1 | tee build/gameplay5/candidate/DASM1.log
+          test "$(stat -c %s build/gameplay5/candidate/bank0.bin)" -eq 4096
+          test "$(stat -c %s build/gameplay5/candidate/bank1.bin)" -eq 4096
+          cat build/gameplay5/candidate/bank0.bin build/gameplay5/candidate/bank1.bin > build/gameplay5/candidate/f8.bin
+          test "$(stat -c %s build/gameplay5/candidate/f8.bin)" -eq 8192
+          sha256sum experiments/gameplay5_bank0.asm experiments/gameplay5_bank1.asm build/gameplay5/candidate/f8.bin > build/gameplay5/SHA256SUMS
+          cat build/gameplay5/SHA256SUMS
+      - name: Same physical Stella R1 frame18 21 24 27 30, frozen then candidate
+        run: |
+          set -euo pipefail
+          bash scripts/gameplay5_ranger_differential.sh build/gameplay5/baseline/f8.bin frozen
+          bash scripts/gameplay5_ranger_differential.sh build/gameplay5/candidate/f8.bin candidate
+          /usr/bin/python3 scripts/gameplay5_summarize.py
+      - name: Preserve all assembler, binary, Stella screenshots and raw debugger counters even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GAMEPLAY5-REAL-F8-FROZEN-CANDIDATE-R1
+          path: |
+            build/gameplay5/
+            scripts/gameplay5_ranger_differential.sh
+            scripts/gameplay5_summarize.py
+            experiments/gameplay5_bank0.asm
+            experiments/gameplay5_bank1.asm
+          if-no-files-found: warn
