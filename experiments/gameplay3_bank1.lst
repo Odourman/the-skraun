@@ -1,0 +1,1041 @@
+------- FILE experiments/gameplay3_bank1.asm LEVEL 1 PASS 2
+      1  10000 ????						; GAMEPLAY-3 PHYSICAL K1-T neutral/warning + R1 neutral; exact 8x16 source masks.
+      2  10000 ????						; WARNING: no K1 strike/R1 draw/release runtime table yet; those need diagnostic passes.
+      3  10000 ????						; GAMEPLAY-2 F8 bank1 - unchanged U1-LEG1 / PLAY1-H renderer, single-visit orb fix.
+      4  10000 ????						; GAMEPLAY-1 bank 1; exact original PLAY1-H bitmaps + bounded noncritical modifications.
+      5  10000 ????						; F8 8KiB prototype: PLAY1-H visible kernel retained; no new PF2 write.
+      6  10000 ????						; PLAY1-H DRAFT | Y-follow PF2 physical renderer diagnostic; strict bounded source copy of frozen PLAY1
+      7  10000 ????						; Derived exactly from frozen COL1 PR27 commit 90f89441b41a2e82408581b81d3743b1423e5cdb
+      8  10000 ????						; 4 KiB NTSC original 6507/TIA. One stationary P1 TRAINING dummy only; NO production enemy architecture.
+      9  10000 ????						; Original U1-LEG1 rows are frozen, top-first human input -> bottom-first ROM.
+     10  10000 ????				       processor	6502
+     11  10000 ????		00 00	    VSYNC      =	$00
+     12  10000 ????		00 01	    VBLANK     =	$01
+     13  10000 ????		00 02	    WSYNC      =	$02
+     14  10000 ????		00 04	    NUSIZ0     =	$04
+     15  10000 ????		00 05	    NUSIZ1     =	$05
+     16  10000 ????		00 06	    COLUP0     =	$06
+     17  10000 ????		00 07	    COLUP1     =	$07
+     18  10000 ????		00 08	    COLUPF     =	$08
+     19  10000 ????		00 09	    COLUBK     =	$09
+     20  10000 ????		00 0a	    CTRLPF     =	$0A
+     21  10000 ????		00 0d	    PF0        =	$0D
+     22  10000 ????		00 0e	    PF1        =	$0E
+     23  10000 ????		00 0f	    PF2        =	$0F
+     24  10000 ????		00 10	    RESP0      =	$10
+     25  10000 ????		00 11	    RESP1      =	$11
+     26  10000 ????		00 14	    RESBL      =	$14
+     27  10000 ????		00 1b	    GRP0       =	$1B
+     28  10000 ????		00 1c	    GRP1       =	$1C
+     29  10000 ????		00 0c	    REFP1      =	$0C	; TIA native per-bit horizontal mirroring
+     30  10000 ????		00 1f	    ENABL      =	$1F
+     31  10000 ????		00 20	    HMP0       =	$20
+     32  10000 ????		00 21	    HMP1       =	$21
+     33  10000 ????		00 24	    HMBL       =	$24
+     34  10000 ????		00 2a	    HMOVE      =	$2A
+     35  10000 ????		00 3c	    INPT4      =	$3C
+     36  10000 ????		02 80	    SWCHA      =	$0280
+     37  10000 ????		02 82	    SWCHB      =	$0282
+     38  10000 ????		02 84	    INTIM      =	$0284
+     39  10000 ????		02 96	    TIM64T     =	$0296
+     40  10000 ????
+     41  10000 ????		00 80	    PlayerX    =	$80	; CENTRE x in TIA colour clocks, 0..159
+     42  10000 ????		00 81	    PlayerY    =	$81	; CENTRE y in 176-line arena, 0 at top
+     43  10000 ????		00 82	    Level      =	$82	; 1,2,3
+     44  10000 ????		00 83	    JoyState   =	$83
+     45  10000 ????		00 84	    SwitchState =	$84
+     46  10000 ????		00 85	    PrevSelect =	$85
+     47  10000 ????		00 86	    Phase      =	$86
+     48  10000 ????		00 87	    DiagonalSkip =	$87
+     49  10000 ????		00 88	    SpriteHeight =	$88
+     50  10000 ????		00 89	    RowMapPtr  =	$89	; 2 bytes
+     51  10000 ????		00 8b	    GfxPtr     =	$8B	; 2 bytes
+     52  10000 ????		00 8d	    FrameCount =	$8D
+     53  10000 ????		00 8e	    Facing     =	$8E	; 0 future RIGHT = source old LEFT, 1 future LEFT = source old RIGHT
+     54  10000 ????		00 8f	    MotionDid  =	$8F
+     55  10000 ????		00 90	    TryX       =	$90
+     56  10000 ????		00 91	    TryY       =	$91
+     57  10000 ????		00 92	    TestLevel  =	$92
+     58  10000 ????		00 93	    RectPtr    =	$93	; 2 bytes
+     59  10000 ????		00 95	    RectIndex  =	$95
+     60  10000 ????		00 96	    RenderX    =	$96
+     61  10000 ????		00 97	    RenderBottom =	$97
+     62  10000 ????		00 98	    HalfW      =	$98
+     63  10000 ????		00 99	    HalfH      =	$99
+     64  10000 ????		00 9a	    GrowthBlocked =	$9A
+     65  10000 ????		00 9b	    BaseX      =	$9B	; original X for strict diagonal Y-projection
+     66  10000 ????		00 9c	    OrbMask    =	$9C	; 2 = BL visible, 0 = consumed temporarily
+     67  10000 ????		00 9d	    OrbTimer   =	$9D	; bounded 90f return for L3 demonstration
+     68  10000 ????		00 9e	    HaloFrames =	$9E	; 30 NTSC frames when FIRE pressed
+     69  10000 ????		00 9f	    HaloRecover =	$9F	; 60/36/15 f cooldown AFTER halo ends
+     70  10000 ????		00 a0	    HaloRadius =	$A0	; logical 360-degree square/Chebyshev radius
+     71  10000 ????		00 a1	    TargetAlive =	$A1	; one frozen original R3 knight P1 dummy
+     72  10000 ????		00 a2	    TargetFlash =	$A2	; death feedback countdown
+     73  10000 ????		00 a3	    CheckDX    =	$A3
+     74  10000 ????		00 a4	    CheckDY    =	$A4
+     75  10000 ????		00 a5	    HaloVisualMask =	$A5	; previous level-dependent contour bits
+     76  10000 ????		00 a6	    HaloRowPtr =	$A6	; dynamic level-baked ROM pointer
+     77  10000 ????		00 a8	    OrbRowPtr  =	$A8	; BL shown/hidden pointer
+     78  10000 ????						; GAMEPLAY-1 F8 extension. Physical screen still PLAY1-H PARTIAL.
+     79  10000 ????		00 aa	    Stage      =	$AA
+     80  10000 ????		00 ab	    StageDir   =	$AB
+     81  10000 ????		00 ac	    Lives      =	$AC
+     82  10000 ????		00 ad	    ScoreLo    =	$AD
+     83  10000 ????		00 ae	    ScoreHi    =	$AE
+     84  10000 ????		00 af	    KnightX    =	$AF
+     85  10000 ????		00 b0	    SwordWarn  =	$B0
+     86  10000 ????		00 b1	    SwordStrike =	$B1
+     87  10000 ????		00 b2	    SwordRest  =	$B2
+     88  10000 ????		00 b3	    Invulnerable =	$B3
+     89  10000 ????		00 b4	    StageKills =	$B4
+     90  10000 ????		00 b5	    KillsNeed  =	$B5
+     91  10000 ????		00 b6	    EnemyRowPtr =	$B6	; low/high actual F8 ROM P1 scan table page
+     92  10000 ????		00 bf	    SoundFrames =	$BF
+     93  10000 ????		00 b8	    RangerX    =	$B8
+     94  10000 ????		00 b9	    RangerY    =	$B9
+     95  10000 ????		00 ba	    OrbX       =	$BA
+     96  10000 ????		00 bb	    OrbDirty   =	$BB
+     97  10000 ????
+     98  10000 ????				       SEG	Code
+     99  f000					      ORG	$F000
+    100  f000				   Reset
+    101  f000		       78		      sei
+    102  f001		       d8		      cld
+    103  f002		       a2 ff		      ldx	#$FF
+    104  f004		       9a		      txs
+    105  f005		       a9 00		      lda	#0
+    106  f007		       a2 7f		      ldx	#$7F
+    107  f009				   ClrRAM
+    108  f009		       95 80		      sta	$80,x
+    109  f00b		       ca		      dex
+    110  f00c		       10 fb		      bpl	ClrRAM
+    111  f00e		       a2 2c		      ldx	#$2C
+    112  f010				   ClrTIA
+    113  f010		       95 00		      sta	$00,x
+    114  f012		       ca		      dex
+    115  f013		       10 fb		      bpl	ClrTIA
+    116  f015		       a9 50		      lda	#80
+    117  f017		       85 80		      sta	PlayerX
+    118  f019		       a9 58		      lda	#88
+    119  f01b		       85 81		      sta	PlayerY
+    120  f01d		       a9 01		      lda	#1
+    121  f01f		       85 82		      sta	Level
+    122  f021		       a9 0c		      lda	#$0C
+    123  f023		       85 06		      sta	COLUP0
+    124  f025		       a9 86		      lda	#$86
+    125  f027		       85 08		      sta	COLUPF
+    126  f029		       a9 00		      lda	#$00
+    127  f02b		       85 09		      sta	COLUBK
+    128  f02d		       a9 11		      lda	#$11
+    129  f02f		       85 0a		      sta	CTRLPF	; original 4 mirrored obstacles; 2x BL orb
+    130  f031		       a9 9e		      lda	#$9E
+    131  f033		       85 07		      sta	COLUP1	; light-blue diagnostic knight byte, NOT final palette
+    132  f035		       a9 02		      lda	#2
+    133  f037		       85 9c		      sta	OrbMask
+    134  f039		       a9 01		      lda	#1
+    135  f03b		       85 a1		      sta	TargetAlive
+    136  f03d		       a9 7d		      lda	#125
+    137  f03f		       20 9c f5 	      jsr	PositionP1
+    138  f042		       a9 60		      lda	#96
+    139  f044		       20 ae f5 	      jsr	PositionBall
+    140  f047		       85 02		      sta	WSYNC
+    141  f049		       85 2a		      sta	HMOVE
+    142  f04b		       a9 00		      lda	#0
+    143  f04d		       85 21		      sta	HMP1
+    144  f04f		       85 24		      sta	HMBL
+    145  f051
+    146  f051				   Frame
+    147  f051		       a9 02		      lda	#2
+    148  f053		       85 01		      sta	VBLANK
+    149  f055		       85 00		      sta	VSYNC
+    150  f057		       85 02		      sta	WSYNC
+    151  f059		       85 02		      sta	WSYNC
+    152  f05b		       85 02		      sta	WSYNC
+    153  f05d		       a9 00		      lda	#0
+    154  f05f		       85 00		      sta	VSYNC
+    155  f061		       a9 2b		      lda	#43	; 43*64 cycles; 37-line NTSC blank target
+    156  f063		       8d 96 02 	      sta	TIM64T
+    157  f066		       ad 80 02 	      lda	SWCHA
+    158  f069		       85 83		      sta	JoyState
+    159  f06b		       ad 82 02 	      lda	SWCHB
+    160  f06e		       85 84		      sta	SwitchState
+    161  f070		       e6 8d		      inc	FrameCount
+    162  f072		       e6 86		      inc	Phase
+    163  f074		       a5 86		      lda	Phase
+    164  f076		       c9 03		      cmp	#3
+    165  f078		       d0 04		      bne	PhaseGood
+    166  f07a		       a9 00		      lda	#0
+    167  f07c		       85 86		      sta	Phase
+    168  f07e				   PhaseGood
+    169  f07e		       20 8a f1 	      jsr	DetectDiagonal
+    170  f081		       a5 80		      lda	PlayerX
+    171  f083		       85 9b		      sta	BaseX
+    172  f085		       a9 00		      lda	#0
+    173  f087		       85 8f		      sta	MotionDid
+    174  f089		       20 a9 f1 	      jsr	MoveX
+    175  f08c		       20 e8 f1 	      jsr	MoveY
+    176  f08f		       20 30 f2 	      jsr	DebugLevel
+    177  f092		       20 c9 f2 	      jsr	UpdateScale
+    178  f095		       20 e0 f2 	      jsr	UpdateGait
+    179  f098		       20 a8 f6 	      jsr	SelectEnemyArt	; offscreen identity/pose, never after GRP1 beam deadline
+    180  f09b		       a5 9e		      lda	HaloFrames
+    181  f09d		       f0 14		      beq	HaloPointerOff
+    182  f09f		       a6 82		      ldx	Level
+    183  f0a1		       a5 81		      lda	PlayerY
+    184  f0a3		       18		      clc
+    185  f0a4		       7d d4 f5 	      adc	HaloBaseLo,x
+    186  f0a7		       85 a6		      sta	HaloRowPtr
+    187  f0a9		       bd d8 f5 	      lda	HaloBaseHi,x
+    188  f0ac		       69 00		      adc	#0
+    189  f0ae		       85 a7		      sta	HaloRowPtr+1
+    190  f0b0		       4c bb f0 	      jmp	HaloPointerReady
+    191  f0b3				   HaloPointerOff
+    192  f0b3		       a9 01		      lda	#$01
+    193  f0b5		       85 a6		      sta	HaloRowPtr
+    194  f0b7		       a9 ff		      lda	#$FF
+    195  f0b9		       85 a7		      sta	HaloRowPtr+1
+    196  f0bb				   HaloPointerReady
+    197  f0bb		       a5 80		      lda	PlayerX
+    198  f0bd		       38		      sec
+    199  f0be		       e5 98		      sbc	HalfW
+    200  f0c0		       85 96		      sta	RenderX
+    201  f0c2		       a9 b1		      lda	#177	; pre-offset P0 bottom; remove SBC #1 in scanline
+    202  f0c4		       38		      sec
+    203  f0c5		       e5 81		      sbc	PlayerY
+    204  f0c7		       38		      sec
+    205  f0c8		       e5 99		      sbc	HalfH
+    206  f0ca		       85 97		      sta	RenderBottom
+    207  f0cc		       a9 00		      lda	#0
+    208  f0ce		       85 21		      sta	HMP1	; stale previous-frame motion must not move P1
+    209  f0d0		       85 24		      sta	HMBL	; nor move BL on P0's HMOVE
+    210  f0d2		       a5 96		      lda	RenderX
+    211  f0d4		       20 0e f3 	      jsr	PositionP0
+    212  f0d7		       85 02		      sta	WSYNC
+    213  f0d9		       85 2a		      sta	HMOVE
+    214  f0db		       a9 00		      lda	#0
+    215  f0dd		       85 20		      sta	HMP0	; essential: second HMOVE must not move P0 again
+    216  f0df		       a5 af		      lda	KnightX	; diagnostic P1 knight follows X
+    217  f0e1		       20 9c f5 	      jsr	PositionP1
+    218  f0e4		       85 02		      sta	WSYNC
+    219  f0e6		       85 2a		      sta	HMOVE
+    220  f0e8		       a9 00		      lda	#0
+    221  f0ea		       85 21		      sta	HMP1	; clear after P1's own motion
+    222  f0ec				   BlankWait
+    223  f0ec		       ad 84 02 	      lda	INTIM
+    224  f0ef		       d0 fb		      bne	BlankWait
+    225  f0f1		       85 02		      sta	WSYNC
+    226  f0f3		       a9 00		      lda	#0
+    227  f0f5		       85 01		      sta	VBLANK
+    228  f0f7		       a9 00		      lda	#0
+    229  f0f9		       85 0f		      sta	PF2
+    230  f0fb		       a2 c0		      ldx	#192
+    231  f0fd		       a9 00		      lda	#0	; preloaded GRP0 for first (empty) visible row
+    232  f0ff				   Visible
+    233  f0ff		       85 02		      sta	WSYNC
+    234  f101		       85 1b		      sta	GRP0	; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)
+    235  f103							; PF byte writes FIRST, before left PF cell deadlines.
+    236  f103							; original static synthetic PF masks, PF0 is PF1 & $80.
+    237  f103							; PF1 first and PF0 second saves 2c/row without altering bits.
+    238  f103		       bd 00 fa 	      lda	PlayPF1,x
+    239  f106		       85 0e		      sta	PF1
+    240  f108		       29 80		      and	#$80
+    241  f10a		       85 0d		      sta	PF0
+    242  f10c		       8a		      txa
+    243  f10d		       a8		      tay
+    244  f10e		       b1 a6		      lda	(HaloRowPtr),y
+    245  f110		       85 0f		      sta	PF2	; c27, before left PF2 beam deadline
+    246  f112							; P1 x125 and BL x96 are beyond these register write deadlines.
+    247  f112		       b1 b6		      lda	(EnemyRowPtr),y
+    248  f114		       85 1c		      sta	GRP1	; c34, original R3 knight on P1, one dummy
+    249  f116		       b1 a8		      lda	(OrbRowPtr),y
+    250  f118		       85 1f		      sta	ENABL	; c44, BL original TIA ball
+    251  f11a							; Fixed-centre PF2 ring trial (arena x80/y112), NOT P0-following.
+    252  f11a							; PREPARE GRP0 for the NEXT visible scanline, x-1.
+    253  f11a							; Deliberately after PF writes; accumulator persists through
+    254  f11a							; DEX/BNE and WSYNC so next line writes GRP0 at CPU cycle ~3.
+    255  f11a		       8a		      txa
+    256  f11b		       38		      sec
+    257  f11c		       e5 97		      sbc	RenderBottom
+    258  f11e		       90 0a		      bcc	NextSpriteBlank
+    259  f120		       c5 88		      cmp	SpriteHeight
+    260  f122		       b0 06		      bcs	NextSpriteBlank
+    261  f124		       a8		      tay
+    262  f125		       b1 8b		      lda	(GfxPtr),y
+    263  f127		       4c 2c f1 	      jmp	NextLine
+    264  f12a				   NextSpriteBlank
+    265  f12a		       a9 00		      lda	#0
+    266  f12c				   NextLine
+    267  f12c		       ca		      dex
+    268  f12d		       d0 d0		      bne	Visible
+    269  f12f		       a9 02		      lda	#2
+    270  f131		       85 01		      sta	VBLANK
+    271  f133		       a9 00		      lda	#0
+    272  f135		       85 1b		      sta	GRP0
+    273  f137		       85 1c		      sta	GRP1
+    274  f139		       85 1f		      sta	ENABL
+    275  f13b		       85 0d		      sta	PF0
+    276  f13d		       85 0e		      sta	PF1
+    277  f13f		       85 0f		      sta	PF2
+    278  f141		       85 02		      sta	WSYNC
+    279  f143		       a9 22		      lda	#34	; ~29 raster lines of overscan incl update work
+    280  f145		       8d 96 02 	      sta	TIM64T
+    281  f148		       20 c7 f4 	      jsr	UpdateOrb
+    282  f14b		       20 14 f5 	      jsr	UpdateAttack
+    283  f14e		       20 65 f5 	      jsr	CheckHaloHit
+    284  f151		       20 80 f6 	      jsr	GameBankEnter	; F8 gameplay tick in overscan ONLY
+    285  f154		       a5 bb		      lda	OrbDirty
+    286  f156		       f0 0f		      beq	OrbXPlaced
+    287  f158		       a5 ba		      lda	OrbX
+    288  f15a		       20 ae f5 	      jsr	PositionBall
+    289  f15d		       85 02		      sta	WSYNC
+    290  f15f		       85 2a		      sta	HMOVE
+    291  f161		       a9 00		      lda	#0
+    292  f163		       85 24		      sta	HMBL
+    293  f165		       85 bb		      sta	OrbDirty
+    294  f167				   OrbXPlaced
+    295  f167		       a5 9c		      lda	OrbMask
+    296  f169		       f0 0b		      beq	SelectOrbZero
+    297  f16b		       a9 00		      lda	#0
+    298  f16d		       85 a8		      sta	OrbRowPtr
+    299  f16f		       a9 fd		      lda	#$FD
+    300  f171		       85 a9		      sta	OrbRowPtr+1
+    301  f173		       4c 7e f1 	      jmp	OrbSelected
+    302  f176				   SelectOrbZero
+    303  f176		       a9 01		      lda	#$01
+    304  f178		       85 a8		      sta	OrbRowPtr
+    305  f17a		       a9 ff		      lda	#$FF
+    306  f17c		       85 a9		      sta	OrbRowPtr+1
+    307  f17e				   OrbSelected
+    308  f17e				   OverScanWait
+    309  f17e		       ad 84 02 	      lda	INTIM
+    310  f181		       d0 fb		      bne	OverScanWait
+    311  f183		       85 02		      sta	WSYNC
+    312  f185		       85 02		      sta	WSYNC	; GAMEPLAY-2 measured frame 261 -> add one OVERSCAN line, target 262
+    313  f187		       4c 51 f0 	      jmp	Frame
+    314  f18a
+    315  f18a							; 8 directions; two of each three diagonal frame updates, like P01.
+    316  f18a				   DetectDiagonal
+    317  f18a		       a9 00		      lda	#0
+    318  f18c		       85 87		      sta	DiagonalSkip
+    319  f18e		       a5 83		      lda	JoyState
+    320  f190		       29 c0		      and	#$C0
+    321  f192		       c9 c0		      cmp	#$C0
+    322  f194		       f0 12		      beq	NoDiag
+    323  f196		       a5 83		      lda	JoyState
+    324  f198		       29 30		      and	#$30
+    325  f19a		       c9 30		      cmp	#$30
+    326  f19c		       f0 0a		      beq	NoDiag
+    327  f19e		       a5 86		      lda	Phase
+    328  f1a0		       c9 02		      cmp	#2
+    329  f1a2		       d0 04		      bne	NoDiag
+    330  f1a4		       a9 01		      lda	#1
+    331  f1a6		       85 87		      sta	DiagonalSkip
+    332  f1a8				   NoDiag
+    333  f1a8		       60		      rts
+    334  f1a9
+    335  f1a9							; Strict K0 corner policy: X and Y projections from ORIGINAL position
+    336  f1a9							; must both be clear before diagonal; then diagonal target must be clear.
+    337  f1a9							; If only X clears, slide X; if only Y clears, slide Y.
+    338  f1a9							; X preference on ambiguous corners is diagnostic, not final feel canon.
+    339  f1a9				   MoveX
+    340  f1a9		       a5 87		      lda	DiagonalSkip
+    341  f1ab		       d0 3a		      bne	MoveXDone
+    342  f1ad		       a5 83		      lda	JoyState
+    343  f1af		       29 40		      and	#$40
+    344  f1b1		       f0 14		      beq	WantLeft
+    345  f1b3		       a5 83		      lda	JoyState
+    346  f1b5		       29 80		      and	#$80
+    347  f1b7		       d0 2e		      bne	MoveXDone
+    348  f1b9		       a9 00		      lda	#0
+    349  f1bb		       85 8e		      sta	Facing
+    350  f1bd		       a5 80		      lda	PlayerX
+    351  f1bf		       18		      clc
+    352  f1c0		       69 01		      adc	#1
+    353  f1c2		       85 90		      sta	TryX
+    354  f1c4		       4c d2 f1 	      jmp	CheckMoveX
+    355  f1c7				   WantLeft
+    356  f1c7		       a9 01		      lda	#1
+    357  f1c9		       85 8e		      sta	Facing
+    358  f1cb		       a5 80		      lda	PlayerX
+    359  f1cd		       38		      sec
+    360  f1ce		       e9 01		      sbc	#1
+    361  f1d0		       85 90		      sta	TryX
+    362  f1d2				   CheckMoveX
+    363  f1d2		       a5 81		      lda	PlayerY
+    364  f1d4		       85 91		      sta	TryY
+    365  f1d6		       a5 82		      lda	Level
+    366  f1d8		       85 92		      sta	TestLevel
+    367  f1da		       20 74 f2 	      jsr	CandidateValid
+    368  f1dd		       f0 08		      beq	MoveXDone
+    369  f1df		       a5 90		      lda	TryX
+    370  f1e1		       85 80		      sta	PlayerX
+    371  f1e3		       a9 01		      lda	#1
+    372  f1e5		       85 8f		      sta	MotionDid
+    373  f1e7				   MoveXDone
+    374  f1e7		       60		      rts
+    375  f1e8				   MoveY
+    376  f1e8		       a5 87		      lda	DiagonalSkip
+    377  f1ea		       d0 43		      bne	MoveYDone
+    378  f1ec		       a5 83		      lda	JoyState
+    379  f1ee		       29 10		      and	#$10
+    380  f1f0		       f0 10		      beq	WantUp
+    381  f1f2		       a5 83		      lda	JoyState
+    382  f1f4		       29 20		      and	#$20
+    383  f1f6		       d0 37		      bne	MoveYDone
+    384  f1f8		       a5 81		      lda	PlayerY
+    385  f1fa		       18		      clc
+    386  f1fb		       69 01		      adc	#1
+    387  f1fd		       85 91		      sta	TryY
+    388  f1ff		       4c 09 f2 	      jmp	CheckMoveY
+    389  f202				   WantUp
+    390  f202		       a5 81		      lda	PlayerY
+    391  f204		       38		      sec
+    392  f205		       e9 01		      sbc	#1
+    393  f207		       85 91		      sta	TryY
+    394  f209				   CheckMoveY
+    395  f209		       a5 82		      lda	Level
+    396  f20b		       85 92		      sta	TestLevel
+    397  f20d							; If horizontal input was also pressed, require Y-only projection
+    398  f20d							; from original centre to be legal before trying diagonal goal.
+    399  f20d		       a5 83		      lda	JoyState
+    400  f20f		       29 c0		      and	#$C0
+    401  f211		       c9 c0		      cmp	#$C0
+    402  f213		       f0 09		      beq	YGoalCheck
+    403  f215		       a5 9b		      lda	BaseX
+    404  f217		       85 90		      sta	TryX
+    405  f219		       20 74 f2 	      jsr	CandidateValid
+    406  f21c		       f0 11		      beq	MoveYDone
+    407  f21e				   YGoalCheck
+    408  f21e		       a5 80		      lda	PlayerX
+    409  f220		       85 90		      sta	TryX
+    410  f222		       20 74 f2 	      jsr	CandidateValid
+    411  f225		       f0 08		      beq	MoveYDone
+    412  f227		       a5 91		      lda	TryY
+    413  f229		       85 81		      sta	PlayerY
+    414  f22b		       a9 01		      lda	#1
+    415  f22d		       85 8f		      sta	MotionDid
+    416  f22f				   MoveYDone
+    417  f22f		       60		      rts
+    418  f230
+    419  f230							; SELECT cycles L1->L2->L3->L1 only when proposed larger size is clear.
+    420  f230							; A blocked grow lights the background red, never embeds body in solids.
+    421  f230				   DebugLevel
+    422  f230		       a5 84		      lda	SwitchState
+    423  f232		       29 02		      and	#2
+    424  f234		       d0 39		      bne	SelectUp
+    425  f236		       a5 85		      lda	PrevSelect
+    426  f238		       d0 39		      bne	DebugDone
+    427  f23a		       a9 01		      lda	#1
+    428  f23c		       85 85		      sta	PrevSelect
+    429  f23e		       a5 82		      lda	Level
+    430  f240		       c9 03		      cmp	#3
+    431  f242		       d0 07		      bne	TryGrow
+    432  f244		       a9 01		      lda	#1
+    433  f246		       85 82		      sta	Level
+    434  f248		       4c 5f f2 	      jmp	GrowthOK
+    435  f24b				   TryGrow
+    436  f24b		       18		      clc
+    437  f24c		       69 01		      adc	#1
+    438  f24e		       85 92		      sta	TestLevel
+    439  f250		       a5 80		      lda	PlayerX
+    440  f252		       85 90		      sta	TryX
+    441  f254		       a5 81		      lda	PlayerY
+    442  f256		       85 91		      sta	TryY
+    443  f258		       20 74 f2 	      jsr	CandidateValid
+    444  f25b		       f0 09		      beq	GrowthFail
+    445  f25d		       e6 82		      inc	Level
+    446  f25f				   GrowthOK
+    447  f25f		       a9 00		      lda	#0
+    448  f261		       85 9a		      sta	GrowthBlocked
+    449  f263		       85 09		      sta	COLUBK
+    450  f265		       60		      rts
+    451  f266				   GrowthFail
+    452  f266		       a9 01		      lda	#1
+    453  f268		       85 9a		      sta	GrowthBlocked
+    454  f26a		       a9 42		      lda	#$42
+    455  f26c		       85 09		      sta	COLUBK
+    456  f26e		       60		      rts
+    457  f26f				   SelectUp
+    458  f26f		       a9 00		      lda	#0
+    459  f271		       85 85		      sta	PrevSelect
+    460  f273				   DebugDone
+    461  f273		       60		      rts
+    462  f274
+    463  f274							; For each candidate (TryX,TryY,TestLevel), K0 expanded rectangle
+    464  f274							; tables: xmin inclusive, xmax exclusive, ymin inclusive, ymax exclusive.
+    465  f274							; One source-only F01-inspired reflection-friendly scene, NOT canonical.
+    466  f274				   CandidateValid
+    467  f274		       a6 92		      ldx	TestLevel
+    468  f276		       a5 90		      lda	TryX
+    469  f278		       dd 5f f4 	      cmp	MinCX,x
+    470  f27b		       90 49		      bcc	Invalid
+    471  f27d		       dd 63 f4 	      cmp	MaxCX,x
+    472  f280		       b0 44		      bcs	Invalid
+    473  f282		       a5 91		      lda	TryY
+    474  f284		       dd 67 f4 	      cmp	MinCY,x
+    475  f287		       90 3d		      bcc	Invalid
+    476  f289		       dd 6b f4 	      cmp	MaxCY,x
+    477  f28c		       b0 38		      bcs	Invalid
+    478  f28e		       bd 6c f6 	      lda	RectRAMLo,x	; gameplay bank loads 16B collision rectangles for active layout
+    479  f291		       85 93		      sta	RectPtr
+    480  f293		       a9 00		      lda	#0
+    481  f295		       85 94		      sta	RectPtr+1
+    482  f297		       a9 00		      lda	#0
+    483  f299		       85 95		      sta	RectIndex
+    484  f29b				   RectLoop
+    485  f29b		       a4 95		      ldy	RectIndex
+    486  f29d		       a5 90		      lda	TryX
+    487  f29f		       d1 93		      cmp	(RectPtr),y
+    488  f2a1		       90 15		      bcc	NextRect
+    489  f2a3		       c8		      iny
+    490  f2a4		       a5 90		      lda	TryX
+    491  f2a6		       d1 93		      cmp	(RectPtr),y
+    492  f2a8		       b0 0e		      bcs	NextRect
+    493  f2aa		       c8		      iny
+    494  f2ab		       a5 91		      lda	TryY
+    495  f2ad		       d1 93		      cmp	(RectPtr),y
+    496  f2af		       90 07		      bcc	NextRect
+    497  f2b1		       c8		      iny
+    498  f2b2		       a5 91		      lda	TryY
+    499  f2b4		       d1 93		      cmp	(RectPtr),y
+    500  f2b6		       90 0e		      bcc	Invalid
+    501  f2b8				   NextRect
+    502  f2b8		       a5 95		      lda	RectIndex
+    503  f2ba		       18		      clc
+    504  f2bb		       69 04		      adc	#4
+    505  f2bd		       85 95		      sta	RectIndex
+    506  f2bf		       c9 10		      cmp	#16
+    507  f2c1		       90 d8		      bcc	RectLoop
+    508  f2c3		       a9 01		      lda	#1
+    509  f2c5		       60		      rts
+    510  f2c6				   Invalid
+    511  f2c6		       a9 00		      lda	#0
+    512  f2c8		       60		      rts
+    513  f2c9
+    514  f2c9				   UpdateScale
+    515  f2c9		       a6 82		      ldx	Level
+    516  f2cb		       bd 6f f4 	      lda	WidthHalf,x
+    517  f2ce		       85 98		      sta	HalfW
+    518  f2d0		       bd 73 f4 	      lda	HeightHalf,x
+    519  f2d3		       85 99		      sta	HalfH
+    520  f2d5		       bd 77 f4 	      lda	SpriteHeights,x
+    521  f2d8		       85 88		      sta	SpriteHeight
+    522  f2da		       bd 7b f4 	      lda	PlayerSizes,x
+    523  f2dd		       85 04		      sta	NUSIZ0
+    524  f2df							; P0 now has bit-exact pre-expanded ROM bitmap per level/pose;
+    525  f2df							; original source rows unchanged; no RowMapPtr lookup in scanline.
+    526  f2df		       60		      rts
+    527  f2e0
+    528  f2e0				   UpdateGait
+    529  f2e0		       a9 00		      lda	#0
+    530  f2e2		       85 95		      sta	RectIndex	; reused scratch: graphics index 0 A-right,1 B-right,2 A-left,3 B-left
+    531  f2e4		       a5 8e		      lda	Facing
+    532  f2e6		       f0 04		      beq	FaceReady
+    533  f2e8		       a9 02		      lda	#2
+    534  f2ea		       85 95		      sta	RectIndex
+    535  f2ec				   FaceReady
+    536  f2ec		       a5 8f		      lda	MotionDid
+    537  f2ee		       f0 08		      beq	GaitReady
+    538  f2f0		       a5 8d		      lda	FrameCount
+    539  f2f2		       29 08		      and	#8
+    540  f2f4		       f0 02		      beq	GaitReady
+    541  f2f6		       e6 95		      inc	RectIndex
+    542  f2f8				   GaitReady
+    543  f2f8		       a5 82		      lda	Level
+    544  f2fa		       38		      sec
+    545  f2fb		       e9 01		      sbc	#1
+    546  f2fd		       0a		      asl
+    547  f2fe		       0a		      asl
+    548  f2ff		       18		      clc
+    549  f300		       65 95		      adc	RectIndex
+    550  f302		       aa		      tax
+    551  f303		       bd 90 f7 	      lda	PlayArtLo,x
+    552  f306		       85 8b		      sta	GfxPtr
+    553  f308		       bd 9c f7 	      lda	PlayArtHi,x
+    554  f30b		       85 8c		      sta	GfxPtr+1
+    555  f30d		       60		      rts
+    556  f30e
+    557  f30e				   PositionP0
+    558  f30e		       85 02		      sta	WSYNC
+    559  f310		       38		      sec
+    560  f311				   P0Loop
+    561  f311		       e9 0f		      sbc	#15
+    562  f313		       b0 fc		      bcs	P0Loop
+    563  f315		       49 07		      eor	#7
+    564  f317		       0a		      asl
+    565  f318		       0a		      asl
+    566  f319		       0a		      asl
+    567  f31a		       0a		      asl
+    568  f31b		       85 20		      sta	HMP0
+    569  f31d		       85 10		      sta	RESP0
+    570  f31f		       60		      rts
+    571  f320
+    572  f320							; All four user-approved bitmap tables are TOP_FIRST in source and
+    573  f320							; reversed for the decreasing X visible kernel. RIGHT label uses the
+    574  f320							; ORIGINAL U1-LEG1 LEFT source bitmap, and vice versa. Frozen bit-exact.
+    575  f320				   A_VISUAL_RIGHT
+    576  f320		       06 c4 64 3c	      dc.b	%00000110,%11000100,%01100100,%00111100
+    577  f324		       3c 3d fe 7c	      dc.b	%00111100,%00111101,%11111110,%01111100
+    578  f328		       66 5a 7e 24	      dc.b	%01100110,%01011010,%01111110,%00100100
+    579  f32c				   B_VISUAL_RIGHT
+    580  f32c		       60 23 26 3c	      dc.b	%01100000,%00100011,%00100110,%00111100
+    581  f330		       3c be fe 7c	      dc.b	%00111100,%10111110,%11111110,%01111100
+    582  f334		       66 5a 7e 24	      dc.b	%01100110,%01011010,%01111110,%00100100
+    583  f338				   A_VISUAL_LEFT
+    584  f338		       60 23 26 3c	      dc.b	%01100000,%00100011,%00100110,%00111100
+    585  f33c		       3c bc 7f 3e	      dc.b	%00111100,%10111100,%01111111,%00111110
+    586  f340		       66 5a 7e 24	      dc.b	%01100110,%01011010,%01111110,%00100100
+    587  f344				   B_VISUAL_LEFT
+    588  f344		       06 c4 64 3c	      dc.b	%00000110,%11000100,%01100100,%00111100
+    589  f348		       3c 7d 7f 3e	      dc.b	%00111100,%01111101,%01111111,%00111110
+    590  f34c		       66 5a 7e 24	      dc.b	%01100110,%01011010,%01111110,%00100100
+    591  f350
+    592  f350				   MapSmall
+    593  f350		       00 01 02 03*	      dc.b	0,1,2,3,4,5,6,7,8,9,10,11
+    594  f35c				   MapMedium
+    595  f35c		       00 00 01 01*	      dc.b	0,0,1,1,2,2,3,3,4,4,5,5
+    596  f368		       06 06 07 07*	      dc.b	6,6,7,7,8,8,9,9,10,10,11,11
+    597  f374				   MapLarge
+    598  f374		       00 00 00 01*	      dc.b	0,0,0,1,1,1,2,2,2,3,3,3
+    599  f380		       04 04 04 05*	      dc.b	4,4,4,5,5,5,6,6,6,7,7,7
+    600  f38c		       08 08 08 09*	      dc.b	8,8,8,9,9,9,10,10,10,11,11,11
+    601  f398
+    602  f398							; Visible synthetic obstacles: top x=[12,28) reflected to [132,148)
+    603  f398							; at arena y=[24,48); lower x=[24,44) reflected to [116,136)
+    604  f398							; at arena y=[136,152). 4 solids, not final world map.
+    605  f398							; This physical scanline map is indexed by X=192..1 in VisibleLoop.
+    606  f398				   KnightWarningScan		; exact 16 K1-T warning source rows; former unused PFCode 193B
+    607  f398		       00 00 00 00*	      ds	73,0
+    608  f3e1		       88 d8 a8 a8*	      dc.b	$88,$D8,$A8,$A8,$70,$70,$78,$D8,$FE,$FA,$72,$DA,$DA,$8A,$FA,$7A
+    609  f3f1		       00 00 00 00*	      ds	104,0
+    610  f459				   PF0Choices
+    611  f459		       00 80 00 	      dc.b	0,$80,0
+    612  f45c				   PF1Choices
+    613  f45c		       00 e0 3e 	      dc.b	0,$E0,$3E
+    614  f45f		       00 08 0c 14 MinCX      dc.b	0,8,12,20
+    615  f463		       00 99 95 8d MaxCX      dc.b	0,153,149,141
+    616  f467		       00 0a 10 16 MinCY      dc.b	0,10,16,22
+    617  f46b		       00 a7 a1 9b MaxCY      dc.b	0,167,161,155
+    618  f46f				   WidthHalf
+    619  f46f		       00 04 08 10	      dc.b	0,4,8,16
+    620  f473				   HeightHalf
+    621  f473		       00 06 0c 12	      dc.b	0,6,12,18
+    622  f477				   SpriteHeights
+    623  f477		       00 0c 18 24	      dc.b	0,12,24,36
+    624  f47b				   PlayerSizes
+    625  f47b		       00 00 05 07	      dc.b	0,0,5,7
+    626  f47f				   MapLow
+    627  f47f		       00 50 5c 74	      dc.b	0,<MapSmall,<MapMedium,<MapLarge
+    628  f483				   MapHigh
+    629  f483		       00 f3 f3 f3	      dc.b	0,>MapSmall,>MapMedium,>MapLarge
+    630  f487				   ArtLo
+    631  f487		       20 2c 38 44	      dc.b	<A_VISUAL_RIGHT,<B_VISUAL_RIGHT,<A_VISUAL_LEFT,<B_VISUAL_LEFT
+    632  f48b				   ArtHi
+    633  f48b		       f3 f3 f3 f3	      dc.b	>A_VISUAL_RIGHT,>B_VISUAL_RIGHT,>A_VISUAL_LEFT,>B_VISUAL_LEFT
+    634  f48f				   RectLo
+    635  f48f		       00 97 a7 b7	      dc.b	0,<F01Diag_L1,<F01Diag_L2,<F01Diag_L3
+    636  f493				   RectHi
+    637  f493		       00 f4 f4 f4	      dc.b	0,>F01Diag_L1,>F01Diag_L2,>F01Diag_L3
+    638  f497							; K0 source formula: full body +4 margin per side (x & y), half-open.
+    639  f497				   F01Diag_L1
+    640  f497		       05 24 0f 3a	      dc.b	5,36,15,58
+    641  f49b		       7d 9c 0f 3a	      dc.b	125,156,15,58
+    642  f49f		       11 34 7f a2	      dc.b	17,52,127,162
+    643  f4a3		       6d 90 7f a2	      dc.b	109,144,127,162
+    644  f4a7				   F01Diag_L2
+    645  f4a7		       01 28 09 40	      dc.b	1,40,9,64
+    646  f4ab		       79 a0 09 40	      dc.b	121,160,9,64
+    647  f4af		       0d 38 79 a8	      dc.b	13,56,121,168
+    648  f4b3		       69 94 79 a8	      dc.b	105,148,121,168
+    649  f4b7				   F01Diag_L3
+    650  f4b7		       00 30 03 46	      dc.b	0,48,3,70
+    651  f4bb		       71 a0 03 46	      dc.b	113,160,3,70
+    652  f4bf		       05 40 73 ae	      dc.b	5,64,115,174
+    653  f4c3		       61 9c 73 ae	      dc.b	97,156,115,174
+    654  f4c7
+    655  f4c7							; PLAY1 code/data inserted below
+    656  f4c7
+    657  f4c7							; ---- PLAY1 frame-independent gameplay: OVERSCAN, not critical scanlines ----
+    658  f4c7				   UpdateOrb
+    659  f4c7		       a5 9c		      lda	OrbMask
+    660  f4c9		       f0 48		      beq	OrbDone	; exactly one orb per stage visit, never respawn after pickup
+    661  f4cb				   OrbCandidate
+    662  f4cb		       a5 82		      lda	Level
+    663  f4cd		       c9 03		      cmp	#3
+    664  f4cf		       b0 42		      bcs	OrbDone	; on L3 orb remains if it was already present
+    665  f4d1							; candidate test against actual BL center x96, y112,
+    666  f4d1							; source-sized full body +2 pixel touch margin.
+    667  f4d1		       a5 80		      lda	PlayerX
+    668  f4d3		       38		      sec
+    669  f4d4		       e5 ba		      sbc	OrbX
+    670  f4d6		       b0 05		      bcs	OrbAbsX
+    671  f4d8		       49 ff		      eor	#$FF
+    672  f4da		       18		      clc
+    673  f4db		       69 01		      adc	#1
+    674  f4dd				   OrbAbsX
+    675  f4dd		       a6 82		      ldx	Level
+    676  f4df		       dd c0 f5 	      cmp	OrbTolX,x
+    677  f4e2		       b0 2f		      bcs	OrbDone
+    678  f4e4		       a5 81		      lda	PlayerY
+    679  f4e6		       38		      sec
+    680  f4e7		       e9 70		      sbc	#112
+    681  f4e9		       b0 05		      bcs	OrbAbsY
+    682  f4eb		       49 ff		      eor	#$FF
+    683  f4ed		       18		      clc
+    684  f4ee		       69 01		      adc	#1
+    685  f4f0				   OrbAbsY
+    686  f4f0		       dd c4 f5 	      cmp	OrbTolY,x
+    687  f4f3		       b0 1e		      bcs	OrbDone
+    688  f4f5		       a5 82		      lda	Level
+    689  f4f7		       18		      clc
+    690  f4f8		       69 01		      adc	#1
+    691  f4fa		       85 92		      sta	TestLevel
+    692  f4fc		       a5 80		      lda	PlayerX
+    693  f4fe		       85 90		      sta	TryX
+    694  f500		       a5 81		      lda	PlayerY
+    695  f502		       85 91		      sta	TryY
+    696  f504		       20 74 f2 	      jsr	CandidateValid	; real COL1 full-size collision K0
+    697  f507		       f0 0a		      beq	OrbDone
+    698  f509		       e6 82		      inc	Level
+    699  f50b		       a9 00		      lda	#0
+    700  f50d		       85 9c		      sta	OrbMask
+    701  f50f		       a9 00		      lda	#0
+    702  f511		       85 9d		      sta	OrbTimer	; consumed orb stays absent for entire visit
+    703  f513				   OrbDone
+    704  f513		       60		      rts
+    705  f514
+    706  f514				   UpdateAttack
+    707  f514		       a5 a2		      lda	TargetFlash
+    708  f516		       f0 08		      beq	NoFlash
+    709  f518		       c6 a2		      dec	TargetFlash
+    710  f51a		       d0 04		      bne	NoFlash
+    711  f51c		       a9 00		      lda	#0
+    712  f51e		       85 09		      sta	COLUBK
+    713  f520				   NoFlash
+    714  f520		       a5 9e		      lda	HaloFrames
+    715  f522		       f0 0b		      beq	AttackInactive
+    716  f524		       c6 9e		      dec	HaloFrames
+    717  f526		       d0 1b		      bne	AttackColor
+    718  f528		       a6 82		      ldx	Level
+    719  f52a		       bd cc f5 	      lda	RecoverTable,x
+    720  f52d		       85 9f		      sta	HaloRecover
+    721  f52f				   AttackInactive
+    722  f52f		       a5 9f		      lda	HaloRecover
+    723  f531		       f0 04		      beq	TryFire
+    724  f533		       c6 9f		      dec	HaloRecover
+    725  f535		       d0 0c		      bne	AttackColor
+    726  f537				   TryFire
+    727  f537		       a5 3c		      lda	INPT4	; Fire active-low, bit7
+    728  f539		       30 08		      bmi	AttackColor
+    729  f53b		       a5 9e		      lda	HaloFrames
+    730  f53d		       d0 04		      bne	AttackColor
+    731  f53f		       a9 1e		      lda	#30
+    732  f541		       85 9e		      sta	HaloFrames
+    733  f543				   AttackColor
+    734  f543		       a5 9e		      lda	HaloFrames
+    735  f545		       f0 0e		      beq	AttackOff
+    736  f547		       a9 2e		      lda	#$2E
+    737  f549		       85 08		      sta	COLUPF	; TEST B: full arena PF + BL GOLD while active
+    738  f54b		       a6 82		      ldx	Level
+    739  f54d		       bd d0 f5 	      lda	HaloMaskTable,x
+    740  f550		       85 a5		      sta	HaloVisualMask
+    741  f552		       4c 5d f5 	      jmp	AttackRadius
+    742  f555				   AttackOff
+    743  f555		       a9 86		      lda	#$86
+    744  f557		       85 08		      sta	COLUPF	; blue diagnostic world PF+orb when inactive
+    745  f559		       a9 00		      lda	#0
+    746  f55b		       85 a5		      sta	HaloVisualMask
+    747  f55d				   AttackRadius
+    748  f55d		       a6 82		      ldx	Level
+    749  f55f		       bd c8 f5 	      lda	RadiusTable,x
+    750  f562		       85 a0		      sta	HaloRadius
+    751  f564		       60		      rts
+    752  f565
+    753  f565				   CheckHaloHit
+    754  f565		       a5 9e		      lda	HaloFrames
+    755  f567		       f0 32		      beq	NoTargetHit
+    756  f569		       a5 a1		      lda	TargetAlive
+    757  f56b		       f0 2e		      beq	NoTargetHit
+    758  f56d		       a5 80		      lda	PlayerX
+    759  f56f		       38		      sec
+    760  f570		       e5 af		      sbc	KnightX
+    761  f572		       b0 05		      bcs	HitAbsX
+    762  f574		       49 ff		      eor	#$FF
+    763  f576		       18		      clc
+    764  f577		       69 01		      adc	#1
+    765  f579				   HitAbsX
+    766  f579		       c5 a0		      cmp	HaloRadius
+    767  f57b		       b0 1e		      bcs	NoTargetHit
+    768  f57d		       a5 81		      lda	PlayerY
+    769  f57f		       38		      sec
+    770  f580		       e9 60		      sbc	#96
+    771  f582		       b0 05		      bcs	HitAbsY
+    772  f584		       49 ff		      eor	#$FF
+    773  f586		       18		      clc
+    774  f587		       69 01		      adc	#1
+    775  f589				   HitAbsY
+    776  f589		       c5 a0		      cmp	HaloRadius
+    777  f58b		       b0 0e		      bcs	NoTargetHit
+    778  f58d		       a9 00		      lda	#0
+    779  f58f		       85 a1		      sta	TargetAlive
+    780  f591		       85 07		      sta	COLUP1
+    781  f593		       a9 42		      lda	#$42
+    782  f595		       85 09		      sta	COLUBK	; transient kill feedback
+    783  f597		       a9 14		      lda	#20
+    784  f599		       85 a2		      sta	TargetFlash
+    785  f59b				   NoTargetHit
+    786  f59b		       60		      rts
+    787  f59c
+    788  f59c				   PositionP1
+    789  f59c		       85 02		      sta	WSYNC
+    790  f59e		       38		      sec
+    791  f59f				   P1PosLoop
+    792  f59f		       e9 0f		      sbc	#15
+    793  f5a1		       b0 fc		      bcs	P1PosLoop
+    794  f5a3		       49 07		      eor	#7
+    795  f5a5		       0a		      asl
+    796  f5a6		       0a		      asl
+    797  f5a7		       0a		      asl
+    798  f5a8		       0a		      asl
+    799  f5a9		       85 21		      sta	HMP1
+    800  f5ab		       85 11		      sta	RESP1
+    801  f5ad		       60		      rts
+    802  f5ae
+    803  f5ae				   PositionBall
+    804  f5ae		       85 02		      sta	WSYNC
+    805  f5b0		       38		      sec
+    806  f5b1				   BallPosLoop
+    807  f5b1		       e9 0f		      sbc	#15
+    808  f5b3		       b0 fc		      bcs	BallPosLoop
+    809  f5b5		       49 07		      eor	#7
+    810  f5b7		       0a		      asl
+    811  f5b8		       0a		      asl
+    812  f5b9		       0a		      asl
+    813  f5ba		       0a		      asl
+    814  f5bb		       85 24		      sta	HMBL
+    815  f5bd		       85 14		      sta	RESBL
+    816  f5bf		       60		      rts
+    817  f5c0
+    818  f5c0				   OrbTolX
+    819  f5c0		       00 07 0b 13	      dc.b	0,7,11,19
+    820  f5c4				   OrbTolY
+    821  f5c4		       00 09 0f 15	      dc.b	0,9,15,21
+    822  f5c8				   RadiusTable
+    823  f5c8		       00 12 1c 28	      dc.b	0,18,28,40
+    824  f5cc				   RecoverTable
+    825  f5cc		       00 3c 24 0f	      dc.b	0,60,36,15
+    826  f5d0				   HaloMaskTable
+    827  f5d0		       00 03 1f ff	      dc.b	0,$03,$1F,$FF
+    828  f5d4		       00 b0 c0 d0 HaloBaseLo dc.b	0,$B0,$C0,$D0
+    829  f5d8		       00 f7 fa fd HaloBaseHi dc.b	0,$F7,$FA,$FD
+    830  f5dc
+    831  f5dc							; Source original R3 K1 exact eight bytes $18,$3C,$7E,$DB,$5A,$24,$66,$42,
+    832  f5dc							; each displayed twice, in decreasing scanline X index order.
+    833  f5dc							; Real TIA object line tables are relocated to aligned F-page ROM
+    834  f5dc							; to guarantee no ABS,X page-crossing beyond 76c raster budget.
+    835  f5dc
+    836  f5dc				   PlayL1P0
+    837  f5dc		       06 c4 64 3c*	      dc.b	$06,$C4,$64,$3C,$3C,$3D,$FE,$7C,$66,$5A,$7E,$24
+    838  f5e8				   PlayL1P1
+    839  f5e8		       60 23 26 3c*	      dc.b	$60,$23,$26,$3C,$3C,$BE,$FE,$7C,$66,$5A,$7E,$24
+    840  f5f4				   PlayL1P2
+    841  f5f4		       60 23 26 3c*	      dc.b	$60,$23,$26,$3C,$3C,$BC,$7F,$3E,$66,$5A,$7E,$24
+    842  f600				   PlayL1P3
+    843  f600		       06 c4 64 3c*	      dc.b	$06,$C4,$64,$3C,$3C,$7D,$7F,$3E,$66,$5A,$7E,$24
+    844  f60c				   PlayL2P0
+    845  f60c		       06 06 c4 c4*	      dc.b	$06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3D,$3D
+    846  f618		       fe fe 7c 7c*	      dc.b	$FE,$FE,$7C,$7C,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+    847  f624				   PlayL2P1
+    848  f624		       60 60 23 23*	      dc.b	$60,$60,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$BE,$BE
+    849  f630		       fe fe 7c 7c*	      dc.b	$FE,$FE,$7C,$7C,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+    850  f63c				   PlayL2P2
+    851  f63c		       60 60 23 23*	      dc.b	$60,$60,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$BC,$BC
+    852  f648		       7f 7f 3e 3e*	      dc.b	$7F,$7F,$3E,$3E,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+    853  f654				   PlayL2P3
+    854  f654		       06 06 c4 c4*	      dc.b	$06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$7D,$7D
+    855  f660		       7f 7f 3e 3e*	      dc.b	$7F,$7F,$3E,$3E,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+    856  f66c							; Three runtime collision tables live at RIOT $C0/$D0/$E0.
+    857  f66c							; They are written only by offscreen bank0 game code on stage transitions.
+    858  f66c				   RectRAMLo
+    859  f66c		       00 c0 d0 e0	      dc.b	0,$C0,$D0,$E0
+    860  f680					      ORG	$F680
+    861  f680				   GameBankEnter
+    862  f680		       ad f8 ff 	      lda	$FFF8	; F8: switch to bank 0 on read
+    863  f683		       4c 00 f1 	      jmp	$F100	; fetched from bank 0 after hotspot
+    864  f690					      ORG	$F690
+    865  f690				   GameBankReturn
+    866  f690		       ad f9 ff 	      lda	$FFF9	; F8: switch back to original graphics bank
+    867  f693		       60		      rts		; fetched from bank 1 after hotspot
+    868  f6a0					      ORG	$F6A0
+    869  f6a0				   GameBankReset
+    870  f6a0		       ad f9 ff 	      lda	$FFF9
+    871  f6a3		       4c 00 f0 	      jmp	$F000
+    872  f6a8					      ORG	$F6A8
+    873  f6a8				   SelectEnemyArt
+    874  f6a8							; Sequential gameplay masks: K1 neutral/warning and independently
+    875  f6a8							; typed R1 neutral; no claim of simultaneous three enemies.
+    876  f6a8							; We select a 193-byte scan profile in VBLANK, only ONE P1
+    877  f6a8							; per physical raster row. Potential +1c indirect-LDA requires test.
+    878  f6a8		       a5 b4		      lda	StageKills
+    879  f6aa		       18		      clc
+    880  f6ab		       69 01		      adc	#1
+    881  f6ad		       c5 b5		      cmp	KillsNeed
+    882  f6af		       d0 0b		      bne	ArtKnight
+    883  f6b1				   ArtRanger
+    884  f6b1		       a9 00		      lda	#<RangerNativeScan
+    885  f6b3		       85 b6		      sta	EnemyRowPtr
+    886  f6b5		       a9 f9		      lda	#>RangerNativeScan
+    887  f6b7		       85 b7		      sta	EnemyRowPtr+1
+    888  f6b9		       4c d3 f6 	      jmp	ArtFacing
+    889  f6bc				   ArtKnight
+    890  f6bc		       a5 b0		      lda	SwordWarn
+    891  f6be		       f0 0b		      beq	ArtNeutral
+    892  f6c0		       a9 98		      lda	#<KnightWarningScan
+    893  f6c2		       85 b6		      sta	EnemyRowPtr
+    894  f6c4		       a9 f3		      lda	#>KnightWarningScan
+    895  f6c6		       85 b7		      sta	EnemyRowPtr+1
+    896  f6c8		       4c d3 f6 	      jmp	ArtFacing
+    897  f6cb				   ArtNeutral
+    898  f6cb		       a9 00		      lda	#<KnightNeutralScan
+    899  f6cd		       85 b6		      sta	EnemyRowPtr
+    900  f6cf		       a9 fc		      lda	#>KnightNeutralScan
+    901  f6d1		       85 b7		      sta	EnemyRowPtr+1
+    902  f6d3				   ArtFacing
+    903  f6d3							; TIA mirror is pixel-exact bit reversal; routine selected by
+    904  f6d3							; enemy-vs-player horizontal position, not P0 Facing direction.
+    905  f6d3		       a5 af		      lda	KnightX
+    906  f6d5		       c5 80		      cmp	PlayerX
+    907  f6d7		       90 05		      bcc	ArtVisualRight
+    908  f6d9		       a9 08		      lda	#$08
+    909  f6db		       85 0c		      sta	REFP1
+    910  f6dd		       60		      rts
+    911  f6de				   ArtVisualRight
+    912  f6de		       a9 00		      lda	#0
+    913  f6e0		       85 0c		      sta	REFP1
+    914  f6e2		       60		      rts
+    915  f700					      ORG	$F700	; all four x36 L3 bitmaps fit one ROM page
+    916  f700				   PlayL3P0
+    917  f700		       06 06 06 c4*	      dc.b	$06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
+    918  f70c		       3c 3c 3c 3d*	      dc.b	$3C,$3C,$3C,$3D,$3D,$3D,$FE,$FE,$FE,$7C,$7C,$7C
+    919  f718		       66 66 66 5a*	      dc.b	$66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+    920  f724				   PlayL3P1
+    921  f724		       60 60 60 23*	      dc.b	$60,$60,$60,$23,$23,$23,$26,$26,$26,$3C,$3C,$3C
+    922  f730		       3c 3c 3c be*	      dc.b	$3C,$3C,$3C,$BE,$BE,$BE,$FE,$FE,$FE,$7C,$7C,$7C
+    923  f73c		       66 66 66 5a*	      dc.b	$66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+    924  f748				   PlayL3P2
+    925  f748		       60 60 60 23*	      dc.b	$60,$60,$60,$23,$23,$23,$26,$26,$26,$3C,$3C,$3C
+    926  f754		       3c 3c 3c bc*	      dc.b	$3C,$3C,$3C,$BC,$BC,$BC,$7F,$7F,$7F,$3E,$3E,$3E
+    927  f760		       66 66 66 5a*	      dc.b	$66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+    928  f76c				   PlayL3P3
+    929  f76c		       06 06 06 c4*	      dc.b	$06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
+    930  f778		       3c 3c 3c 7d*	      dc.b	$3C,$3C,$3C,$7D,$7D,$7D,$7F,$7F,$7F,$3E,$3E,$3E
+    931  f784		       66 66 66 5a*	      dc.b	$66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+    932  f790
+    933  f790				   PlayArtLo
+    934  f790		       dc e8 f4 00*	      dc.b	<PlayL1P0,<PlayL1P1,<PlayL1P2,<PlayL1P3,<PlayL2P0,<PlayL2P1,<PlayL2P2,<PlayL2P3,<PlayL3P0,<PlayL3P1,<PlayL3P2,<PlayL3P3
+    935  f79c				   PlayArtHi
+    936  f79c		       f5 f5 f5 f6*	      dc.b	>PlayL1P0,>PlayL1P1,>PlayL1P2,>PlayL1P3,>PlayL2P0,>PlayL2P1,>PlayL2P2,>PlayL2P3,>PlayL3P0,>PlayL3P1,>PlayL3P2,>PlayL3P3
+    937  f7a8
+    938  f7a8
+    939  f7a8							; PLAY1 combined original asymmetric PF obstacle source (mirror enabled)
+    940  f7a8							; Halo is a *first visible centered static contour experiment*,
+    941  f7a8							; NOT full P0-following sprite or full-scene claim.
+    942  f7a8							; L1 source-baked visible profile, with real signed Y shift
+    943  f7a8					      ORG	$F7A8
+    944  f7a8		       00 00 00 00*	      ds	120,0
+    945  f820					      ORG	$F820
+    946  f820				   HaloL1Rows
+    947  f820		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    948  f82c		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    949  f838		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$03
+    950  f844		       03 03 00 00*	      dc.b	$03,$03,$00,$00,$00,$00,$00,$03,$03,$03,$00,$00
+    951  f850		       00 00 00 03*	      dc.b	$00,$00,$00,$03,$03,$03,$02,$02,$02,$02,$02,$02
+    952  f85c		       02 02 02 02*	      dc.b	$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
+    953  f868		       02 02 02 03*	      dc.b	$02,$02,$02,$03,$03,$03,$00,$00,$00,$00,$00,$03
+    954  f874		       03 03 00 00*	      dc.b	$03,$03,$00,$00,$00,$00,$00,$03,$03,$03,$00,$00
+    955  f880		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    956  f88c		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    957  f898		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    958  f8a4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    959  f8b0		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    960  f8bc		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    961  f8c8		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    962  f8d4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    963  f8e0		       00		      dc.b	$00
+    964  f8e1		       00 00 00 00*	      ds	31,0
+    965  f900					      ORG	$F900
+    966  f900				   RangerNativeScan		; exact R1 neutral, 193-byte page, unused original PlayPF0 region
+    967  f900		       00 00 00 00*	      ds	73,0
+    968  f949		       cc 48 50 32*	      dc.b	$CC,$48,$50,$32,$31,$75,$7D,$71,$72,$70,$70,$30,$70,$50,$78,$38
+    969  f959		       00 00 00 00*	      ds	104,0
+    970  fa00					      ORG	$FA00
+    971  fa00				   PlayPF1
+    972  fa00		       00 00 00 00*	      ds	25,0
+    973  fa19		       3e 3e 3e 3e*	      ds	16,$3E
+    974  fa29		       00 00 00 00*	      ds	88,0
+    975  fa81		       e0 e0 e0 e0*	      ds	24,$E0
+    976  fa99		       00 00 00 00*	      ds	40,0
+    977  fac1		       00 00 00 00*	      ds	111,0
+    978  fb30					      ORG	$FB30
+    979  fb30				   HaloL2Rows
+    980  fb30		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    981  fb3c		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    982  fb48		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$1F
+    983  fb54		       1f 1f 00 00*	      dc.b	$1F,$1F,$00,$00,$00,$00,$00,$1F,$1F,$1F,$10,$10
+    984  fb60		       10 10 10 13*	      dc.b	$10,$10,$10,$13,$13,$13,$12,$12,$12,$12,$12,$12
+    985  fb6c		       12 12 12 12*	      dc.b	$12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$12
+    986  fb78		       12 12 12 13*	      dc.b	$12,$12,$12,$13,$13,$13,$10,$10,$10,$10,$10,$1F
+    987  fb84		       1f 1f 00 00*	      dc.b	$1F,$1F,$00,$00,$00,$00,$00,$1F,$1F,$1F,$00,$00
+    988  fb90		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    989  fb9c		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    990  fba8		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    991  fbb4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    992  fbc0		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    993  fbcc		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    994  fbd8		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    995  fbe4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+    996  fbf0		       00		      dc.b	$00
+    997  fbf1		       00 00 00 00*	      ds	15,0
+    998  fc00							; At $FC00+X and $FD00+X all X=1..192 reads stay same page.
+    999  fc00					      ORG	$FC00
+   1000  fc00				   DummyScan
+   1001  fc00				   KnightNeutralScan		; frozen exact K1-T neutral, bottom-first, 16 unique scanrows
+   1002  fc00		       00 00 00 00*	      ds	73,0
+   1003  fc49		       88 d8 a8 a8*	      dc.b	$88,$D8,$A8,$A8,$70,$70,$78,$D8,$F8,$F8,$70,$D8,$D8,$88,$F8,$78
+   1004  fc59		       00 00 00 00*	      ds	104,0	; index192 read by first of 192 visible lines MUST be zero
+   1005  fd00					      ORG	$FD00
+   1006  fd00				   OrbScan
+   1007  fd00		       00 00 00 00*	      ds	63,0
+   1008  fd3f		       02 02 02 02	      dc.b	2,2,2,2
+   1009  fd43		       00 00 00 00*	      ds	126,0	; index192 must be zero
+   1010  fdc1		       00 00 00 00*	      ds	63,0	; guarantee FDC1..FDFF zeros for OFF pointer
+   1011  fe00
+   1012  fe00							; level3 Y-motion template with full two-sided guards in ROM
+   1013  fe00							; Original last BL table extends to FDFF. FE00..FE3F is
+   1014  fe00							; zero guard. L3 table starts FE40; FF01..FFFB is a
+   1015  fe00							; permanent 251-byte zero profile for OFF halo and OFF BL.
+   1016  fe00					      ORG	$FE00
+   1017  fe00		       00 00 00 00*	      ds	64,0
+   1018  fe40					      ORG	$FE40
+   1019  fe40				   HaloL3Rows
+   1020  fe40		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1021  fe4c		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1022  fe58		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF
+   1023  fe64		       ff ff 80 80*	      dc.b	$FF,$FF,$80,$80,$80,$80,$80,$9F,$9F,$9F,$90,$90
+   1024  fe70		       90 90 90 93*	      dc.b	$90,$90,$90,$93,$93,$93,$92,$92,$92,$92,$92,$92
+   1025  fe7c		       92 92 92 92*	      dc.b	$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92
+   1026  fe88		       92 92 92 93*	      dc.b	$92,$92,$92,$93,$93,$93,$90,$90,$90,$90,$90,$9F
+   1027  fe94		       9f 9f 80 80*	      dc.b	$9F,$9F,$80,$80,$80,$80,$80,$FF,$FF,$FF,$00,$00
+   1028  fea0		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1029  feac		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1030  feb8		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1031  fec4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1032  fed0		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1033  fedc		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1034  fee8		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1035  fef4		       00 00 00 00*	      dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+   1036  ff00		       00		      dc.b	$00
+   1037  ff01		       00 00 00 00*	      ds	251,0
+   1038  fffc					      ORG	$FFFC
+   1039  fffc		       00 f0		      dc.w	Reset
+   1040  fffe		       00 f0		      dc.w	Reset
