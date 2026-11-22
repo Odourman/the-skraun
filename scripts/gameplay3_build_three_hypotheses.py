@@ -18,8 +18,8 @@ a=a.replace("        lda KnightX       ; diagnostic P1 knight follows X",
 # GRP1 immediately after GRP0, postponing PF1/PF0 by 7 cycles.
 # This deliberately risks PF beam deadlines; it MUST be measured.
 a=a.replace("        sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)",
-            "        sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)\\n        lda DummyScan,x\\n        sta GRP1          ; early x67 before P1 beam, 7c PF delay risk")
-a=a.replace("        lda (EnemyRowPtr),y\\n        sta GRP1", 
+            "        sta GRP0          ; P0 first, frozen U1-LEG1 (cycle3 after WSYNC)\n        lda DummyScan,x\n        sta GRP1          ; early x67 before P1 beam, 7c PF delay risk")
+a=a.replace("        lda (EnemyRowPtr),y\n        sta GRP1", 
             "        ; H1 P1 already loaded before beam, no late double GRP1 write")
 assert a!=src
 (root/"H1_sameY_three_NUSIZ_copies.asm").write_text(a)
