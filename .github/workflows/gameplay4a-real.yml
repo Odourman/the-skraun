@@ -2,7 +2,7 @@ name: GAMEPLAY-4 checkpoint A actual playable dynamic sword and bow
 on:
   push:
     branches: [experiment/gameplay4-dynamic-combat-arrow-20261122]
-    paths: [.github/workflows/gameplay4a-real.yml, scripts/gameplay4a_stella_runtime.sh, scripts/gameplay4_make_checkpoint_a.py]
+    paths: [.github/workflows/gameplay4a-real.yml, scripts/gameplay4a_stella_runtime.sh, scripts/gameplay4_make_checkpoint_a.py, experiments/gameplay4_bank0.asm, experiments/gameplay4_bank1.asm]
   workflow_dispatch:
 permissions:
   contents: read
