@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import hashlib, json, re
 root=Path('build/gameplay2/scenes')
-names=('start','orb_L2','stage1_score_checkpoint','fight_stage1','stage2_L3','sword_warning','sword_hit','gameover_before','gameover_restart','bonus_2000')
+names=('start','orb_L2','stage1_score_checkpoint','fight_stage1','stage2_L3','sword_warning','sword_hit','damage_level2','life_lost_after_kill','gameover_before','gameover_restart','bonus_2000')
 reports={}
 def box(mask):
     y,x=np.where(mask)
