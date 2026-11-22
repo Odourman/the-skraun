@@ -450,9 +450,9 @@ CandidateValid:
         bcc Invalid
         cmp MaxCY,x
         bcs Invalid
-        lda RectLo,x
+        lda RectRAMLo,x  ; gameplay bank loads 16B collision rectangles for active layout
         sta RectPtr
-        lda RectHi,x
+        lda #0
         sta RectPtr+1
         lda #0
         sta RectIndex
@@ -838,6 +838,10 @@ PlayL2P2:
 PlayL2P3:
         dc.b $06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$7D,$7D
         dc.b $7F,$7F,$3E,$3E,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+; Three runtime collision tables live at RIOT $C0/$D0/$E0.
+; They are written only by offscreen bank0 game code on stage transitions.
+RectRAMLo:
+        dc.b 0,$C0,$D0,$E0
         ORG $F680
 GameBankEnter:
         lda $FFF8         ; F8: switch to bank 0 on read
