@@ -1,0 +1,318 @@
+------- FILE experiments/n7_f2b_minimal_ntsc.asm LEVEL 1 PASS 2
+      1  10000 ????						; THE SKRAUN - N7/F2b authorised, isolated physical diagnostic only.
+      2  10000 ????						; BASE: 4KiB NTSC, 6507 + true TIA. No mapper, full game or N8.
+      3  10000 ????						; P1 main and NUSIZ 3 close copies, one mid-line RESP1 re-trigger.
+      4  10000 ????						; This is a *falsification candidate*: a green DASM build is NOT a P1 PASS.
+      5  10000 ????						; S2 @ Scene=0, permuted S2 @ Scene=1, S3 P0 busy @ Scene=2.
+      6  10000 ????						; Source: MAIN III order / issue #31 (2026-11-21).
+      7  10000 ????				       processor	6502
+      8  10000 ????		00 00	    VSYNC      =	$00
+      9  10000 ????		00 01	    VBLANK     =	$01
+     10  10000 ????		00 02	    WSYNC      =	$02
+     11  10000 ????		00 04	    NUSIZ0     =	$04
+     12  10000 ????		00 05	    NUSIZ1     =	$05
+     13  10000 ????		00 06	    COLUP0     =	$06
+     14  10000 ????		00 07	    COLUP1     =	$07
+     15  10000 ????		00 08	    COLUPF     =	$08
+     16  10000 ????		00 09	    COLUBK     =	$09
+     17  10000 ????		00 0a	    CTRLPF     =	$0A
+     18  10000 ????		00 0b	    REFP0      =	$0B
+     19  10000 ????		00 0c	    REFP1      =	$0C
+     20  10000 ????		00 0d	    PF0        =	$0D
+     21  10000 ????		00 0e	    PF1        =	$0E
+     22  10000 ????		00 0f	    PF2        =	$0F
+     23  10000 ????		00 10	    RESP0      =	$10
+     24  10000 ????		00 11	    RESP1      =	$11
+     25  10000 ????		00 1b	    GRP0       =	$1B
+     26  10000 ????		00 1c	    GRP1       =	$1C
+     27  10000 ????		00 1d	    ENAM0      =	$1D
+     28  10000 ????		00 1f	    ENABL      =	$1F
+     29  10000 ????		00 20	    HMP0       =	$20
+     30  10000 ????		00 21	    HMP1       =	$21
+     31  10000 ????		00 26	    VDELP1     =	$26
+     32  10000 ????		00 2a	    HMOVE      =	$2A
+     33  10000 ????		02 80	    SWCHA      =	$0280
+     34  10000 ????		02 82	    SWCHB      =	$0282
+     35  10000 ????		02 84	    INTIM      =	$0284
+     36  10000 ????		02 96	    TIM64T     =	$0296
+     37  10000 ????
+     38  10000 ????		00 80	    Scene      =	$80	; debugger-settable after reset: 0=S2,1=permuted,2=S3
+     39  10000 ????		00 81	    FrameNumber =	$81
+     40  10000 ????		00 82	    FirstColor =	$82
+     41  10000 ????		00 83	    ThirdColor =	$83
+     42  10000 ????		00 90	    P1RowA     =	$90	; $90..$9F, 16 double-rendered R3 source bytes
+     43  10000 ????		00 a0	    P1RowB     =	$A0	; $A0..$AF
+     44  10000 ????		00 b0	    P1RowC     =	$B0	; $B0..$BF
+     45  10000 ????
+     46  10000 ????				       SEG	Code
+     47  f000					      ORG	$F000
+     48  f000				   Reset
+     49  f000		       78		      sei
+     50  f001		       d8		      cld
+     51  f002		       a2 ff		      ldx	#$FF
+     52  f004		       9a		      txs
+     53  f005		       a9 00		      lda	#0
+     54  f007		       a2 7f		      ldx	#$7F
+     55  f009				   ZeroRAM
+     56  f009		       95 80		      sta	$80,x
+     57  f00b		       ca		      dex
+     58  f00c		       10 fb		      bpl	ZeroRAM
+     59  f00e		       a9 00		      lda	#0
+     60  f010		       85 80		      sta	Scene
+     61  f012		       85 0d		      sta	PF0
+     62  f014		       85 0e		      sta	PF1
+     63  f016		       85 0f		      sta	PF2
+     64  f018		       85 1d		      sta	ENAM0
+     65  f01a		       85 1f		      sta	ENABL
+     66  f01c		       85 09		      sta	COLUBK
+     67  f01e		       85 0a		      sta	CTRLPF
+     68  f020		       85 0b		      sta	REFP0
+     69  f022		       85 0c		      sta	REFP1
+     70  f024		       85 26		      sta	VDELP1
+     71  f026		       85 20		      sta	HMP0
+     72  f028		       85 21		      sta	HMP1
+     73  f02a		       a9 07		      lda	#$07
+     74  f02c		       85 04		      sta	NUSIZ0
+     75  f02e		       a9 03		      lda	#$03
+     76  f030		       85 05		      sta	NUSIZ1
+     77  f032
+     78  f032				   Frame
+     79  f032		       a9 02		      lda	#2
+     80  f034		       85 01		      sta	VBLANK
+     81  f036		       85 00		      sta	VSYNC
+     82  f038		       85 02		      sta	WSYNC
+     83  f03a		       85 02		      sta	WSYNC
+     84  f03c		       85 02		      sta	WSYNC
+     85  f03e		       a9 00		      lda	#0
+     86  f040		       85 00		      sta	VSYNC
+     87  f042		       a9 2b		      lda	#43
+     88  f044		       8d 96 02 	      sta	TIM64T
+     89  f047		       e6 81		      inc	FrameNumber
+     90  f049		       20 02 f1 	      jsr	StageThree
+     91  f04c		       a5 80		      lda	Scene
+     92  f04e		       c9 02		      cmp	#2
+     93  f050		       90 04		      bcc	P0Hidden
+     94  f052		       a9 0c		      lda	#$0C
+     95  f054		       d0 02		      bne	P0Color
+     96  f056				   P0Hidden
+     97  f056		       a9 00		      lda	#0
+     98  f058				   P0Color
+     99  f058		       85 06		      sta	COLUP0
+    100  f05a		       a5 82		      lda	FirstColor
+    101  f05c		       85 07		      sta	COLUP1
+    102  f05e		       a9 00		      lda	#0
+    103  f060		       85 0d		      sta	PF0
+    104  f062		       85 0e		      sta	PF1
+    105  f064		       85 0f		      sta	PF2
+    106  f066		       85 08		      sta	COLUPF
+    107  f068		       85 21		      sta	HMP1
+    108  f06a		       a5 80		      lda	Scene
+    109  f06c		       c9 02		      cmp	#2
+    110  f06e		       90 05		      bcc	NoP0Position
+    111  f070		       a9 58		      lda	#88	; S3 Skraun centre X104, 32-colorclock-wide P0
+    112  f072		       20 42 f1 	      jsr	PositionP0
+    113  f075				   NoP0Position
+    114  f075		       a5 80		      lda	Scene
+    115  f077		       c9 02		      cmp	#2
+    116  f079		       90 04		      bcc	S2P1Start
+    117  f07b		       a9 69		      lda	#105
+    118  f07d		       d0 02		      bne	P1StartReady
+    119  f07f				   S2P1Start
+    120  f07f		       a9 43		      lda	#67
+    121  f081				   P1StartReady
+    122  f081		       20 54 f1 	      jsr	PositionP1
+    123  f084		       85 02		      sta	WSYNC
+    124  f086		       85 2a		      sta	HMOVE
+    125  f088				   WaitVblank
+    126  f088		       ad 84 02 	      lda	INTIM
+    127  f08b		       d0 fb		      bne	WaitVblank
+    128  f08d		       85 02		      sta	WSYNC
+    129  f08f		       a9 00		      lda	#0
+    130  f091		       85 01		      sta	VBLANK
+    131  f093		       a0 10		      ldy	#16
+    132  f095				   HudBlank
+    133  f095		       85 02		      sta	WSYNC
+    134  f097		       88		      dey
+    135  f098		       d0 fb		      bne	HudBlank
+    136  f09a
+    137  f09a							; 176 arena lines exactly: 78 preceding, 16 same-Y, 82 following.
+    138  f09a		       a2 4e		      ldx	#78
+    139  f09c				   Top
+    140  f09c		       85 02		      sta	WSYNC
+    141  f09e		       bd ff f6 	      lda	P0Top-1,x
+    142  f0a1		       85 1b		      sta	GRP0
+    143  f0a3		       a9 00		      lda	#0
+    144  f0a5		       85 1c		      sta	GRP1
+    145  f0a7		       ca		      dex
+    146  f0a8		       d0 f2		      bne	Top
+    147  f0aa
+    148  f0aa							; Critical *same-physical-line* attempt. One close-copy train (NUSIZ1=3)
+    149  f0aa							; plus explicit RESP1 at cycle 53 (see static instruction schedule).
+    150  f0aa							; The new main P1 position at end of previous line may disturb next line.
+    151  f0aa							; No calls / RIOT RAM buffers in critical kernel. All three R3 8-row
+    152  f0aa							; originals are re-used bit-exact with each source row replicated twice.
+    153  f0aa							; First/second actor color same on normal S2/S3; Ranger has unique color.
+    154  f0aa							; Forbidden to count fixed repeated bitmaps as individual actor PASS.
+    155  f0aa		       a2 10		      ldx	#16
+    156  f0ac				   P1Band
+    157  f0ac		       85 02		      sta	WSYNC
+    158  f0ae		       bd 4d f7 	      lda	P0Band-1,x
+    159  f0b1		       85 1b		      sta	GRP0
+    160  f0b3		       b5 8f		      lda	P1RowA-1,x
+    161  f0b5		       85 1c		      sta	GRP1
+    162  f0b7		       b5 9f		      lda	P1RowB-1,x
+    163  f0b9		       b4 af		      ldy	P1RowC-1,x
+    164  f0bb		       ea		      nop
+    165  f0bc		       ea		      nop
+    166  f0bd		       ea		      nop
+    167  f0be		       ea		      nop
+    168  f0bf		       ea		      nop
+    169  f0c0		       ea		      nop
+    170  f0c1		       ea		      nop
+    171  f0c2		       ea		      nop
+    172  f0c3		       ea		      nop
+    173  f0c4		       ea		      nop
+    174  f0c5		       85 1c		      sta	GRP1
+    175  f0c7		       24 81		      bit	FrameNumber
+    176  f0c9		       85 11		      sta	RESP1
+    177  f0cb		       84 1c		      sty	GRP1
+    178  f0cd		       a5 83		      lda	ThirdColor
+    179  f0cf		       85 07		      sta	COLUP1
+    180  f0d1		       a5 82		      lda	FirstColor
+    181  f0d3		       85 07		      sta	COLUP1
+    182  f0d5		       ca		      dex
+    183  f0d6		       d0 d4		      bne	P1Band
+    184  f0d8
+    185  f0d8		       a2 52		      ldx	#82
+    186  f0da				   Bottom
+    187  f0da		       85 02		      sta	WSYNC
+    188  f0dc		       bd 5d f7 	      lda	P0Bottom-1,x
+    189  f0df		       85 1b		      sta	GRP0
+    190  f0e1		       a9 00		      lda	#0
+    191  f0e3		       85 1c		      sta	GRP1
+    192  f0e5		       ca		      dex
+    193  f0e6		       d0 f2		      bne	Bottom
+    194  f0e8
+    195  f0e8		       a9 02		      lda	#2
+    196  f0ea		       85 01		      sta	VBLANK
+    197  f0ec		       a9 00		      lda	#0
+    198  f0ee		       85 1b		      sta	GRP0
+    199  f0f0		       85 1c		      sta	GRP1
+    200  f0f2		       85 0d		      sta	PF0
+    201  f0f4		       85 0e		      sta	PF1
+    202  f0f6		       85 0f		      sta	PF2
+    203  f0f8		       a2 1e		      ldx	#30
+    204  f0fa				   Overscan
+    205  f0fa		       85 02		      sta	WSYNC
+    206  f0fc		       ca		      dex
+    207  f0fd		       d0 fb		      bne	Overscan
+    208  f0ff		       4c 32 f0 	      jmp	Frame
+    209  f102
+    210  f102							; Scene1 reverses R3 source first/last X placement; colors follow identity.
+    211  f102							; Scene0 S2: K1@67, K2@83, Ranger@101.
+    212  f102							; Scene1 permute: Ranger@67, K2@83, K1@101 (no Y shifting).
+    213  f102							; Scene2 S3: K1@105, K2@124, Ranger@147, P0 L3 centre104.
+    214  f102							; NUSIZ train alone is NOT free-X; the explicit RESP1 is intentionally tried.
+    215  f102				   StageThree
+    216  f102		       a5 80		      lda	Scene
+    217  f104		       c9 01		      cmp	#1
+    218  f106		       f0 1d		      beq	StagePermuted
+    219  f108		       a9 9e		      lda	#$9E	; light blue symbolic candidate, NOT final canon
+    220  f10a		       85 82		      sta	FirstColor
+    221  f10c		       a9 c6		      lda	#$C6	; forest camouflage candidate, NOT final canon
+    222  f10e		       85 83		      sta	ThirdColor
+    223  f110		       a2 10		      ldx	#16
+    224  f112				   StageNormalLoop
+    225  f112		       bd ff f7 	      lda	R3K1Doubled-1,x
+    226  f115		       95 8f		      sta	P1RowA-1,x
+    227  f117		       bd 0f f8 	      lda	R3K2Doubled-1,x
+    228  f11a		       95 9f		      sta	P1RowB-1,x
+    229  f11c		       bd 1f f8 	      lda	R3RangerDoubled-1,x
+    230  f11f		       95 af		      sta	P1RowC-1,x
+    231  f121		       ca		      dex
+    232  f122		       d0 ee		      bne	StageNormalLoop
+    233  f124		       60		      rts
+    234  f125				   StagePermuted
+    235  f125		       a9 c6		      lda	#$C6
+    236  f127		       85 82		      sta	FirstColor
+    237  f129		       a9 9e		      lda	#$9E
+    238  f12b		       85 83		      sta	ThirdColor
+    239  f12d		       a2 10		      ldx	#16
+    240  f12f				   StagePermutedLoop
+    241  f12f		       bd 1f f8 	      lda	R3RangerDoubled-1,x
+    242  f132		       95 8f		      sta	P1RowA-1,x
+    243  f134		       bd 0f f8 	      lda	R3K2Doubled-1,x
+    244  f137		       95 9f		      sta	P1RowB-1,x
+    245  f139		       bd ff f7 	      lda	R3K1Doubled-1,x
+    246  f13c		       95 af		      sta	P1RowC-1,x
+    247  f13e		       ca		      dex
+    248  f13f		       d0 ee		      bne	StagePermutedLoop
+    249  f141		       60		      rts
+    250  f142
+    251  f142				   PositionP0
+    252  f142		       85 02		      sta	WSYNC
+    253  f144		       38		      sec
+    254  f145				   Pos0
+    255  f145		       e9 0f		      sbc	#15
+    256  f147		       b0 fc		      bcs	Pos0
+    257  f149		       49 07		      eor	#7
+    258  f14b		       0a		      asl
+    259  f14c		       0a		      asl
+    260  f14d		       0a		      asl
+    261  f14e		       0a		      asl
+    262  f14f		       85 20		      sta	HMP0
+    263  f151		       85 10		      sta	RESP0
+    264  f153		       60		      rts
+    265  f154				   PositionP1
+    266  f154		       85 02		      sta	WSYNC
+    267  f156		       38		      sec
+    268  f157				   Pos1
+    269  f157		       e9 0f		      sbc	#15
+    270  f159		       b0 fc		      bcs	Pos1
+    271  f15b		       49 07		      eor	#7
+    272  f15d		       0a		      asl
+    273  f15e		       0a		      asl
+    274  f15f		       0a		      asl
+    275  f160		       0a		      asl
+    276  f161		       85 21		      sta	HMP1
+    277  f163		       85 11		      sta	RESP1
+    278  f165		       60		      rts
+    279  f166
+    280  f166							; Single chosen B/ON PF source masks retained as experiment REFERENCE DATA.
+    281  f166							; After a deterministic P1 FAIL we must STOP, not silently claim P3 drawn.
+    282  f166							; R3 row source98 -> arena y78/79, X80 and X84 respectively. Left PF0,1,2
+    283  f166							; and right PF0,1,2 for each. This ROM DOES NOT emit these PF writes:
+    284  f166							; P3 combined PF proof is explicitly untested unless P1 F2b first succeeds.
+    285  f500					      ORG	$F500
+    286  f500		       00 00 0c    PF_B80_Left dc.b	$00,$00,$0C
+    287  f503		       40 50 00    PF_B80_Right dc.b	$40,$50,$00
+    288  f506		       00 00 14    PF_B84_Left dc.b	$00,$00,$14
+    289  f509		       40 30 00    PF_B84_Right dc.b	$40,$30,$00
+    290  f50c
+    291  f700					      ORG	$F700
+    292  f700				   P0Top
+    293  f700							; 78 entries, x=78..1, arena Y0..77
+    294  f700		       fe 7c 7c 7c*	      dc.b	$FE,$7C,$7C,$7C,$66,$66,$66,$5A,$5A,$5A,$7E,$7E
+    295  f70c		       7e 24 24 24	      dc.b	$7E,$24,$24,$24
+    296  f710		       00 00 00 00*	      ds	62,0
+    297  f74e				   P0Band
+    298  f74e							; 16 entries, x=16..1, arena Y78..93
+    299  f74e		       c4 c4 64 64*	      dc.b	$C4,$C4,$64,$64,$64,$3C,$3C,$3C,$3C,$3C,$3C,$3D
+    300  f75a		       3d 3d fe fe	      dc.b	$3D,$3D,$FE,$FE
+    301  f75e				   P0Bottom
+    302  f75e							; 82 entries, x=82..1, arena Y94..175
+    303  f75e		       00 00 00 00*	      ds	78,0
+    304  f7ac		       06 06 06 c4	      dc.b	$06,$06,$06,$C4
+    305  f800					      ORG	$F800
+    306  f800				   R3K1Doubled
+    307  f800		       42 42 66 66*	      dc.b	$42,$42,$66,$66,$24,$24,$5A,$5A,$DB,$DB,$7E,$7E
+    308  f80c		       3c 3c 18 18	      dc.b	$3C,$3C,$18,$18
+    309  f810				   R3K2Doubled
+    310  f810		       81 81 66 66*	      dc.b	$81,$81,$66,$66,$3C,$3C,$7E,$7E,$DB,$DB,$5A,$5A
+    311  f81c		       7e 7e 24 24	      dc.b	$7E,$7E,$24,$24
+    312  f820				   R3RangerDoubled
+    313  f820		       42 42 24 24*	      dc.b	$42,$42,$24,$24,$18,$18,$7E,$7E,$5A,$5A,$7E,$7E
+    314  f82c		       3c 3c 18 18	      dc.b	$3C,$3C,$18,$18
+    315  fffc					      ORG	$FFFC
+    316  fffc		       00 f0		      dc.w	Reset
+    317  fffe		       00 f0		      dc.w	Reset

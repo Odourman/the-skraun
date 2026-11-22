@@ -1,0 +1,40 @@
+name: N7 F2b instruction-level Stella trace
+on:
+  push:
+    branches:
+      - experiment/n7-f2b-three-enemy-retrigger-20261121
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  physical-instruction-trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install authentic Atari developer tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot
+          mkdir -p build/n7/trace
+      - name: Rebuild same original NTSC diagnostic ROM
+        run: |
+          set -euo pipefail
+          dasm experiments/n7_f2b_minimal_ntsc.asm -f3 -obuild/n7/n7-f2b-ntsc.bin -lbuild/n7/n7-f2b-ntsc.lst -sbuild/n7/n7-f2b-ntsc.sym
+          sha256sum build/n7/n7-f2b-ntsc.bin > build/n7/ROM_SHA256.txt
+          test "$(stat -c %s build/n7/n7-f2b-ntsc.bin)" -eq 4096
+          sha="$(cut -d\  -f1 build/n7/ROM_SHA256.txt)"
+          test "$sha" != "45b8fa0045383438f5b3bcc9d09b2cfac3f91a9b9822d0d5a7124e71c44ad361"
+      - name: Actual Stella register/deadline trace for first two F2b rows
+        run: |
+          set -euo pipefail
+          chmod +x scripts/n7_f2b_debugger_trace.sh
+          scripts/n7_f2b_debugger_trace.sh
+      - name: Upload authentic screenshot/opcode evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n7-f2b-stella-physical-register-trace
+          path: build/n7
+          if-no-files-found: warn
