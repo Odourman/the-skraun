@@ -88,6 +88,8 @@ BonusCount  = $B6
 SoundFrames = $B7
 RangerX     = $B8
 RangerY     = $B9
+OrbX        = $BA
+OrbDirty    = $BB
 
         SEG Code
         ORG $F000
@@ -197,14 +199,21 @@ HaloPointerReady:
         sec
         sbc HalfH
         sta RenderBottom
+        lda #0
+        sta HMP1          ; stale previous-frame motion must not move P1
+        sta HMBL          ; nor move BL on P0's HMOVE
         lda RenderX
         jsr PositionP0
         sta WSYNC
         sta HMOVE
-        lda KnightX       ; physical P1 X follows diagnostic sword-knight
-        jsr PositionP1    ; do NOT add code to visible 76-cycle kernel
+        lda #0
+        sta HMP0          ; essential: second HMOVE must not move P0 again
+        lda KnightX       ; diagnostic P1 knight follows X
+        jsr PositionP1
         sta WSYNC
         sta HMOVE
+        lda #0
+        sta HMP1          ; clear after P1's own motion
 BlankWait:
         lda INTIM
         bne BlankWait
@@ -268,6 +277,16 @@ NextLine:
         jsr UpdateAttack
         jsr CheckHaloHit
         jsr GameBankEnter ; F8 gameplay tick in overscan ONLY
+        lda OrbDirty
+        beq OrbXPlaced
+        lda OrbX
+        jsr PositionBall
+        sta WSYNC
+        sta HMOVE
+        lda #0
+        sta HMBL
+        sta OrbDirty
+OrbXPlaced:
         lda OrbMask
         beq SelectOrbZero
         lda #0
@@ -651,7 +670,7 @@ OrbCandidate:
         ; source-sized full body +2 pixel touch margin.
         lda PlayerX
         sec
-        sbc #96
+        sbc OrbX
         bcs OrbAbsX
         eor #$FF
         clc
