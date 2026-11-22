@@ -920,6 +920,8 @@ PlayL1P2:
         dc.b $60,$23,$26,$3C,$3C,$BC,$7F,$3E,$66,$5A,$7E,$24
 PlayL1P3:
         dc.b $06,$C4,$64,$3C,$3C,$7D,$7F,$3E,$66,$5A,$7E,$24
+        ORG $F600     ; GAMEPLAY-5 A: page-align L2 24-row bank1 P0 table.
+                      ; A5 causal trial: old $F5FE crosses page for 22/24 rows.
 PlayL2P0:
         dc.b $06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3D,$3D
         dc.b $FE,$FE,$7C,$7C,$66,$66,$5A,$5A,$7E,$7E,$24,$24
