@@ -44,6 +44,10 @@ jobs:
           PY
       - name: Genuine Stella 6.7.1 gameplay screenshots and debugger
         run: bash scripts/gameplay1_stella_scenes.sh
+      - name: Fail-closed bounded source-accurate Stella pixel oracle
+        run: |
+          set -euo pipefail
+          /usr/bin/python3 tests/gameplay1_pixels.py | tee build/gameplay1/PIXELS.log
       - name: Preserve raw developer evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,4 +58,5 @@ jobs:
             experiments/gameplay1_bank0.asm
             experiments/gameplay1_bank1.asm
             scripts/gameplay1_stella_scenes.sh
+            tests/gameplay1_pixels.py
           if-no-files-found: warn
