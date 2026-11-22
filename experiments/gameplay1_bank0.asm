@@ -5,6 +5,7 @@
 COLUP1      = $07
 COLUPF      = $08
 COLUBK      = $09
+CTRLPF      = $0A
 AUDC0       = $15
 AUDF0       = $17
 AUDV0       = $19
@@ -97,6 +98,7 @@ InitializeGame:
         lda #88
         sta PlayerY
         jsr SetWaveTarget
+        jsr InstallStageLayout
         rts
 
 SetWaveTarget:
@@ -219,6 +221,7 @@ SetNewStage:
         lda #6
         sta AUDC0
         jsr SetWaveTarget
+        jsr InstallStageLayout
         rts
 
 KnightAI:
@@ -355,6 +358,33 @@ RangerRight:
 RangerDone:
         rts
 
+; Two *intentionally distinct provisional layouts* at stage boundaries.
+; Unlike rejected PLAY1-H mirror hack, this is not an X-halo trick:
+; we switch geometry together with its exact collision tables.
+InstallStageLayout:
+        lda Stage
+        and #1
+        beq InstallRepeat
+        ldx #47
+CopyMirror:
+        lda MirrorRects,x
+        sta $C0,x
+        dex
+        bpl CopyMirror
+        lda #$11
+        sta CTRLPF       ; mirrored obstacle layout, original PLAY1-H
+        rts
+InstallRepeat:
+        ldx #47
+CopyRepeat:
+        lda RepeatRects,x
+        sta $C0,x
+        dex
+        bpl CopyRepeat
+        lda #$10
+        sta CTRLPF       ; repeated obstacle layout, changed at stage boundary
+        rts
+
 SetWorldColors:
         ; Eight provisional color identities, but ONE common obstacle map.
         ; World PF must become gold under active halo (PLAY1-H test B).
@@ -400,6 +430,18 @@ WorldPFColors:
         dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
 WorldBGColors:
         dc.b $00,$00,$00,$02,$02,$04,$04,$00,$00
+
+; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
+; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
+MirrorRects:
+        dc.b 5,36,15,58,125,156,15,58,17,52,127,162,109,144,127,162
+        dc.b 1,40,9,64,121,160,9,64,13,56,121,168,105,148,121,168
+        dc.b 0,48,3,70,113,160,3,70,5,64,115,174,97,156,115,174
+; Mirror bit off: right-side obstacle copies begin at x92 and x104.
+RepeatRects:
+        dc.b 5,36,15,58,85,116,15,58,17,52,127,162,97,132,127,162
+        dc.b 1,40,9,64,81,120,9,64,13,56,121,168,93,136,121,168
+        dc.b 0,48,3,70,73,128,3,70,5,64,115,174,85,144,115,174
 
         ; Exact corresponding shared-address bank trampolines.
         ORG $F680
