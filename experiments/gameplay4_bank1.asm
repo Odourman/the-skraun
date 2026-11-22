@@ -981,6 +981,11 @@ GameBankReset:
         ORG $F6A8
 SelectEnemyArt:
         jmp SelectEnemyArtImpl
+        ; 12B pointer table in F6AB..F6B6, physically outside F7A8 halo guard
+EnemyArtLo:
+        dc.b <K1NeutralBytes,<K1WarningBytes,<K1StrikeBytes,<R1NeutralBytes,<R1DrawBytes,<R1ReleaseBytes
+EnemyArtHi:
+        dc.b >K1NeutralBytes,>K1WarningBytes,>K1StrikeBytes,>R1NeutralBytes,>R1DrawBytes,>R1ReleaseBytes
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
         dc.b $06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
@@ -1003,10 +1008,6 @@ PlayArtLo:
         dc.b <PlayL1P0,<PlayL1P1,<PlayL1P2,<PlayL1P3,<PlayL2P0,<PlayL2P1,<PlayL2P2,<PlayL2P3,<PlayL3P0,<PlayL3P1,<PlayL3P2,<PlayL3P3
 PlayArtHi:
         dc.b >PlayL1P0,>PlayL1P1,>PlayL1P2,>PlayL1P3,>PlayL2P0,>PlayL2P1,>PlayL2P2,>PlayL2P3,>PlayL3P0,>PlayL3P1,>PlayL3P2,>PlayL3P3
-EnemyArtLo:
-        dc.b <K1NeutralBytes,<K1WarningBytes,<K1StrikeBytes,<R1NeutralBytes,<R1DrawBytes,<R1ReleaseBytes
-EnemyArtHi:
-        dc.b >K1NeutralBytes,>K1WarningBytes,>K1StrikeBytes,>R1NeutralBytes,>R1DrawBytes,>R1ReleaseBytes
 
 
         ; PLAY1 combined original asymmetric PF obstacle source (mirror enabled)
