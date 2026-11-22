@@ -73,6 +73,15 @@ jobs:
             assert (r/name/'DEBUGGER_DESKTOP.png').exists(),name
             print('AUTHENTIC_GAMEPLAY_REPLAY_262',name)
           PY
+      - name: Separate instrumented RIOT stack highwater test through authentic Stella execution
+        run: |
+          set -euo pipefail
+          python3 scripts/gameplay3_stack_sentinel.py
+          dasm build/gameplay3/stack_sentinel_bank1.asm -f3 -obuild/gameplay3/stack_sentinel_bank1.bin -lbuild/gameplay3/stack_sentinel_bank1.lst -sbuild/gameplay3/stack_sentinel_bank1.sym 2>&1 | tee build/gameplay3/STACK_DASM.log
+          cat build/gameplay3/bank0.bin build/gameplay3/stack_sentinel_bank1.bin > build/gameplay3/stack_sentinel_f8.bin
+          test "$(stat -c %s build/gameplay3/stack_sentinel_f8.bin)" -eq 8192
+          bash scripts/gameplay3_stella_stack_probe.sh
+          /usr/bin/python3 tests/gameplay3_stack_audit.py | tee build/gameplay3/STACK_AUDIT.log
       - name: Preserve full developer ROM, source, timings, screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,5 +98,8 @@ jobs:
             scripts/gameplay3_build_three_hypotheses.py
             scripts/gameplay3_stella_three_hypotheses.sh
             tests/gameplay3_three_hypotheses_audit.py
+            scripts/gameplay3_stack_sentinel.py
+            scripts/gameplay3_stella_stack_probe.sh
+            tests/gameplay3_stack_audit.py
             tests/gameplay3_real_art_pixels.py
           if-no-files-found: warn
