@@ -305,6 +305,7 @@ OverScanWait:
         lda INTIM
         bne OverScanWait
         sta WSYNC
+        sta WSYNC          ; GAMEPLAY-2 measured frame 261 -> add one OVERSCAN line, target 262
         jmp Frame
 
 ; 8 directions; two of each three diagonal frame updates, like P01.
