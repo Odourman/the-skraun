@@ -1,0 +1,46 @@
+name: GAMEPLAY-5 one-shot genuine DASM frozen playable F8 ROM
+on:
+  push:
+    branches: [experiment/gameplay5-arcade-combat-push-20261122]
+    paths: [docs/gameplay5/FREEZE_REQUEST.txt]
+permissions:
+  contents: write
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment/gameplay5-arcade-combat-push-20261122
+          persist-credentials: true
+      - name: Install real DASM assembler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm
+      - name: Reproduce exact 8192-byte baseline, final A+C and SHA
+        run: |
+          set -euo pipefail
+          dasm experiments/gameplay4a_bank0.asm -f3 -obaseline4a_0.bin -lbaseline4a_0.lst -sbaseline4a_0.sym 2>&1 | tee baseline4a_DASM0.log
+          dasm experiments/gameplay4a_bank1.asm -f3 -obaseline4a_1.bin -lbaseline4a_1.lst -sbaseline4a_1.sym 2>&1 | tee baseline4a_DASM1.log
+          cat baseline4a_0.bin baseline4a_1.bin > baseline4a_F8.bin
+          echo '8bb19a9d58b6a4f608f1ab10adbb622b9e70d0f44b39e247c68feb3a974427bd  baseline4a_F8.bin' | sha256sum -c -
+          dasm experiments/gameplay5_bank0.asm -f3 -oexperiments/gameplay5_bank0.bin -lexperiments/gameplay5_bank0.lst -sexperiments/gameplay5_bank0.sym 2>&1 | tee experiments/gameplay5_DASM0.log
+          dasm experiments/gameplay5_bank1.asm -f3 -oexperiments/gameplay5_bank1.bin -lexperiments/gameplay5_bank1.lst -sexperiments/gameplay5_bank1.sym 2>&1 | tee experiments/gameplay5_DASM1.log
+          test "$(stat -c %s experiments/gameplay5_bank0.bin)" -eq 4096
+          test "$(stat -c %s experiments/gameplay5_bank1.bin)" -eq 4096
+          cat experiments/gameplay5_bank0.bin experiments/gameplay5_bank1.bin > experiments/gameplay5_f8_ntsc.bin
+          test "$(stat -c %s experiments/gameplay5_f8_ntsc.bin)" -eq 8192
+          sha256sum experiments/gameplay5_bank0.asm experiments/gameplay5_bank1.asm experiments/gameplay5_f8_ntsc.bin > experiments/gameplay5_SHA256SUMS.txt
+          sha256sum -c experiments/gameplay5_SHA256SUMS.txt
+          echo 'b31e508e8947052b88fa50fb173106dcbe8e7d5f416eb3740e5f29088526bdca  experiments/gameplay5_f8_ntsc.bin' | sha256sum -c -
+      - name: Commit only frozen ROM evidence on isolated experiment branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add experiments/gameplay5_bank0.bin experiments/gameplay5_bank1.bin experiments/gameplay5_bank0.lst experiments/gameplay5_bank1.lst experiments/gameplay5_bank0.sym experiments/gameplay5_bank1.sym experiments/gameplay5_DASM0.log experiments/gameplay5_DASM1.log experiments/gameplay5_f8_ntsc.bin experiments/gameplay5_SHA256SUMS.txt
+          git commit -m 'artifact(GAMEPLAY-5): exact true DASM playable 8192B F8 checkpoint + SHA proof'
+          git fetch origin experiment/gameplay5-arcade-combat-push-20261122
+          git rebase origin/experiment/gameplay5-arcade-combat-push-20261122
+          git push origin HEAD:refs/heads/experiment/gameplay5-arcade-combat-push-20261122
