@@ -631,17 +631,7 @@ B_VISUAL_LEFT:
         dc.b %00111100,%01111101,%01111111,%00111110
         dc.b %01100110,%01011010,%01111110,%00100100
 
-MapSmall:
-        dc.b 0,1,2,3,4,5,6,7,8,9,10,11
-MapMedium:
-        dc.b 0,0,1,1,2,2,3,3,4,4,5,5
-        dc.b 6,6,7,7,8,8,9,9,10,10,11,11
-MapLarge:
-        dc.b 0,0,0,1,1,1,2,2,2,3,3,3
-        dc.b 4,4,4,5,5,5,6,6,6,7,7,7
-        dc.b 8,8,8,9,9,9,10,10,10,11,11,11
-
-; Visible synthetic obstacles: top x=[12,28) reflected to [132,148)
+; Old MapSmall/MapMedium/MapLarge row indirection was UNUSED since PLAY1-H,\n; real U1-LEG1 P0 is rendered from frozen PlayL1/L2/L3P0..P3 below.\n\n; Visible synthetic obstacles: top x=[12,28) reflected to [132,148)
 ; at arena y=[24,48); lower x=[24,44) reflected to [116,136)
 ; at arena y=[136,152). 4 solids, not final world map.
 ; This physical scanline map is indexed by X=192..1 in VisibleLoop.
@@ -732,11 +722,7 @@ SpriteHeights:
         dc.b 0,12,24,36
 PlayerSizes:
         dc.b 0,0,5,7
-MapLow:
-        dc.b 0,<MapSmall,<MapMedium,<MapLarge
-MapHigh:
-        dc.b 0,>MapSmall,>MapMedium,>MapLarge
-ArtLo:
+; Obsolete unused MapLow/MapHigh removed, no dynamic RowMapPtr reader.\nArtLo:
         dc.b <A_VISUAL_RIGHT,<B_VISUAL_RIGHT,<A_VISUAL_LEFT,<B_VISUAL_LEFT
 ArtHi:
         dc.b >A_VISUAL_RIGHT,>B_VISUAL_RIGHT,>A_VISUAL_LEFT,>B_VISUAL_LEFT
