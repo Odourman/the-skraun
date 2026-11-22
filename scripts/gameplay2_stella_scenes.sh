@@ -47,7 +47,9 @@ for scene in start orb_L2 stage1_score_checkpoint fight_stage1 stage2_L3 sword_w
         echo 'joy0Right #0';echo 'frame #8';echo 'joy0Right #1'
         echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
         # L3 moves diagonally during the genuine FIRE attack.
+        echo 'frame #65' # let the prior L2 cooldown finish without RAM intervention
         echo 'joy0Fire #0'
+        echo 'frame #2'
         echo 'joy0Right #0';echo 'joy0Up #0';echo 'frame #12'
         echo 'joy0Right #1';echo 'joy0Up #1'
         echo 'frame #2';echo 'joy0Fire #1'
