@@ -35,7 +35,7 @@ jobs:
           test "$(stat -c %s build/gameplay4/gameplay4_f8.bin)" -eq 8192
           sha256sum experiments/gameplay4_bank0.asm experiments/gameplay4_bank1.asm build/gameplay4/gameplay4_f8.bin > build/gameplay4/SHA256SUMS
           cat build/gameplay4/SHA256SUMS
-      - name: Real Stella gameplay: original controller input, physical screenshot, 262 scanline measurement
+      - name: Real Stella gameplay original controller input physical screenshots and 262 scanlines
         run: |
           set -euo pipefail
           bash scripts/gameplay4_stella_runtime.sh
