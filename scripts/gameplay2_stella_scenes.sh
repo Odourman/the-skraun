@@ -30,8 +30,15 @@ for scene in start orb_L2 fight_stage1 stage2_L3 sword_warning sword_hit gameove
       echo 'frame #420'
       if [ "$scene" = stage2_L3 ];then
         echo 'joy0Fire #1'
-        echo 'joy0Left #0';echo 'frame #30';echo 'joy0Left #1'
-        echo 'joy0Down #0';echo 'frame #40';echo 'joy0Down #1'
+        # Stage 2 respawns at x80 y88; new BL orb x88,y112 (not x96).
+        # REAL joystick move only, one orb gives exactly one level.
+        echo 'joy0Right #0';echo 'frame #8';echo 'joy0Right #1'
+        echo 'joy0Down #0';echo 'frame #24';echo 'joy0Down #1'
+        # L3 moves diagonally during the genuine FIRE attack.
+        echo 'joy0Fire #0'
+        echo 'joy0Right #0';echo 'joy0Up #0';echo 'frame #12'
+        echo 'joy0Right #1';echo 'joy0Up #1'
+        echo 'frame #2';echo 'joy0Fire #1'
       fi
       ;;
     sword_warning|sword_hit)
