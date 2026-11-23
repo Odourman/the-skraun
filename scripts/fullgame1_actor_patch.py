@@ -16,12 +16,18 @@ def actors_bank2(s):
         lda Stage
         bne GameInitialized
         jsr InitializeGame
+        ; Stage-0 reset/initialization already performs two bank changes
+        ; and map/actor setup. Avoid running all combat/sound work again
+        ; inside the same overscan frame.
+        jmp GameBankReturn
 GameInitialized:
         lda StagePause
         beq StagePauseDone
         dec StagePause
         bne GamePauseOnly
         jsr NextStage
+        ; Finish this frame: first new-stage audio tick occurs next frame.
+        jmp GameBankReturn
 GamePauseOnly:
         jsr SetWorldColors
         jsr UpdateSound
