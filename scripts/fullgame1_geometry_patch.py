@@ -15,7 +15,6 @@ def cache_bank2(s):
     a=s.index("MirrorRects:\n")
     b=s.index("\n        ORG $F480",a)
     s=s[:a]+"""MirrorRects:
-        ; 4 unexpanded solids x0,x1,y0,y1, collision grow follows Level
         dc.b 9,32,21,52,129,152,21,52,21,48,133,156,113,140,133,156
 RepeatRects:
         dc.b 9,32,21,52,89,112,21,52,21,48,133,156,101,128,133,156
