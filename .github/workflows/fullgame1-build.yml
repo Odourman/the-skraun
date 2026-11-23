@@ -6,6 +6,8 @@ on:
       - scripts/fullgame1_build.py
       - scripts/fullgame1_stella.sh
       - scripts/fullgame1_arrow_patch.py
+      - scripts/fullgame1_sound_bank1.asm
+      - scripts/fullgame1_sound_patch.py
       - scripts/fullgame1_actor_bank0.asm
       - scripts/fullgame1_actor_patch.py
       - scripts/fullgame1_geometry_patch.py
