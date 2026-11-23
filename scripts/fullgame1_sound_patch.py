@@ -37,6 +37,40 @@ def sound_bank2(s):
         sta SoundFrames
 HaloSoundAlreadyPlayed:
         jsr SetWorldColors""","halo start in roomy game bank")
+    # All arrow impacts and exits get a low dry tick; never trigger an
+    # invisible projectile since active arrow is always enabled in M1.
+    s=exactly(s,"""ArrowDestroy:
+        lda #0
+        sta ArrowDX""","""ArrowDestroy:
+        lda #$90          ; projectile hits world/halo/player/edge
+        cmp SoundFrames
+        bcc ArrowSoundHigherPriority
+        sta SoundFrames
+ArrowSoundHigherPriority:
+        lda #0
+        sta ArrowDX""","projectile destruction cue")
+    # Legacy damage entry was an unprioritized continuous channel0 tone.
+    s=exactly(s,"""        lda #16
+        sta SoundFrames
+        lda #2
+        sta AUDC0
+        lda #8
+        sta AUDF0""","""        lda #$C0
+        cmp SoundFrames
+        bcc DamageAlreadyQueued
+        sta SoundFrames
+DamageAlreadyQueued:""","arrow-player damage cue")
+    s=exactly(s,"""LoseLife:
+        dec Lives
+        lda #80
+        sta PlayerX""","""LoseLife:
+        dec Lives
+        bne ExtraLifeStillHere
+        lda #$E0
+        sta SoundFrames
+ExtraLifeStillHere:
+        lda #80
+        sta PlayerX""","player last life cue")
     a=s.index("UpdateSound:\n")
     b=s.index("GameOver:\n",a)
     s=s[:a]+"""UpdateSound:
