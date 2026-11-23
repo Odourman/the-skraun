@@ -499,10 +499,14 @@ RangerFlee:
         and #7
         bne RangerDone
         lda RX
+        sta ScratchMin
+        lda RY
+        sta ScratchMax
+        lda RX
         cmp PlayerX
         bcs RangerStepRight
         cmp #23
-        bcc RangerDone
+        bcc RangerStepY
         dec RX
         jmp RangerStepY
 RangerStepRight:
@@ -514,13 +518,34 @@ RangerStepY:
         cmp PlayerY
         bcs RangerStepUp
         cmp #145
-        bcs RangerDone
+        bcs RangerMovementCheck
         inc RY
-        rts
+        jmp RangerMovementCheck
 RangerStepUp:
         cmp #35
-        bcc RangerDone
+        bcc RangerMovementCheck
         dec RY
+RangerMovementCheck:
+        ; Ranger center occupies the same bounded 8x16 sprite as
+        ; knights. Reuse the real four-rectangle solid tester at +14.
+        ldx #14
+        jsr KnightBlocked
+        beq RangerMovementDone
+        lda RY
+        sta ScratchY
+        lda ScratchMax
+        sta RY
+        jsr KnightBlocked
+        beq RangerMovementDone
+        lda ScratchMin
+        sta RX
+        lda ScratchY
+        sta RY
+        jsr KnightBlocked
+        beq RangerMovementDone
+        lda ScratchMax
+        sta RY
+RangerMovementDone:
         rts
 
 SpawnArrow:
