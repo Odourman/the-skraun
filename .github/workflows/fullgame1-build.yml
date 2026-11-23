@@ -8,6 +8,8 @@ on:
       - scripts/fullgame1_arrow_patch.py
       - scripts/fullgame1_sound_bank1.asm
       - scripts/fullgame1_sound_patch.py
+      - scripts/fullgame1_audio_capture.sh
+      - scripts/fullgame1_audio_to_wav.py
       - scripts/fullgame1_actor_bank0.asm
       - scripts/fullgame1_actor_patch.py
       - scripts/fullgame1_geometry_patch.py
@@ -44,6 +46,8 @@ jobs:
           ldd "$(command -v stella)" > build/fullgame1/tools/stella_ldd.txt || true
       - name: Emulator bootstrap test; never claim full game from it
         run: bash scripts/fullgame1_stella.sh
+      - name: Capture actual audible two-channel Stella PCM and WAV
+        run: bash scripts/fullgame1_audio_capture.sh
       - name: Real ranged combat / arrow / L3 frames in Stella
         run: |
           bash scripts/fullgame1_stella_regression.sh
