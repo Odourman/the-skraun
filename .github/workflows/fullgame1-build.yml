@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo sed -i 's|http://us-east-2.ec2.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources || true
           timeout 180 sudo apt-get update -qq -o Acquire::Retries=2 -o Acquire::http::Timeout=18
-          timeout 180 sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
+          timeout 600 sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
       - name: Assemble F6 and compare two original banks byte-for-byte
         run: |
           python3 scripts/fullgame1_build.py
