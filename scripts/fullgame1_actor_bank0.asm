@@ -63,6 +63,8 @@ ScratchIX = $E8
 ScratchMin=$E9
 ScratchMax=$EA
 ScratchY  = $EB
+WorldPFPtr= $EC
+WorldShift= $EE
 AuxMode   = $EF
         SEG GameAux
         ORG $F000
@@ -114,6 +116,7 @@ ClearActorRAM:
         sta Reserves
         lda #0
         sta NextSlot
+        jsr InstallWorldMap
         jsr ChooseP1
         rts
 
@@ -646,6 +649,43 @@ RangerColors:
         dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
 RangerCooldowns:
         dc.b 0,180,180,150,150,120,120,90,90
+
+; Eight physically different map layouts: 4 vertical shifts x mirror/repeat
+; of the established collision/visual source. No claim of final world art.
+; World PF pointer is set once per stage and *read without extra hotspots*
+; in the F6 bank3 visible raster kernel. Source FA00, guard F9C1..F9FF=0.
+InstallWorldMap:
+        ldy Stage
+        lda WorldPFLo,y
+        sta WorldPFPtr
+        lda WorldPFHi,y
+        sta WorldPFPtr+1
+        lda MapOffsets,y
+        sta WorldShift
+        ldx #2
+WorldShiftRectLoop:
+        lda $C0,x
+        sec
+        sbc WorldShift
+        sta $C0,x
+        inx
+        lda $C0,x
+        sec
+        sbc WorldShift
+        sta $C0,x
+        inx
+        inx
+        inx
+        cpx #18
+        bcc WorldShiftRectLoop
+        rts
+WorldPFLo:
+        dc.b $00,$00,$00,$FA,$FA,$F4,$F4,$EE,$EE
+WorldPFHi:
+        dc.b $FA,$FA,$FA,$F9,$F9,$F9,$F9,$F9,$F9
+MapOffsets:
+        dc.b 0,0,0,6,6,12,12,18,18
+
         ORG $FFFC
         dc.w ColdBoot
         dc.w ColdBoot
