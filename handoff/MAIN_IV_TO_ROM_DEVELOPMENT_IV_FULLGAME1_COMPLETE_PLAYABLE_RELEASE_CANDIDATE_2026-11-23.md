@@ -137,3 +137,22 @@ Publicera på din NYA branch och EN DRAFT PR, utan att röra main:
 Slutstatus: FULLGAME1_DELIVERED / ROMDEV_IV_STOPPED / MAIN_IV_FINAL_REVIEW_REQUIRED.
 
 **FULLGAME-1 ska börja när ROM DEVELOPMENT IV får denna order i den separata chatten.** En GitHub-issue eller handoff startar inte en chatt automatiskt.
+
+---
+
+## TILLÄGG 2026-11-23 – NYTT BESLUT: HÖJ ROM-TAKET TILL 16 KiB
+
+**Ny direkt användarinstruktion:** överväg och använd ROM-utrymme **upp till 16 KiB** för att förbättra hela The Skraun. MAIN IV fastslår att **16 KiB är tillåtet och föredraget som huvudmål** inom den redan auktoriserade FULLGAME-1, Issue #50. Det är inte en ny mikrosprint eller omstart av GAMEPLAY-5. Den tidigare 8 KiB F8-ROM:en är endast fryst start/checkpoint.
+
+**ROM DEVELOPMENT IV ska agera enligt följande:**
+
+1. Utvärdera och vid fördel använda **vanlig original-Atari-kompatibel F6: fyra banker × 4096 byte = 16384 byte**. F6 väljs via hotspots $1FF6–$1FF9; säkerställ korrekta resetvektorer/startkod/banktrampoliner och kör bankväxling utanför kritisk rasterrad. Skapa ny isolerad FULLGAME-1 implementationsgren direkt från fryst GAMEPLAY-5 HEAD 6d76ad267a465d7f3e2e0a707d0c1dd425d80cd2, inte från main.
+2. Om faktisk RAM-budget motiverar det är **F6SC** också tillåten **inom samma 16 KiB-tak**: dokumentera extra 128 byte cartridge-Superchip-RAM, dess separat adresserade läs-/skrivfönster och ROM-område samt kompatibilitet. Förväxla inte extra cartridge-RAM med de 128 RIOT RAM-byten (inklusive stack) på baskonsolen.
+3. Använd extra ROM-byte för färdiga åtta banor, grafiktabeller, kompakt AI, Ranger-pil, mer genomarbetad rasterarkitektur, X/Y-halomasker, HUD, ljudeffekter, nivåer och speltestbar helhet. Välj fritt bankfördelning efter riktig CPU-/TIA-/RAM-budget; en möjlig idé är separata renderer-, AI-, värld-/grafik- och HUD/ljud/systembanker, men lås inte arkitekturen i förväg.
+4. **16 KiB löser inte 76 cykler/rasterrad, beamdeadlines eller antalet TIA-grafikobjekt.** Mät fortfarande verklig Stella-timing, kompletta rasterrader, RAM/stack och faktisk samtidighet med två riddare och Ranger. Inga fejkpilar eller sekventiella proxy-fiender får betecknas som full implementering.
+5. Testa den valda ROM-typen på faktisk Stella (F6 eller F6SC explicit identifierad) och om möjligt RetroN 77/Stella 7 samt originalkompatibel cartridge. RetroN 77-kompatibilitet på communitynivå är inte ett PASS för denna specifika spel-ROM.
+6. **16 KiB är ny högsta ROM-gräns.** Större ROM eller annan specialmapper kräver nytt användarbeslut. En fullständigt fungerande 8 KiB-version är inte förbjuden, men 16 KiB får användas utan extra tillstånd. Dokumentera banklayout, mapper, SHA, originalkompatibilitet och eventuella alternativ.
+7. **Viktig authority clarification:** GAMEPLAY-5 (Issue #48) är redan avslutat. Men senare FULLGAME-1 (Issue #50, 2026-11-23) är en **uttrycklig ny fullspelsorder** och upphäver standby-villkoret för just det nya uppdraget. ROM DEVELOPMENT IV ska inte svara med GAMEPLAY-5:s gamla STOP när den mottar FULLGAME-1. Läs hela Issue #50, denna fullständiga uppdaterade handoff och projektkällorna, och **genomför FULLGAME-1 hela vägen**.
+8. MAIN-merge, offentlig release och independent Verification kräver fortfarande separat slutligt MAIN-beslut. Slutleverera en körbar komplett releasekandidat med verkligt DASM/Stella-testad funktionalitet och ärligt avvikelseregister. STOP först vid FULLGAME-1:s slutleverans.
+
+**Källor:** Stella officiell mapperlista https://stella-emu.github.io/docs/ ; bankswitch-praktik https://forums.atariage.com/topic/83915-bank-switching-best-practices/ ; RetroN77-community https://forums.atariage.com/topic/280100-retron77-compatibility-list/page/10/ .
