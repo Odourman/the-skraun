@@ -9,7 +9,7 @@ def once(s,a,b,name):
     return s.replace(a,b,1)
 
 def actors_bank2(s):
-    s=once(s, "INPT4       = $3C", "AuxMode     = $EF\nINPT4       = $3C", "command mailbox")
+    s=once(s, "INPT4       = $3C", "ScratchY    = $EB\nINPT4       = $3C", "actor command mailbox")
     a=s.index("GameBankTick:\n")
     b=s.index("InitializeGame:\n",a)
     s=s[:a]+"""GameBankTick:
@@ -36,7 +36,7 @@ GameRunning:
         dec Invulnerable
 InvulnDone:
         lda #0
-        sta AuxMode
+        sta ScratchY
         jsr ActorBankEnter ; true F6 bank0 independent actor AI
         jsr UpdateArrow
         jsr SetWorldColors
@@ -48,7 +48,7 @@ InvulnDone:
     a="        jsr PlaceStageOrb\n        rts"
     b="""        jsr PlaceStageOrb
         lda #1
-        sta AuxMode
+        sta ScratchY
         jsr ActorBankEnter
         rts"""
     if s.count(a)!=2:raise ValueError(f"stage-init call sites={s.count(a)}")
@@ -62,6 +62,12 @@ ActorBankEnter:
 ActorBankReturn:
         rts
 
+        ORG $F6E0
+SoundBankEnter:
+        lda $FFF7
+        ORG $F6ED
+SoundBankReturn:
+        rts
         ORG $F700
 ; GAMEPLAY-5 C:""", "F6 hot/cold bank trampolines")
     return s
