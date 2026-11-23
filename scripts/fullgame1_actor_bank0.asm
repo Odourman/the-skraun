@@ -795,6 +795,10 @@ WorldShiftRectLoop:
         inx
         cpx #18
         bcc WorldShiftRectLoop
+        ; This scratch world offset becomes sound voice0 state after
+        ; installation; never let a nonzero map index masquerade as SFX.
+        lda #0
+        sta WorldShift
         rts
 WorldPFLo:
         dc.b $00,$00,$00,$FA,$FA,$F4,$F4,$EE,$EE
