@@ -6,6 +6,7 @@ on:
       - scripts/fullgame1_build.py
       - scripts/fullgame1_stella.sh
       - scripts/fullgame1_arrow_patch.py
+      - scripts/fullgame1_world_patch.py
       - scripts/fullgame1_stella_regression.sh
       - scripts/fullgame1_report_scenes.py
       - .github/workflows/fullgame1-build.yml
