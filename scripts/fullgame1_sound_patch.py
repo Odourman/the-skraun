@@ -54,8 +54,14 @@ def sound_bank3(s):
     s=exactly(s,"""        inc Level
         lda #0
         sta OrbMask""","""        inc Level
-        lda #$50          ; one short chime, emitted only on actual pickup
+        lda #$50          ; chime only after actual successful growth
         sta SoundFrames
         lda #0
         sta OrbMask""","orb pickup cue")
+    # Obsolete A=0 immediately before RTS had no consumer; its removal
+    # gives the two missing bytes before the immutable F600 ROM bank3 page.
+    s=exactly(s,"""        sta OrbMask
+        lda #0
+        ; consumed orb""","""        sta OrbMask
+        ; consumed orb""","free two bytes of dead code")
     return s
