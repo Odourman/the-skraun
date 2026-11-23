@@ -756,10 +756,18 @@ AwardDone:
 
 ; Highest-priority event mailbox, preserve X/Y for actor logic.
 QueueSound:
+        ; Halo/orb/arrow on channel0, warning/sword/damage on channel1.
+        cmp #$A0
+        bcs QueuePriorityVoice1
         cmp SoundFrames
         bcc SoundReqLower
         sta SoundFrames
 SoundReqLower:
+        rts
+QueuePriorityVoice1:
+        cmp $85
+        bcc SoundReqLower
+        sta $85
         rts
 
 RangerColors:
