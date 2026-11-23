@@ -20,6 +20,23 @@ def sound_bank2(s):
         lda #6
         sta AUDC0""", """        lda #$60          ; stage transition melody
         sta SoundFrames""","stage change cue")
+    s=exactly(s,"""        jsr UpdateArrow
+        jsr SetWorldColors""","""        jsr UpdateArrow
+        ; New halo starts at frame=30 in bank3 overscan; one cue per
+        ; activation, 3 levels with separate TIA distortion/pitch.
+        lda HaloFrames
+        cmp #30
+        bne HaloSoundAlreadyPlayed
+        lda Level
+        asl
+        asl
+        asl
+        asl
+        cmp SoundFrames
+        bcc HaloSoundAlreadyPlayed
+        sta SoundFrames
+HaloSoundAlreadyPlayed:
+        jsr SetWorldColors""","halo start in roomy game bank")
     a=s.index("UpdateSound:\n")
     b=s.index("GameOver:\n",a)
     s=s[:a]+"""UpdateSound:
@@ -37,25 +54,8 @@ def sound_bank3(s):
     s=exactly(s,"""        inc Level
         lda #0
         sta OrbMask""","""        inc Level
-        lda #$50          ; ascending orb chime
-        cmp SoundFrames
-        bcc OrbChimeAlreadyQueued
+        lda #$50          ; one short chime, emitted only on actual pickup
         sta SoundFrames
-OrbChimeAlreadyQueued:
         lda #0
         sta OrbMask""","orb pickup cue")
-    s=exactly(s,"""        lda #30
-        sta HaloFrames
-AttackColor:""","""        lda #30
-        sta HaloFrames
-        lda Level
-        asl
-        asl
-        asl
-        asl               ; $10/$20/$30: 3 halo power sounds
-        cmp SoundFrames
-        bcc HaloCueAlreadyQueued
-        sta SoundFrames
-HaloCueAlreadyQueued:
-AttackColor:""","halo activation cue")
     return s
