@@ -6,7 +6,7 @@ mkdir -p build/fullgame1/regression/scenes "$HOME/.config/stella"
 i=0
 for scene in start knight_warning knight_strike ranger_draw ranger_release arrow_first arrow_mid arrow_later stage2_L3;do
  i=$((i+1));export DISPLAY=":$((200+i))"
- out="$PWD/build/gameplay5/regression/scenes/$scene";mkdir -p "$out"
+ out="$PWD/build/fullgame1/regression/scenes/$scene";mkdir -p "$out"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "$out/XVFB.log" 2>&1 &
  xv=$!;sleep 1
  {
