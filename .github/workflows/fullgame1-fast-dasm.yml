@@ -1,0 +1,39 @@
+name: FULLGAME-1 fast real DASM-only gate
+on:
+  push:
+    branches: [experiment/fullgame1-complete-skraun-20261123]
+    paths:
+      - scripts/fullgame1_build.py
+      - scripts/fullgame1_actor_bank0.asm
+      - scripts/fullgame1_actor_patch.py
+      - scripts/fullgame1_geometry_patch.py
+      - scripts/fullgame1_arrow_patch.py
+      - .github/workflows/fullgame1-fast-dasm.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fast-dasm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fast install real DASM with existing Ubuntu apt lists
+        run: |
+          timeout 90 sudo apt-get install -y --no-install-recommends dasm
+      - name: Assemble actual four-bank 16KiB candidate
+        run: |
+          python3 scripts/fullgame1_build.py
+          cd build/fullgame1
+          sha256sum -c SHA256SUMS.txt
+      - name: Save source, listing, symbol and actual assembler
+        if: always()
+        run: |
+          mkdir -p build/fullgame1/tools
+          command -v dasm >/dev/null && cp "$(command -v dasm)" build/fullgame1/tools/dasm || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: FULLGAME1-FAST-REAL-DASM
+          path: build/fullgame1
+          if-no-files-found: warn
