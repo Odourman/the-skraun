@@ -13,8 +13,22 @@ for scene in ["start","knight_warning","knight_strike","knight_rest","ranger_pha
     print("REAL_STELLA_FRAME",scene,"scanEnd",summary[scene]["scan_end"],"session_bytes",len(text))
 out=Path("build/fullgame1/REAL_STELLA_SCENES.json")
 out.write_text(json.dumps(summary,indent=2)+"\n")
-if len(summary["stress_120"]["raw_scan_values"]) < 120:
-    raise SystemExit("CONSECUTIVE_FRAMES_UNOBSERVED: missing sequential scanline logs")
+# Stella saveSes stores the current debugger state, not the full transcript.
+# Read one genuine session after each of 120 consecutive frame #1 commands.
+frames=sorted((root/"stress_120").glob("FRAME_*.txt"))
+if len(frames)!=120:
+    raise SystemExit(f"CONSECUTIVE_FRAMES_UNOBSERVED: {len(frames)}/120 separate Stella captures")
+sequential=[]
+for frame_file in frames:
+    session=frame_file.read_text(errors="replace")
+    observed=re.findall(r'> print _scanEnd\\s*\\n[^\\n]*?#(\\d+)',session)
+    if not observed:
+        raise SystemExit(f"CONSECUTIVE_FRAME_SCAN_MISSING: {frame_file}")
+    sequential.append(int(observed[-1]))
+summary["stress_120"]["consecutive_scan_end"]=sequential
+if not all(n == 262 for n in sequential):
+    raise SystemExit("CONSECUTIVE_NTSC_FAIL: physical frame not 262 scanlines")
+print("REAL_STELLA_CONTIGUOUS_120_SCAN_END",len(sequential),set(sequential))
 if not all(row["raw_scan_values"] and all(v == 262 for v in row["raw_scan_values"]) for row in summary.values()):
     raise SystemExit("NOT_262_OR_UNOBSERVED: real F6 arrow candidate must not be called a PASS")
 print("BOUNDED_NTSC_PASS 17 scenarios plus >=120 contiguous frame captures (not entire game, not worst-case beam deadlines)")
