@@ -82,6 +82,14 @@ for scene in start knight_warning knight_strike ranger_draw ranger_release arrow
  xdotool type --clearmodifiers --delay 4 'print _scanEnd' || true
  xdotool key Return || true
  sleep 0.2;scrot -z "$out/SCANLINES_DEBUGGER.png"
+ for mem in 80 81 82 9d 9e a3 a4 a5 aa b0 b1 b2 b4 b5 b8 b9;do
+  xdotool type --clearmodifiers --delay 3 "print *\$mem" || true
+  xdotool key Return || true
+ done
+ xdotool type --clearmodifiers --delay 3 'print _bank' || true
+ xdotool key Return || true
+ xdotool type --clearmodifiers --delay 3 'print _scanEnd' || true
+ xdotool key Return || true
  xdotool type --clearmodifiers --delay 4 "saveSes $out/SESSION_TYPED.txt" || true
  xdotool key Return || true
  sleep 0.3
