@@ -180,9 +180,15 @@ FaceRight:
         sta K1Facing,x
         rts
 KnightChase:
+        ; Keep actual K1/K2 collision rectangles consistent with the world.
+        ; All three trials run offscreen in F6 bank0, not in the 76c kernel.
         lda FrameCount
         and #3
         bne KnightReturn
+        lda K1X,x
+        sta ScratchMin
+        lda K1Y,x
+        sta ScratchMax
         lda K1X,x
         cmp PlayerX
         beq KnightStepY
@@ -198,16 +204,74 @@ KnightMoveRight:
 KnightStepY:
         lda K1Y,x
         cmp PlayerY
-        beq KnightReturn
+        beq KnightMovementCheck
         bcc KnightMoveDown
         cmp #34
-        bcc KnightReturn
+        bcc KnightMovementCheck
         dec K1Y,x
-        rts
+        jmp KnightMovementCheck
 KnightMoveDown:
         cmp #155
-        bcs KnightReturn
+        bcs KnightMovementCheck
         inc K1Y,x
+KnightMovementCheck:
+        ; Prefer full diagonal step; else X-only; else Y-only.
+        ; These are actual logical actor positions used by combat and shots.
+        jsr KnightBlocked
+        beq KnightMovementDone
+        lda K1Y,x
+        sta ScratchY
+        lda ScratchMax
+        sta K1Y,x
+        jsr KnightBlocked
+        beq KnightMovementDone
+        lda ScratchMin
+        sta K1X,x
+        lda ScratchY
+        sta K1Y,x
+        jsr KnightBlocked
+        beq KnightMovementDone
+        lda ScratchMax
+        sta K1Y,x
+KnightMovementDone:
+        rts
+
+KnightBlocked:
+        ; Test a conservatively bounded 8x16 real P1 sprite against the
+        ; current four *unexpanded* world rectangles C0..CF. X is actor
+        ; record offset (0 for K1, 7 for K2); Y scans obstacle records.
+        ldy #0
+KnightBlockRect:
+        lda K1X,x
+        clc
+        adc #4
+        cmp $C0,y
+        bcc KnightBlockNext
+        lda K1X,x
+        sec
+        sbc #4
+        cmp $C1,y
+        bcs KnightBlockNext
+        lda K1Y,x
+        clc
+        adc #8
+        cmp $C2,y
+        bcc KnightBlockNext
+        lda K1Y,x
+        sec
+        sbc #8
+        cmp $C3,y
+        bcs KnightBlockNext
+        lda #1
+        rts
+KnightBlockNext:
+        tya
+        clc
+        adc #4
+        tay
+        cpy #16
+        bcc KnightBlockRect
+        lda #0
         rts
 
 KnightInRange:
