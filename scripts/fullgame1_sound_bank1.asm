@@ -13,6 +13,7 @@ AUDF1     = $18
 AUDV0     = $19
 AUDV1     = $1A
 SoundReq  = $BF
+SoundReq1 = $85  ; former SELECT cheat byte, independent audio queue
 Voice0    = $EE
 Voice1    = $EF
         SEG AudioCode
@@ -22,30 +23,34 @@ AudioCold:
         jmp $F000
         ORG $F100
 AudioEngine:
+        ; Channel0 and channel1 can accept different simultaneous events
+        ; in a single physical frame. Neither starves the other queue.
         lda SoundReq
-        beq NoNewEvent
-        cmp #$A0
-        bcs QueueVoice1
-QueueVoice0:
+        beq NoNewEvent0
+        tax
         lda Voice0
         and #$F0
         cmp SoundReq
-        bcs ClearRequest
-        lda SoundReq
+        bcs NoNewEvent0
+        txa
         ora #$0C
         sta Voice0
-        jmp ClearRequest
-QueueVoice1:
-        lda Voice1
-        and #$F0
-        cmp SoundReq
-        bcs ClearRequest
-        lda SoundReq
-        ora #$0C
-        sta Voice1
-ClearRequest:
+NoNewEvent0:
         lda #0
         sta SoundReq
+        lda SoundReq1
+        beq NoNewEvent1
+        tax
+        lda Voice1
+        and #$F0
+        cmp SoundReq1
+        bcs NoNewEvent1
+        txa
+        ora #$0C
+        sta Voice1
+NoNewEvent1:
+        lda #0
+        sta SoundReq1
 NoNewEvent:
         lda Voice0
         and #$0F
