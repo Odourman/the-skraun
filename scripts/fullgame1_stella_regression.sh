@@ -60,9 +60,10 @@ for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger
       # 120 consecutive physical frames, no injected RAM/register edits.
       echo 'joy0Right #0'
       echo 'joy0Fire #0'
-      for k in $(seq 1 120);do
+      for k in $(seq -w 1 120);do
         echo 'frame #1'
         echo 'print _scanEnd'
+        echo "saveSes $out/FRAME_${k}.txt"
       done
       echo 'joy0Right #1'
       echo 'joy0Fire #1'
