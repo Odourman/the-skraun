@@ -593,15 +593,24 @@ SpawnDone:
 ReserveTick:
         lda Reserves
         beq ReserveDone
+        ; Reserve appears ~120 NTSC frames *after* a knight slot
+        ; becomes vacant. A full wave never respawns already killed
+        ; knights: Reserves is the exact remaining unseen quota.
+        lda K1Alive
+        beq ReserveSlotOpen
+        lda K2Alive
+        bne ReserveOccupied
+ReserveSlotOpen:
         lda ResWait
-        beq ReserveEligible
-        dec ResWait
+        bne ReserveCountdown
+        lda #120
+        sta ResWait
         rts
-ReserveEligible:
+ReserveCountdown:
+        dec ResWait
+        bne ReserveDone
         lda K1Alive
         beq Respawn1
-        lda K2Alive
-        bne ReserveDone
         lda #1
         sta K2Alive
         lda #145
@@ -626,7 +635,12 @@ Respawn1:
         sta K1Rest
 ReserveCreated:
         dec Reserves
-        lda #120
+        lda #0
+        sta ResWait
+        rts
+ReserveOccupied:
+        ; Clear a countdown if the free slot was somehow filled.
+        lda #0
         sta ResWait
 ReserveDone:
         rts
