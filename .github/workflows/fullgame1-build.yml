@@ -1,0 +1,37 @@
+name: FULLGAME-1 F6 real DASM + Stella baseline
+on:
+  push:
+    branches: [experiment/fullgame1-complete-skraun-20261123]
+    paths:
+      - scripts/fullgame1_build.py
+      - scripts/fullgame1_stella.sh
+      - .github/workflows/fullgame1-build.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real assembler and emulator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y dasm stella xvfb xdotool scrot
+      - name: Assemble F6 and compare two original banks byte-for-byte
+        run: |
+          python3 scripts/fullgame1_build.py
+          cd build/fullgame1
+          sha256sum -c SHA256SUMS.txt
+          test "$(stat -c %s THE_SKRAUN_FULLGAME1_F6_NTSC.bin)" = "16384"
+      - name: Emulator bootstrap test; never claim full game from it
+        run: bash scripts/fullgame1_stella.sh
+      - name: Publish actual source/build/emulator artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FULLGAME1-F6-BOOTSTRAP-REAL-DASM-STELLA
+          path: |
+            build/fullgame1/
+          if-no-files-found: warn
