@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/fullgame1/regression/scenes "$HOME/.config/stella"
 i=0
-for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger_phase12 ranger_phase22 ranger_phase29 ranger_phase35 ranger_draw ranger_release arrow_first arrow_mid arrow_later stage2_L3 gameover_restart;do
+for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger_phase12 ranger_phase22 ranger_phase29 ranger_phase35 ranger_draw ranger_release arrow_first arrow_mid arrow_later stage2_L3 gameover_restart stress_120;do
  i=$((i+1));export DISPLAY=":$((200+i))"
  out="$PWD/build/fullgame1/regression/scenes/$scene";mkdir -p "$out"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "$out/XVFB.log" 2>&1 &
@@ -56,6 +56,17 @@ for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger
           echo 'joy0Fire #1';;
       esac
       ;;
+    stress_120)
+      # 120 consecutive physical frames, no injected RAM/register edits.
+      echo 'joy0Right #0'
+      echo 'joy0Fire #0'
+      for k in $(seq 1 120);do
+        echo 'frame #1'
+        echo 'print _scanEnd'
+      done
+      echo 'joy0Right #1'
+      echo 'joy0Fire #1'
+      ;;
     gameover_restart)
       echo 'joy0Right #0';echo 'frame #30';echo 'joy0Right #1'
       echo 'frame #500';echo 'joy0Fire #0';echo 'frame #3';echo 'joy0Fire #1';;
@@ -82,7 +93,7 @@ for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger
  xdotool type --clearmodifiers --delay 4 'print _scanEnd' || true
  xdotool key Return || true
  sleep 0.2;scrot -z "$out/SCANLINES_DEBUGGER.png"
- for mem in 80 81 82 9d 9e a3 a4 a5 aa b0 b1 b2 b4 b5 b8 b9;do
+ for mem in 80 81 82 9d 9e a3 a4 a5 aa b0 b1 b2 b4 b5 b8 b9 d0 d1 d5 d7 d8 dc de df e3 e4 e5;do
   xdotool type --clearmodifiers --delay 3 "print *\$""$mem" || true
   xdotool key Return || true
  done
