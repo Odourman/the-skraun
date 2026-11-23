@@ -5,6 +5,9 @@ on:
     paths:
       - scripts/fullgame1_build.py
       - scripts/fullgame1_stella.sh
+      - scripts/fullgame1_arrow_patch.py
+      - scripts/fullgame1_stella_regression.sh
+      - scripts/fullgame1_report_scenes.py
       - .github/workflows/fullgame1-build.yml
   workflow_dispatch:
 permissions:
@@ -27,6 +30,10 @@ jobs:
           test "$(stat -c %s THE_SKRAUN_FULLGAME1_F6_NTSC.bin)" = "16384"
       - name: Emulator bootstrap test; never claim full game from it
         run: bash scripts/fullgame1_stella.sh
+      - name: Real ranged combat / arrow / L3 frames in Stella
+        run: |
+          bash scripts/fullgame1_stella_regression.sh
+          python3 scripts/fullgame1_report_scenes.py
       - name: Publish actual source/build/emulator artifacts
         if: always()
         uses: actions/upload-artifact@v4
