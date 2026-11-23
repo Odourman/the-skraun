@@ -20,7 +20,7 @@ if len(frames)!=120:
 sequential=[]
 for frame_file in frames:
     session=frame_file.read_text(errors="replace")
-    observed=re.findall(r'> print _scanEnd\\s*\\n[^\\n]*?#(\\d+)',session)
+    observed=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)',session)
     # saveSes in Stella 6.7.1 does not necessarily preserve autoexec's
     # debugger print history. Never infer scanline counts from an empty record.
     sequential.append(int(observed[-1]) if observed else None)
@@ -30,7 +30,7 @@ if any(n!=262 for n in measured):
     raise SystemExit("CONSECUTIVE_NTSC_FAIL: observed physical frame not 262")
 print("REAL_STELLA_CONTIGUOUS_CAPTURED",len(frames),
       "per_frame_scan_observed",len(measured),"unobserved",len(frames)-len(measured))
-out.write_text(json.dumps(summary,indent=2)+"\\n")
+out.write_text(json.dumps(summary,indent=2)+"\n")
 if not all(row["raw_scan_values"] and all(v == 262 for v in row["raw_scan_values"]) for row in summary.values()):
     raise SystemExit("NOT_262_OR_UNOBSERVED: real F6 arrow candidate must not be called a PASS")
 print("BOUNDED_NTSC_PASS 17 final scenes; 120 contiguous state captures with unmeasured per-frame scanEnd (not full game)")
