@@ -144,6 +144,13 @@ KnightTimer:
         bne KnightReturn
         lda #7
         sta K1Strike,x
+        ; Audible sword hit-window cue. Strike outranks prior warning.
+        lda #6
+        sta SoundFrames
+        lda #$0C
+        sta AUDC0
+        lda #14
+        sta AUDF0
 KnightReturn:
         rts
 KnightTryStrike:
@@ -169,6 +176,16 @@ KnightReady:
         beq KnightChase
         lda #24
         sta K1Warn,x
+        ; Short telegraph cue: never interrupt an existing sound event.
+        lda SoundFrames
+        bne KnightWarnSoundDone
+        lda #6
+        sta SoundFrames
+        lda #$04
+        sta AUDC0
+        lda #23
+        sta AUDF0
+KnightWarnSoundDone:
         lda K1X,x
         cmp PlayerX
         bcc FaceRight
