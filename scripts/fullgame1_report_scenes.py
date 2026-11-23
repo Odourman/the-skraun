@@ -4,7 +4,7 @@ from pathlib import Path
 import re, json
 root=Path("build/fullgame1/regression/scenes")
 summary={}
-for scene in ["start","knight_warning","knight_strike","knight_rest","ranger_phase4","ranger_phase12","ranger_phase22","ranger_phase29","ranger_phase35","ranger_draw","ranger_release","arrow_first","arrow_mid","arrow_later","stage2_L3","gameover_restart"] :
+for scene in ["start","knight_warning","knight_strike","knight_rest","ranger_phase4","ranger_phase12","ranger_phase22","ranger_phase29","ranger_phase35","ranger_draw","ranger_release","arrow_first","arrow_mid","arrow_later","stage2_L3","gameover_restart","stress_120"] :
     p=root/scene/"SESSION_TYPED.txt"
     text=p.read_text(errors="replace") if p.exists() else ""
     match=re.findall(r'> print _scanEnd\s*\n[^\n]*?#(\d+)', text)
@@ -13,6 +13,8 @@ for scene in ["start","knight_warning","knight_strike","knight_rest","ranger_pha
     print("REAL_STELLA_FRAME",scene,"scanEnd",summary[scene]["scan_end"],"session_bytes",len(text))
 out=Path("build/fullgame1/REAL_STELLA_SCENES.json")
 out.write_text(json.dumps(summary,indent=2)+"\n")
-if not all(row["scan_end"] == 262 for row in summary.values()):
+if len(summary["stress_120"]["raw_scan_values"]) < 120:
+    raise SystemExit("CONSECUTIVE_FRAMES_UNOBSERVED: missing sequential scanline logs")
+if not all(row["raw_scan_values"] and all(v == 262 for v in row["raw_scan_values"]) for row in summary.values()):
     raise SystemExit("NOT_262_OR_UNOBSERVED: real F6 arrow candidate must not be called a PASS")
-print("BOUNDED_NTSC_PASS 16 sampled scenarios (not entire game, not worst-case beam deadlines)")
+print("BOUNDED_NTSC_PASS 17 scenarios plus >=120 contiguous frame captures (not entire game, not worst-case beam deadlines)")
