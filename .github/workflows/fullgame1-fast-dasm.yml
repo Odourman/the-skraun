@@ -8,6 +8,7 @@ on:
       - scripts/fullgame1_actor_patch.py
       - scripts/fullgame1_geometry_patch.py
       - scripts/fullgame1_arrow_patch.py
+      - scripts/fullgame1_world_patch.py
       - .github/workflows/fullgame1-fast-dasm.yml
   workflow_dispatch:
 permissions:
