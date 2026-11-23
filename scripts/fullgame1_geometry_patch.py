@@ -40,7 +40,7 @@ def assert_safe_level3_orbs(s):
     """
     import re
     def read_row(label):
-        m=re.search(r"^"+label+r":\\s*\\n\\s*dc\\.b\\s+([0-9,]+)",s,re.M)
+        m=re.search(r"^"+label+r":\s*\n\s*dc\.b\s+([0-9,]+)",s,re.M)
         if not m: raise ValueError("missing geometry row "+label)
         return [int(v) for v in m.group(1).split(",")]
     orbs=read_row("StageOrbX")
