@@ -26,8 +26,11 @@ F6B{n}Cold:
 """
 (OUT/"bank0.asm").write_text(extra_bank(0))
 (OUT/"bank1.asm").write_text(extra_bank(1))
+from fullgame1_arrow_patch import patch_bank2, patch_bank3
 for i, name in ((2,"gameplay5_bank0.asm"),(3,"gameplay5_bank1.asm")):
-    (OUT/f"bank{i}.asm").write_bytes((SRC/name).read_bytes())
+    original_source=(SRC/name).read_text()
+    updated_source=(patch_bank2(original_source) if i==2 else patch_bank3(original_source))
+    (OUT/f"bank{i}.asm").write_text(updated_source)
 parts=[]
 for i in range(4):
     source=OUT/f"bank{i}.asm"
@@ -41,7 +44,8 @@ for i in range(4):
     if len(part)!=4096:
         raise ValueError(f"bank{i} size={len(part)}, expected 4096")
     parts.append(part)
-assert parts[2]+parts[3] == original, "F6 banking altered frozen GAMEPLAY-5 bytes"
+# Original 8KiB remains frozen; derived banks2/3 intentionally differ for new M1 attempt.
+assert parts[2] != original[:4096] and parts[3] != original[4096:], "Arrow experiment did not compile"
 rom=b"".join(parts)
 assert len(rom)==16384
 (OUT/"THE_SKRAUN_FULLGAME1_F6_NTSC.bin").write_bytes(rom)
@@ -51,6 +55,6 @@ for i in range(4):
         p=OUT/f"bank{i}.{ext}"
         rows.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}")
 (OUT/"SHA256SUMS.txt").write_text("\n".join(rows)+"\n")
-print("FULLGAME1_F6_BOOTSTRAP_SOURCE_ONLY")
+print("FULLGAME1_F6_M1_EXPERIMENT_NOT_A_PASS")
 print("F8 frozen:",EXPECTED)
 print("F6 16384:",hashlib.sha256(rom).hexdigest())
