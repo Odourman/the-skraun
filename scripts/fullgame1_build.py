@@ -24,14 +24,16 @@ F6B{n}Cold:
         dc.w F6B{n}Cold
         dc.w F6B{n}Cold
 """
-(OUT/"bank0.asm").write_text(extra_bank(0))
+(OUT/"bank0.asm").write_text((ROOT/"scripts"/"fullgame1_actor_bank0.asm").read_text())
 (OUT/"bank1.asm").write_text(extra_bank(1))
 from fullgame1_arrow_patch import patch_bank2, patch_bank3
 from fullgame1_geometry_patch import cache_bank2, cache_bank3
+from fullgame1_actor_patch import actors_bank2, actors_bank3
 for i, name in ((2,"gameplay5_bank0.asm"),(3,"gameplay5_bank1.asm")):
     original_source=(SRC/name).read_text()
     updated_source=(patch_bank2(original_source) if i==2 else patch_bank3(original_source))
     updated_source=(cache_bank2(updated_source) if i==2 else cache_bank3(updated_source))
+    updated_source=(actors_bank2(updated_source) if i==2 else actors_bank3(updated_source))
     (OUT/f"bank{i}.asm").write_text(updated_source)
 parts=[]
 for i in range(4):
