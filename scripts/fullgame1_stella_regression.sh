@@ -4,7 +4,7 @@ set -euo pipefail
 export SDL_AUDIODRIVER=dummy SDL_VIDEODRIVER=x11 SDL_RENDER_DRIVER=software
 mkdir -p build/fullgame1/regression/scenes "$HOME/.config/stella"
 i=0
-for scene in start knight_warning knight_strike ranger_draw ranger_release arrow_first arrow_mid arrow_later stage2_L3;do
+for scene in start knight_warning knight_strike knight_rest ranger_phase4 ranger_phase12 ranger_phase22 ranger_phase29 ranger_phase35 ranger_draw ranger_release arrow_first arrow_mid arrow_later stage2_L3 gameover_restart;do
  i=$((i+1));export DISPLAY=":$((200+i))"
  out="$PWD/build/fullgame1/regression/scenes/$scene";mkdir -p "$out"
  Xvfb "$DISPLAY" -screen 0 1400x1000x24 > "$out/XVFB.log" 2>&1 &
