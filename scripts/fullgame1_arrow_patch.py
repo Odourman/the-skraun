@@ -13,10 +13,9 @@ def patch_bank2(s):
        "        lda #8\n        sta SwordStrike\n        ; CHECKPOINT A: no projectile, so no invisible damage ever\n        rts",
        "        lda #8\n        sta SwordStrike\n        jsr LaunchArrow      ; physical M1 shot on bow release\n        lda #9\n        sta SoundFrames\n        lda #12\n        sta AUDC0\n        lda #20\n        sta AUDF0\n        rts",
        "R1 release")
-    s=once(s,
-       "UpdateArrow:\n        lda ArrowCool",
-       "UpdateArrow:\n        ; Temporary safety: no invisible arrow can hit during halo;\n        ; all arrows disappear when any halo is active (DESIGN DEVIATION).\n        lda HaloFrames\n        beq ArrowNoHaloCull\n        lda #0\n        sta ArrowDX\n        sta ArrowDY\nArrowNoHaloCull:\n        lda ArrowCool",
-       "halo arrow safety")
+    # Base UpdateArrow already checks actual projectile/halo X/Y overlap.
+    # Do not globally delete arrow for an unrelated active halo.
+
     return s
 
 ARROW_KERNEL = """
@@ -26,8 +25,8 @@ VisibleGate:
         ldx #192
         lda ArrowDX
         beq GateNormal
-        lda HaloFrames
-        bne GateNormal
+        ; Preserve visual projectile while halo active, even when off-radius.
+        ; PF2 halo outline is suppressed during M1 frames (visual PARTIAL).
         lda #0
         jmp VisibleArrow
 GateNormal:
