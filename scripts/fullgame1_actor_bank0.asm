@@ -73,7 +73,7 @@ ColdBoot:
         jmp $F000
         ORG $F100
 ActorEntry:
-        lda AuxMode
+        lda ScratchY
         beq ActorsRunning
         jsr ActorInitialize
         jmp AuxiliaryReturn
@@ -145,12 +145,8 @@ KnightTimer:
         lda #7
         sta K1Strike,x
         ; Audible sword hit-window cue. Strike outranks prior warning.
-        lda #6
-        sta SoundFrames
-        lda #$0C
-        sta AUDC0
-        lda #14
-        sta AUDF0
+        lda #$A0
+        jsr QueueSound
 KnightReturn:
         rts
 KnightTryStrike:
@@ -177,15 +173,8 @@ KnightReady:
         lda #24
         sta K1Warn,x
         ; Short telegraph cue: never interrupt an existing sound event.
-        lda SoundFrames
-        bne KnightWarnSoundDone
-        lda #6
-        sta SoundFrames
-        lda #$04
-        sta AUDC0
-        lda #23
-        sta AUDF0
-KnightWarnSoundDone:
+        lda #$B0
+        jsr QueueSound
         lda K1X,x
         cmp PlayerX
         bcc FaceRight
@@ -406,12 +395,8 @@ DamagePlayer:
         bne DamageDone
         lda #60
         sta Invuln
-        lda #15
-        sta SoundFrames
-        lda #2
-        sta AUDC0
-        lda #8
-        sta AUDF0
+        lda #$C0
+        jsr QueueSound
         lda Level
         cmp #1
         beq DamageLife
@@ -422,6 +407,10 @@ DamageLife:
         lda Lives
         beq DamageDone
         dec Lives
+        bne LifeRemains
+        lda #$E0
+        jsr QueueSound
+LifeRemains:
         lda #80
         sta PlayerX
         lda #88
@@ -493,6 +482,8 @@ RangerReady:
         bne RangerFlee
         lda #24
         sta RDraw
+        lda #$70
+        jsr QueueSound
         rts
 RangerFlee:
         lda FrameCount
@@ -581,12 +572,8 @@ ArrowCooldownSet:
         ldx Stage
         lda RangerCooldowns,x
         sta RCool
-        lda #9
-        sta SoundFrames
-        lda #12
-        sta AUDC0
-        lda #20
-        sta AUDF0
+        lda #$80
+        jsr QueueSound
 SpawnDone:
         rts
 
@@ -711,9 +698,13 @@ ChooseRanger:
 
 AwardKnight:
         ldx #100
+        lda #$40
+        jsr QueueSound
         jmp AwardAny
 AwardRanger:
         ldx #250
+        lda #$50
+        jsr QueueSound
 AwardAny:
         stx ScratchIX
         txa
@@ -749,20 +740,26 @@ ExtraLife:
         cmp #9
         bcs NoExtraLife
         inc Lives
+        lda #$D0
+        jsr QueueSound
 NoExtraLife:
         inc StageKills
-        lda #13
-        sta SoundFrames
-        lda #4
-        sta AUDC0
-        lda #16
-        sta AUDF0
         lda StageKills
         cmp KillsNeed
         bcc AwardDone
         lda #120
         sta StagePause
+        lda #$60
+        jsr QueueSound
 AwardDone:
+        rts
+
+; Highest-priority event mailbox, preserve X/Y for actor logic.
+QueueSound:
+        cmp SoundFrames
+        bcc SoundReqLower
+        sta SoundFrames
+SoundReqLower:
         rts
 
 RangerColors:
