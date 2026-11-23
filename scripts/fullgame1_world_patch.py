@@ -7,22 +7,15 @@ def world_bank3(s):
     n=s.count("ArrowRowPtr = $89")
     if n!=1: raise ValueError("ArrowRowPtr source symbol missing")
     s=s.replace("ArrowRowPtr = $89", "ArrowRowPtr = $89\nWorldPFPtr = $EC", 1)
-    old="""        sta WSYNC
-        sta GRP0
-        lda PlayPF1,x
-        sta PF1
-        and #$80
-        sta PF0
-        txa
-        tay
-"""
-    new="""        sta WSYNC
+    replacement="""        sta WSYNC
         sta GRP0
         txa
         tay
         lda (WorldPFPtr),y
         sta PF1
 """
-    n=s.count(old)
-    if n!=2: raise ValueError(f"normal+arrow raster loop anchors={n}")
-    return s.replace(old,new)
+    for label, successor in (("Visible:\n","        lda (HaloRowPtr),y"),("VisibleArrow:\n","        lda (ArrowRowPtr),y")):
+        a=s.index(label)
+        b=s.index(successor,a)
+        s=s[:a]+label+replacement+s[b:]
+    return s
