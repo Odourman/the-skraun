@@ -500,6 +500,11 @@ CopyRepeat:
         rts
 
 SetWorldColors:
+        ; TIA BL width tracks level: L1=2px, L2=4px, L3=8px.
+        ; Match M0 gold side arc thickness without any hot-scanline cost.
+        ldx Level
+        lda HaloBLWidths,x
+        sta CTRLPF
         ; Animated gold player silhouette follows real P0 X/Y.
         lda HaloFrames
         beq P0AuraInactive
@@ -550,6 +555,8 @@ WorldPFColors:
         dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
 WorldBGColors:
         dc.b $00,$00,$00,$02,$02,$04,$04,$00,$00
+HaloBLWidths:
+        dc.b $10,$10,$20,$30 ; TIA 2/4/8px ball, same original PF mirror
 
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
