@@ -1,0 +1,110 @@
+--- a/experiments/fullgame1_arrow_halo_20261125/bank3.asm
++++ b/experiments/fullgame1_arrow_halo_20261125/bank3.asm
+@@ -630,15 +630,7 @@
+ 
+ PositionP0:
+         sta WSYNC
+-        sec
+-P0Loop:
+-        sbc #15
+-        bcs P0Loop
+-        eor #7
+-        asl
+-        asl
+-        asl
+-        asl
++        jsr PositionFine
+         sta HMP0
+         sta RESP0
+         rts
+@@ -722,15 +714,7 @@
+         rts
+ PositionMissile1:
+         sta WSYNC
+-        sec
+-MissilePosLoop:
+-        sbc #15
+-        bcs MissilePosLoop
+-        eor #7
+-        asl
+-        asl
+-        asl
+-        asl
++        jsr PositionFine
+         sta HMM1
+         sta RESM1
+         rts
+@@ -970,30 +954,14 @@
+ 
+ PositionP1:
+         sta WSYNC
+-        sec
+-P1PosLoop:
+-        sbc #15
+-        bcs P1PosLoop
+-        eor #7
+-        asl
+-        asl
+-        asl
+-        asl
++        jsr PositionFine
+         sta HMP1
+         sta RESP1
+         rts
+ 
+ PositionBall:
+         sta WSYNC
+-        sec
+-BallPosLoop:
+-        sbc #15
+-        bcs BallPosLoop
+-        eor #7
+-        asl
+-        asl
+-        asl
+-        asl
++        jsr PositionFine
+         sta HMBL
+         sta RESBL
+         rts
+@@ -1042,6 +1010,23 @@
+ ; They are written only by offscreen bank0 game code on stage transitions.
+ RectRAMLo:
+         dc.b 0,$C0,$D0,$E0
++        ORG $F664
++PositionFine:
++        sec
++PositionFineLoop:
++        sbc #30
++        bcs PositionFineLoop
++        cmp #$F1
++        bcs PositionFineReady
++        clc
++        adc #15
++PositionFineReady:
++        eor #7
++        asl
++        asl
++        asl
++        asl
++        rts
+         ORG $F680
+ GameBankEnter:
+         lda $FFF8         ; F8: switch to bank 0 on read
+@@ -1272,15 +1257,7 @@
+         ORG $F9A0
+ PositionMissile0:
+         sta WSYNC
+-        sec
+-M0PositionLoop:
+-        sbc #15
+-        bcs M0PositionLoop
+-        eor #7
+-        asl
+-        asl
+-        asl
+-        asl
++        jsr PositionFine
+         sta HMM0
+         sta RESM0
+         rts

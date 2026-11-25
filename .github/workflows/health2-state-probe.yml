@@ -1,26 +1,24 @@
-name: HEALTH-2 raw Stella state probe
+name: HEALTH-2 frozen-candidate diagnostics
 on:
   push:
     branches:
       - experiment/health2-deep-debug-optimization-20261125
     paths:
-      - experiments/fullgame1_arrow_halo_20261125/**
-      - .github/workflows/health2-state-probe.yml
       - .github/workflows/health2-state-probe.yml
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  state-probe:
+  health2:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Install native DASM, Stella debugger and X automation
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
-      - name: Assemble frozen F6 candidate and verify exact ROM identity
+      - name: Rebuild and verify frozen F6 candidate identity
         run: |
           python3 experiments/fullgame1_arrow_halo_20261125/build.py
           cd build/arrow_halo_romdev4
@@ -28,18 +26,43 @@ jobs:
           test "$(sha256sum THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin | cut -d' ' -f1)" = "bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
           mkdir -p ../fullgame1
           cp THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin ../fullgame1/THE_SKRAUN_FULLGAME1_F6_NTSC.bin
-      - name: Probe the 17 legacy scenes with actual RIOT RAM dumps
+      - name: Capture real RIOT RAM from 16 joystick scenes
         run: |
           bash scripts/health2_stella_state_probe.sh
           python3 scripts/health2_state_probe.py
-      - name: Preserve raw source, ROM, debugger traces and RAM probe
+      - name: Summarize state assertions
+        if: always()
+        run: python3 scripts/health2_state_report.py build/fullgame1
+      - name: Assert expected game states (known gaps leave this run red)
+        if: always()
+        run: python3 scripts/health2_assert_states.py build/fullgame1
+      - name: Measure 120 consecutive physical NTSC frame endpoints
+        if: always()
+        run: bash scripts/fullgame1_stella_120_measured.sh
+      - name: Inventory emitted code, RAM aliases and TIA writes
+        if: always()
+        run: python3 scripts/health2_static_inventory.py build/arrow_halo_romdev4
+      - name: Compare experimental positioner against frozen baseline in Stella
+        if: always()
+        run: bash scripts/health2_position_compare.sh
+      - name: Produce source-path CPU-cycle model
+        if: always()
+        run: python3 scripts/health2_position_cycles.py
+      - name: Preserve all raw evidence and reproducibility inputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: HEALTH2-RAW-STATE-PROBE
+          name: HEALTH2-COMPLETE-DIAGNOSTICS
           path: |
             build/arrow_halo_romdev4/
-            build/fullgame1/HEALTH2_RAW_STATE_PROBE.json
-            build/fullgame1/regression/scenes/
+            build/fullgame1/
+            build/HEALTH2_BASELINE_BUILD/
+            build/HEALTH2_POSITION_BASELINE/
+            build/HEALTH2_POSITION_CANDIDATE/
+            build/health2_position_cycle_model/
             scripts/health2_*
+            scripts/fullgame1_stella_120_measured.sh
+            scripts/fullgame1_romdev_v_positions.sh
+            experiments/health2_position_doublestep.patch
+            .github/workflows/health2-state-probe.yml
           if-no-files-found: warn
