@@ -6,10 +6,12 @@ on:
       - experiment/fullgame1-halo-combat-readability-20261125
       - experiment/fullgame1-m1-orb-hud-radar-20261125
       - experiment/fullgame1-health1-mainv-integration-20261125
+      - experiment/fullgame1-romdev-v-halo-rim-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh
       - scripts/health1_mainv_checks.py
+      - scripts/fullgame1_romdev_v_positions.sh
       - .github/workflows/fullgame1-arrow-halo-romdev4.yml
   workflow_dispatch:
 permissions:
@@ -46,6 +48,8 @@ jobs:
           python3 scripts/fullgame1_report_scenes.py
       - name: Measure 120 actual consecutive Level3 frames individually (not mere saved states)
         run: bash scripts/fullgame1_stella_120_measured.sh
+      - name: Directed TIA positions at physical VisibleGate (synthetic)
+        run: bash scripts/fullgame1_romdev_v_positions.sh
       - name: Archive ROM, 4 readable sources, DASM/NTSC debugger proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,4 +60,5 @@ jobs:
             build/arrow_halo_romdev4/
             build/fullgame1/
             scripts/health1_mainv_checks.py
+            scripts/fullgame1_romdev_v_positions.sh
           if-no-files-found: warn

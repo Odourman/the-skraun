@@ -9,7 +9,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUT = ROOT / "build" / "arrow_halo_romdev4"
 OUT.mkdir(parents=True, exist_ok=True)
-EXPECTED = "83f35c6d1c24be9391a845d377b4d24ee9d2b20647ca5f993d3cb54e646acbfa"
+EXPECTED = "bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
+FROZEN_PR58 = "83f35c6d1c24be9391a845d377b4d24ee9d2b20647ca5f993d3cb54e646acbfa"
 FROZEN_PR56 = "2587a1a1a6905c5447cbe4cd44ea92b495346450ab2727f298af36a5fee28572"
 BASELINE = "d2a0a1b57ac9c78b2af14f77800f7c1ecf99aaa43f60e8c4216974f18aed2a0e"
 parts = []
@@ -32,7 +33,7 @@ sha=hashlib.sha256(rom).hexdigest()
 if sha != EXPECTED:raise RuntimeError("OUTPUT ROM NOT FROZEN CHECKPOINT: "+sha)
 (OUT/"THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin").write_bytes(rom)
 (OUT/"SHA256SUMS.txt").write_text(sha+"  THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin\n")
-(OUT/"BANK_USAGE.json").write_text(json.dumps({"mapper":"F6 (NO SC RAM)","rom_sha256":sha,"frozen_adaptive_sha256":BASELINE,"frozen_pr56_sha256":FROZEN_PR56,"banks":usage},indent=2)+"\n")
+(OUT/"BANK_USAGE.json").write_text(json.dumps({"mapper":"F6 (NO SC RAM)","rom_sha256":sha,"frozen_adaptive_sha256":BASELINE,"frozen_pr56_sha256":FROZEN_PR56,"frozen_pr58_sha256":FROZEN_PR58,"banks":usage},indent=2)+"\n")
 compat = ROOT / "build" / "fullgame1"
 compat.mkdir(parents=True, exist_ok=True)
 shutil.copy2(OUT/"THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin",compat/"THE_SKRAUN_FULLGAME1_F6_NTSC.bin")

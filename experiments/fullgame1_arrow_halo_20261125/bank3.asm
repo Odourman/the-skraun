@@ -1363,15 +1363,19 @@ HaloTracerPrepare:
         lda FrameCount
         and #1
         beq TracerUseOrb
-        ; Real BL on left side, real M0 on right, while arrow owns M1.
-        ; Blinking BL orb stays visible on alternating frames; no owner theft.
-        lda PlayerX
-        sec
-        sbc HaloRadius
-        clc
-        adc #8            ; side rim inside octagonal logical distance
-        bcc TracerUseOrb
-        cmp #6
+        ; BL covers the left side normally, alternates sides when M1
+        ; is flying (the M0 kernel slot is then unavailable).
+        lda ArrowDX
+        beq TracerLeft
+        lda FrameCount
+        and #2
+        bne TracerRight
+TracerLeft:
+        jsr HaloLeftX
+        jmp TracerXReady
+TracerRight:
+        jsr HaloRightX
+TracerXReady:
         bcc TracerUseOrb
         sta $96           ; P0 was positioned in offscreen setup; HUD $E9..$EB stays intact
         lda HaloRowPtr
@@ -1426,29 +1430,19 @@ NewHaloSetup:
         sta ENAM0
         lda HaloFrames
         beq HaloSetupCaps
+        lda ArrowDX
+        bne HaloSetupCaps  ; do not spend blank time on an unused M0 slot
         lda INTIM
         cmp #11
-        bcc HaloSetupCaps   ; never steal more than remaining VBLANK
+        bcc HaloSetupCaps
         lda FrameCount
         and #1
         beq HaloSideLeft
-        lda PlayerX
-        clc
-        adc HaloRadius
-        sec
-        sbc #8
-        ; legal PlayerX+HaloRadius never overflows 8-bit here
-        cmp #153
-        bcs HaloSetupCaps
-        jmp HaloSideXPosition
+        jsr HaloRightX
+        jmp HaloSideCheck
 HaloSideLeft:
-        lda PlayerX
-        sec
-        sbc HaloRadius
-        clc
-        adc #8
-        bcc HaloSetupCaps
-        cmp #6
+        jsr HaloLeftX
+HaloSideCheck:
         bcc HaloSetupCaps
 HaloSideXPosition:
         jsr PositionMissile0
@@ -1464,32 +1458,40 @@ NewHaloQuickReturn:
         lda #0
         sta ENAM0
         rts
-; Conditional P0 top/bottom runic caps; original U1-LEG1 sprite masks
-; remain completely untouched, cap art only where P0 would be blank.
-HaloCapPixel:
-        lda HaloFrames
-        beq HaloCapBlank
-        txa
+ ; Short cardinal rim segments: use the same octagonal radius as hits.
+ ; Carry set only for an entirely on-screen segment. Right-side start
+ ; accounts for the physical 2/4/8-clock width. At dy=0..5 the segment
+ ; marks the reach boundary to within its own width, not an 8px inset.
+HaloLeftX:
+        lda PlayerX
         sec
-        sbc $E9
-        cmp #2
-        bcc HaloCapGold
-        txa
+        sbc HaloRadius
+        bcc HaloXInvalid
+        clc
+        adc #2
+        cmp #6
+        rts
+HaloRightX:
+        ldx Level
+        lda PlayerX
+        clc
+        adc HaloRadius
+        cmp #159
+        bcs HaloXInvalid
         sec
-        sbc $EA
-        cmp #2
-        bcc HaloCapGold
-HaloCapBlank:
-        lda #0
+        sbc HaloRightInset,x
+        sec
         rts
-HaloCapGold:
-        lda #$3C
+HaloXInvalid:
+        clc
         rts
+HaloRightInset:
+        dc.b 0,3,5,9
         ORG $FF01
-        ds 119,0   ; FF01..FF77: OFF M1/BL/M0 zero guard
+        ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
 HaloSideRim:
-        ds 17,2    ; FF78..FF88: 34 physical line side arc
-        ds 115,0   ; FF89..FFFB: never ghost after genuine halo radius
+        ds 7,2     ; FF7D..FF83: 14-line cardinal arc
+        ds 120,0   ; FF84..FFFB: zero guard
         ORG $FFFC
         dc.w Reset
         dc.w Reset
