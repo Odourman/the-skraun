@@ -103,7 +103,9 @@ def patch_bank3(s):
         sta PF1"""
     after="""        ldy WorldPFIndex,x
         lda (WorldPFPtr),y
-        sta PF1"""
+        sta PF1
+        txa
+        tay          ; restore physical raster row for ENAM1/ENABL"""
     if s.count(before)!=2:raise ValueError("PF1 pointer changes="+str(s.count(before)))
     s=s.replace(before,after)
     old="""        ldy EnemyIndexScan,x
