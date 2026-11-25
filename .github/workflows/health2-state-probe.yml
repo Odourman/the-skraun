@@ -66,5 +66,5 @@ jobs:
             scripts/fullgame1_romdev_v_positions.sh
             experiments/health2_position_doublestep.patch
             .github/workflows/health2-state-probe.yml
-          docs/health2/
+            docs/health2/
           if-no-files-found: warn
