@@ -1408,6 +1408,12 @@ TracerBudgetReturn:
 ; 2-line mask centered on the REAL PlayerY; X sides are +/- HaloRadius.
 ; M0/BL Gold are independent of real Ranger M1 arrow.
 NewHaloSetup:
+        ; Keep VBLANK within its physical timer when L3 HUD/rune is busy.
+        ; If fewer than 12 * 64 CPU cycles remain, skip optional M0/BL
+        ; positioning; preserve P0 rune and M1 arrow unmodified.
+        lda INTIM
+        cmp #12
+        bcc NewHaloQuickReturn
         lda #0
         sta ENAM0
         lda HaloFrames
@@ -1446,6 +1452,10 @@ HaloSetupCaps:
         jsr TracerBudgetCheck
         rts
 
+NewHaloQuickReturn:
+        lda #0
+        sta ENAM0
+        rts
 ; Conditional P0 top/bottom runic caps; original U1-LEG1 sprite masks
 ; remain completely untouched, cap art only where P0 would be blank.
 HaloCapPixel:
