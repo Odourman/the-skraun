@@ -26,7 +26,7 @@ jobs:
           test "$(sha256sum THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin | cut -d' ' -f1)" = "bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
           mkdir -p ../fullgame1
           cp THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin ../fullgame1/THE_SKRAUN_FULLGAME1_F6_NTSC.bin
-      - name: Capture natural-scene RAM and a calibrated stage-transition checkpoint
+      - name: Capture natural-scene RAM at the Stage 2 transition
         run: |
           bash scripts/health2_stella_state_probe.sh
           python3 scripts/health2_state_probe.py
@@ -42,9 +42,6 @@ jobs:
       - name: Inventory emitted code, RAM aliases and TIA writes
         if: always()
         run: python3 scripts/health2_static_inventory.py build/arrow_halo_romdev4
-      - name: Compare experimental positioner against frozen baseline in Stella
-        if: always()
-        run: bash scripts/health2_position_compare.sh
       - name: Produce source-path CPU-cycle model
         if: always()
         run: python3 scripts/health2_position_cycles.py

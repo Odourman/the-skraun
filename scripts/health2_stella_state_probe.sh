@@ -14,7 +14,7 @@ checks=[
   ("if [ \"$scene\" = knight_strike ];then echo 'frame #30';fi",
    "if [ \"$scene\" = knight_strike ];then echo 'frame #23';fi"),
   ("          echo 'joy0Fire #1';;\n      esac\n      ;;\n    stress_120)",
-   "          echo 'joy0Fire #1'\n          echo 'frame #140';;\n      esac\n      ;;\n    stress_120)"),
+   "          echo 'joy0Fire #1'\n          echo 'frame #20';;\n      esac\n      ;;\n    stress_120)"),
 ]
 for old,new in checks:
   assert src.count(old)==1, f"frozen runner structure changed for {old!r}"
