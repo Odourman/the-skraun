@@ -216,7 +216,7 @@ HaloPointerReady:
         sec
         sbc PlayerY
         sec
-        sbc HalfH
+        sbc $EB           ; bank1 chooses regular half-height or radial rune height
         sta RenderBottom
         lda #0
         sta HMP1          ; stale previous-frame motion must not move P1
@@ -806,7 +806,7 @@ HeightHalf:
 SpriteHeights:
         dc.b 0,12,24,36
 PlayerSizes:
-        dc.b 0,0,5,7
+        dc.b 0,0,$15,$27 ; M0 missile 1/2/4px, same P0 level width bits
 ; Obsolete unused MapLow/MapHigh removed, no dynamic RowMapPtr reader.\nArtLo:
         dc.b <A_VISUAL_RIGHT,<B_VISUAL_RIGHT,<A_VISUAL_LEFT,<B_VISUAL_LEFT
 ArtHi:
@@ -1000,7 +1000,7 @@ OrbTolX:
 OrbTolY:
         dc.b 0,9,15,21
 RadiusTable:
-        dc.b 0,18,28,40
+        dc.b 0,18,28,38
 RecoverTable:
         dc.b 0,60,36,15
 HaloMaskTable:
@@ -1275,6 +1275,15 @@ M0PositionLoop:
         sta HMM0
         sta RESM0
         rts
+        ORG $F9B2
+HaloL3Rune:
+        dc.b $18,$3C,$7E,$00,$00,$00,$00,$00,$00,$00,$00,$18
+        dc.b $3C,$00,$00,$00,$00,$00,$00,$00,$06,$06,$06,$C4
+        dc.b $C4,$C4,$64,$64,$64,$3C,$3C,$3C,$3C,$3C,$3C,$3D
+        dc.b $3D,$3D,$FE,$FE,$FE,$7C,$7C,$7C,$66,$66,$66,$5A
+        dc.b $5A,$5A,$7E,$7E,$7E,$24,$24,$24,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$3C,$18,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$7E,$3C,$18
         ORG $FA00
 PlayPF1:
 ; World 1: four 2-line PF render entries per 8-row world metatile
@@ -1323,8 +1332,19 @@ OrbScan:
         ds 16,2     ; original orb occupies 32 physical lines at new pair index
         ds 65,0     ; align tracer source to FD90
 HaloTraceCore:
-        dc.b 2,0    ; one two-line golden BL spark at exact radial sample
-        ds 110,0   ; FD92..FDFF: all zero, no phantom ball pixels
+        dc.b 2,0
+HaloL1Rune:
+        dc.b $18,$3C,$7E,$00,$00,$18,$3C,$00,$00,$00,$00,$00
+        dc.b $06,$C4,$64,$3C,$3C,$3D,$FE,$7C,$66,$5A,$7E,$24
+        dc.b $00,$00,$00,$00,$00,$00,$3C,$18,$00,$00,$7E,$3C
+        dc.b $18
+HaloL2Rune:
+        dc.b $18,$3C,$7E,$00,$00,$00,$00,$00,$18,$3C,$00,$00
+        dc.b $00,$00,$00,$00,$06,$06,$C4,$C4,$64,$64,$3C,$3C
+        dc.b $3C,$3C,$3D,$3D,$FE,$FE,$7C,$7C,$66,$66,$5A,$5A
+        dc.b $7E,$7E,$24,$24,$00,$00,$00,$00,$00,$00,$00,$3C
+        dc.b $18,$00,$00,$00,$00,$00,$7E,$3C,$18
+        ds 16,0    ; FDF0..FDFF original OrbScan zero-guard
         ORG $FE00
 GameOverMap:
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$77,$55,$55,$45,$77,$00,$00,$00,$00,$00,$00,$00,$00
@@ -1339,17 +1359,19 @@ HaloTracerPrepare:
         lda PlayerX
         sec
         sbc HaloRadius
+        clc
+        adc #8            ; side rim inside octagonal logical distance
         bcc TracerUseOrb
         cmp #6
         bcc TracerUseOrb
-        sta $E9
+        sta $EB           ; do NOT overwrite $E9 HUD score pixels
         lda HaloRowPtr
         sta OrbRowPtr
         lda HaloRowPtr+1
         sta OrbRowPtr+1
         lda #1
         sta OrbDirty
-        lda $E9
+        lda $EB
         jmp TracerSetBallX
 TracerUseOrb:
         lda OrbMask
@@ -1399,7 +1421,9 @@ NewHaloSetup:
         lda PlayerX
         clc
         adc HaloRadius
-        bcs HaloSetupCaps
+        sec
+        sbc #8
+        ; legal PlayerX+HaloRadius never overflows 8-bit here
         cmp #153
         bcs HaloSetupCaps
         jmp HaloSideXPosition
@@ -1407,6 +1431,8 @@ HaloSideLeft:
         lda PlayerX
         sec
         sbc HaloRadius
+        clc
+        adc #8
         bcc HaloSetupCaps
         cmp #6
         bcc HaloSetupCaps
@@ -1418,20 +1444,6 @@ HaloSideXPosition:
         sta HMM0
 HaloSetupCaps:
         jsr TracerBudgetCheck
-        ; Exact top/bottom halo tip Y matches same PlayerY and active radius.
-        lda #176
-        sec
-        sbc PlayerY
-        sta $E9
-        clc
-        adc HaloRadius
-        sta $E9
-        lda #176
-        sec
-        sbc PlayerY
-        sec
-        sbc HaloRadius
-        sta $EA
         rts
 
 ; Conditional P0 top/bottom runic caps; original U1-LEG1 sprite masks
