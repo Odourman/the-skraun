@@ -5,9 +5,11 @@ on:
       - experiment/fullgame1-arrow-halo-romdev4-20261125
       - experiment/fullgame1-halo-combat-readability-20261125
       - experiment/fullgame1-m1-orb-hud-radar-20261125
+      - experiment/fullgame1-health1-mainv-integration-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh
+      - scripts/health1_mainv_checks.py
       - .github/workflows/fullgame1-arrow-halo-romdev4.yml
   workflow_dispatch:
 permissions:
@@ -29,6 +31,8 @@ jobs:
           cd build/arrow_halo_romdev4
           sha256sum -c SHA256SUMS.txt
           test "$(stat -c %s THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin)" = "16384"
+      - name: Corrected HEALTH-1 validation (SOURCE_ONLY + actual ROM SHA)
+        run: python3 scripts/health1_mainv_checks.py
       - name: Preserve exact tool executables
         run: |
           mkdir -p build/arrow_halo_romdev4/tools
@@ -51,4 +55,5 @@ jobs:
             experiments/fullgame1_arrow_halo_20261125/
             build/arrow_halo_romdev4/
             build/fullgame1/
+            scripts/health1_mainv_checks.py
           if-no-files-found: warn

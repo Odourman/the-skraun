@@ -52,8 +52,7 @@ PlayerY     = $81   ; CENTRE y in 176-line arena, 0 at top
 Level       = $82   ; 1,2,3
 JoyState    = $83
 SwitchState = $84
-PrevSelect  = $85
-Phase       = $86
+Phase       = $86       ; low 2 bits = 0..2 gait phase; bit 7 = SELECT latch
 DiagonalSkip= $87
 SpriteHeight= $88
 ArrowRowPtr = $89
@@ -71,7 +70,6 @@ RenderX     = $96
 RenderBottom= $97
 HalfW       = $98
 HalfH       = $99
-GrowthBlocked = $9A
 BaseX       = $9B       ; original X for strict diagonal Y-projection
 OrbMask     = $9C       ; 2 = BL visible, 0 = consumed temporarily
 ArrowCool   = $9D       ; 0..180 actual release cooldown, unused GAMEPLAY-3 OrbTimer state
@@ -174,9 +172,11 @@ Frame:
         inc FrameCount
         inc Phase
         lda Phase
+        and #$03
         cmp #3
         bne PhaseGood
-        lda #0
+        lda Phase
+        and #$80          ; wrap gait phase without losing SELECT edge latch
         sta Phase
 PhaseGood:
         jsr DetectDiagonal
@@ -218,7 +218,7 @@ HaloPointerReady:
         sec
         sbc PlayerY
         sec
-        sbc $EB           ; bank1 chooses regular half-height or radial rune height
+        sbc $87           ; bank1 chooses regular half-height or radial rune height
         sta RenderBottom
         ; Each object RESP and fine-HM register is set on its own WSYNC.
         ; One shared HMOVE after all three positions preserves the same
@@ -393,6 +393,7 @@ DetectDiagonal:
         cmp #$30
         beq NoDiag
         lda Phase
+        and #$03
         cmp #2
         bne NoDiag
         lda #1
@@ -490,10 +491,12 @@ DebugLevel:
         lda SwitchState
         and #2
         bne SelectUp
-        lda PrevSelect
+        lda Phase
+        and #$80
         bne DebugDone
-        lda #1
-        sta PrevSelect
+        lda Phase
+        ora #$80
+        sta Phase
         lda Level
         cmp #3
         bne TryGrow
@@ -513,18 +516,16 @@ TryGrow:
         inc Level
 GrowthOK:
         lda #0
-        sta GrowthBlocked
         sta COLUBK
         rts
 GrowthFail:
-        lda #1
-        sta GrowthBlocked
         lda #$42
         sta COLUBK
         rts
 SelectUp:
-        lda #0
-        sta PrevSelect
+        lda Phase
+        and #$7F
+        sta Phase
 DebugDone:
         rts
 
@@ -1372,14 +1373,14 @@ HaloTracerPrepare:
         bcc TracerUseOrb
         cmp #6
         bcc TracerUseOrb
-        sta $EB           ; do NOT overwrite $E9 HUD score pixels
+        sta $96           ; P0 was positioned in offscreen setup; HUD $E9..$EB stays intact
         lda HaloRowPtr
         sta OrbRowPtr
         lda HaloRowPtr+1
         sta OrbRowPtr+1
         lda #1
         sta OrbDirty
-        lda $EB
+        lda $96
         jmp TracerSetBallX
 TracerUseOrb:
         lda OrbMask
@@ -1492,3 +1493,4 @@ HaloSideRim:
         ORG $FFFC
         dc.w Reset
         dc.w Reset
+
