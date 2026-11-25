@@ -5,7 +5,7 @@ on:
       - experiment/health2-deep-debug-optimization-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
-      - scripts/health2_*
+      - .github/workflows/health2-state-probe.yml
       - .github/workflows/health2-state-probe.yml
   workflow_dispatch:
 permissions:
