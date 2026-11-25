@@ -43,3 +43,15 @@
 - Still unimplemented/unproven: three physical P1 enemy sprites simultaneously, visually correct circular X/Y halo, arrow fine-Y, continuous full game natural play, all worst beam deadlines, stack high-water, original hardware.
 
 **Disposition:** preserve as `SPARSE_EVENT_KERNEL_DEVELOPER_CHECKPOINT / MAIN_REVIEW_REQUIRED / NO_MERGE`, and do not silently apply patch to existing PR #51. User explicitly authorized only this bounded kernel change.
+
+## UPDATE AFTER FULL GITHUB ACTIONS / FINAL GATE: FAIL (2026-11-25)
+
+**Critical:** GitHub Actions experimental native 17-scene regression [#45528298701](https://github.com/Odourman/the-skraun/actions/runs/45528298701) **FAILED** (and its repeat on subsequent documentation commit [#45528569629](https://github.com/Odourman/the-skraun/actions/runs/45528569629) also failed). Real DASM exact 16384-byte candidate SHA check PASS; Stella bootstrap PASS. **One true physical scenario** named `arrow_first` reported `_scanEnd=263` (**FAIL**, requires 262). The other 16/17 selected scene endpoints reported 262. The earlier three *local* selected 262 scenes were correct but insufficient to detect this failure.
+
+Real developer reproduced the exact `arrow_first` joystick/FIRE sequence in local Stella: baseline F6 original `_scanEnd=262`, new sparse PF candidate `_scanEnd=263`. This is **a real regression**, not a CI install or test harness failure. The 120 sequential saved states in Actions are still NOT per-frame measured scanline PASS.
+
+Two additional LOCAL ONLY non-committed follow-up attempts were rejected: prefetch the next PF event at previous row end yielded 274 lines on `arrow_first`; relocating SEC/carry setup to previous row still yielded 263. These are NOT posted or approved. The GitHub candidate remains exact SHA `e5d027c35ae8bdbc0bac60a2ba41abbd5b2a777f7e32726cc9266499c02cb258` and is **NOT SAFE TO MERGE**.
+
+Generic repository CI has green jobs on some commits, but those jobs validate P01/design and do **NOT** override this failed FULLGAME-1 emulator regression. The source-only 2058-cycle arithmetic remains a potential insight, **not a physical pass**; the 24 event rows take 2 more source cycles and deserve focused beam/late-row analysis.
+
+**Final result:** `SPARSE_RENDERER_EXPERIMENT_REJECTED_FOR_ARROW_FIRST_263 / SOURCE_ONLY_PF_OPTIMIZATION_OBSERVED / FULLGAME1_FROZEN_BASELINE_RETAINED`. No production merge, no new gameplay authority, no independent Verification. Preserve this negative evidence and start no further implementation without the user's actual direction.
