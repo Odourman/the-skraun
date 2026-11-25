@@ -1,0 +1,49 @@
+name: FULLGAME-1 ArrowY radial-halo experimental 16KiB F6
+on:
+  push:
+    branches:
+      - experiment/fullgame1-arrow-halo-romdev4-20261125
+    paths:
+      - experiments/fullgame1_arrow_halo_20261125/**
+      - .github/workflows/fullgame1-arrow-halo-romdev4.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  assemble-and-stella:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real DASM + Stella 6.7.1 debugger and Xvfb
+        run: |
+          sudo sed -i 's|http://us-east-2.ec2.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources || true
+          timeout 180 sudo apt-get update -qq -o Acquire::Retries=2 -o Acquire::http::Timeout=18
+          timeout 600 sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
+      - name: Assemble actual 4 F6 banks, verify binary SHA
+        run: |
+          python3 experiments/fullgame1_arrow_halo_20261125/build.py
+          cd build/arrow_halo_romdev4
+          sha256sum -c SHA256SUMS.txt
+          test "$(stat -c %s THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin)" = "16384"
+      - name: Preserve exact tool executables
+        run: |
+          mkdir -p build/arrow_halo_romdev4/tools
+          cp "$(command -v dasm)" build/arrow_halo_romdev4/tools/
+          cp "$(command -v stella)" build/arrow_halo_romdev4/tools/
+      - name: Real Stella bootstrap
+        run: bash scripts/fullgame1_stella.sh
+      - name: All 17 real Stella sampled scenarios (not all-frame verification)
+        run: |
+          bash scripts/fullgame1_stella_regression.sh
+          python3 scripts/fullgame1_report_scenes.py
+      - name: Archive ROM, 4 readable sources, DASM/NTSC debugger proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ROMDEV4-ARROWY-HALO-REAL-DASM-STELLA-EXPERIMENT
+          path: |
+            experiments/fullgame1_arrow_halo_20261125/
+            build/arrow_halo_romdev4/
+            build/fullgame1/
+          if-no-files-found: warn
