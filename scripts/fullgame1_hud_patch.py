@@ -175,7 +175,7 @@ def gameover_bank3(s):
     glyph=["1110111","1000101","1010101","1010101","1110111"]
     rows=[0]*8+[int(bits,2) for bits in glyph]+[0]*11
     if len(rows)!=24:raise ValueError("wrong game-over map length")
-    table="GameOverMap:\n        dc.b "+",".join(f"$"+"{v:02X}" for v in reversed(rows))
+    table="GameOverMap:\n        dc.b "+",".join("$%02X" % v for v in reversed(rows))
     table+="\n        ds 169,0 ; keep FC00 index table physically aligned\n"
     return s[:a]+table+s[b:]
 
