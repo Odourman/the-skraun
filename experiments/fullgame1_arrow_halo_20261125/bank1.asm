@@ -251,13 +251,13 @@ HudBase:
 ; player can continue moving, but walking pose freezes for 30f.
 HaloVisualSelect:
         lda $99           ; real HalfH remains untouched for collision
-        sta $EB           ; display half-height consumed by bank3 only
+        sta $87           ; movement's DiagonalSkip dies before HUD/render setup
         lda #0
         sta $0B           ; REFP0, normal sprite already physically flipped in ROM
         lda $9E           ; HaloFrames
         beq HVSExit
         lda $A0           ; HaloRadius (18/28/38)
-        sta $EB
+        sta $87
         ldx $82           ; Level
         lda HaloRuneLo,x
         sta $8B           ; GfxPtr low
@@ -293,3 +293,4 @@ AudioBankReturn:
         ORG $FFFC
         dc.w AudioCold
         dc.w AudioCold
+

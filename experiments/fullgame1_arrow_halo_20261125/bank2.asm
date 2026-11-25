@@ -500,10 +500,19 @@ CopyRepeat:
         rts
 
 SetWorldColors:
-        ; TIA BL width tracks level: L1=2px, L2=4px, L3=8px.
-        ; Match M0 gold side arc thickness without any hot-scanline cost.
+        ; TIA ball widths: L1=2, L2=4, L3=8 color clocks.
+        ; Preserve stage REF (odd stages mirrored) while changing width.
         ldx Level
+        ldy Stage
+        tya
+        and #1
+        beq CTPFRepeat
         lda HaloBLWidths,x
+        ora #1
+        bne CTPFWrite
+CTPFRepeat:
+        lda HaloBLWidths,x
+CTPFWrite:
         sta CTRLPF
         ; Animated gold player silhouette follows real P0 X/Y.
         lda HaloFrames
@@ -556,7 +565,7 @@ WorldPFColors:
 WorldBGColors:
         dc.b $00,$00,$00,$02,$02,$04,$04,$00,$00
 HaloBLWidths:
-        dc.b $10,$10,$20,$30 ; TIA 2/4/8px ball, same original PF mirror
+        dc.b $00,$20,$10,$30 ; Level 1/2/3 = 2/4/8 color clocks
 
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
@@ -892,3 +901,4 @@ OctagonXMax:
         ORG $FFFC
         dc.w GameBankReset
         dc.w GameBankReset
+
