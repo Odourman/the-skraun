@@ -1,0 +1,520 @@
+{
+  "status": "SOURCE_ONLY_CANDIDATES_NOT_APPLIED",
+  "coordinate_system": "X [0,160) colour clocks, Y [0,186) visible rasterlines; each rectangle [x0,x1,y0,y1] with end EXCLUSIVE",
+  "warning": "Conservative AABB encloses visual voids of spirals and arch portals; original WorldRects do NOT match all new pixels; no gameplay collision changes authorized",
+  "baseline_pr60": "2af9855fbe8d3edbe6d01609d3e539547b744aef",
+  "rect_order": [
+    "top_left",
+    "top_right",
+    "bottom_left",
+    "bottom_right"
+  ],
+  "source_only_L3_half_width": 16,
+  "source_only_L3_half_height": 18,
+  "stages": [
+    {
+      "stage": 1,
+      "world": "Skog",
+      "mode": "mirror",
+      "new_rectangles": [
+        [
+          16,
+          48,
+          15,
+          57
+        ],
+        [
+          112,
+          144,
+          15,
+          57
+        ],
+        [
+          16,
+          48,
+          129,
+          173
+        ],
+        [
+          112,
+          144,
+          129,
+          173
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          40,
+          0,
+          43
+        ],
+        [
+          120,
+          140,
+          0,
+          43
+        ],
+        [
+          20,
+          40,
+          139,
+          186
+        ],
+        [
+          120,
+          140,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 7460,
+        "connected_from_spawn": 7460,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 2,
+      "world": "Skog",
+      "mode": "repeat",
+      "new_rectangles": [
+        [
+          20,
+          48,
+          15,
+          57
+        ],
+        [
+          100,
+          128,
+          15,
+          57
+        ],
+        [
+          20,
+          48,
+          129,
+          173
+        ],
+        [
+          100,
+          128,
+          129,
+          173
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          36,
+          0,
+          43
+        ],
+        [
+          100,
+          116,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          100,
+          124,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 6296,
+        "connected_from_spawn": 6296,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 3,
+      "world": "Berg",
+      "mode": "mirror",
+      "new_rectangles": [
+        [
+          16,
+          48,
+          19,
+          53
+        ],
+        [
+          112,
+          144,
+          19,
+          53
+        ],
+        [
+          16,
+          48,
+          135,
+          167
+        ],
+        [
+          112,
+          144,
+          135,
+          167
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          116,
+          140,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          116,
+          140,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 8350,
+        "connected_from_spawn": 8350,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 4,
+      "world": "Berg",
+      "mode": "repeat",
+      "new_rectangles": [
+        [
+          20,
+          48,
+          19,
+          53
+        ],
+        [
+          100,
+          128,
+          19,
+          53
+        ],
+        [
+          20,
+          48,
+          135,
+          167
+        ],
+        [
+          100,
+          128,
+          135,
+          167
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          100,
+          124,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          100,
+          124,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 7306,
+        "connected_from_spawn": 7306,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 5,
+      "world": "Dröm",
+      "mode": "mirror",
+      "new_rectangles": [
+        [
+          16,
+          44,
+          15,
+          57
+        ],
+        [
+          116,
+          144,
+          15,
+          57
+        ],
+        [
+          16,
+          48,
+          131,
+          171
+        ],
+        [
+          112,
+          144,
+          131,
+          171
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          116,
+          140,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          116,
+          140,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 8062,
+        "connected_from_spawn": 8062,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 6,
+      "world": "Dröm",
+      "mode": "repeat",
+      "new_rectangles": [
+        [
+          20,
+          48,
+          15,
+          57
+        ],
+        [
+          100,
+          128,
+          15,
+          57
+        ],
+        [
+          20,
+          48,
+          131,
+          171
+        ],
+        [
+          100,
+          128,
+          131,
+          171
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          100,
+          124,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          100,
+          124,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 6498,
+        "connected_from_spawn": 6498,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 7,
+      "world": "Natt",
+      "mode": "mirror",
+      "new_rectangles": [
+        [
+          16,
+          48,
+          17,
+          57
+        ],
+        [
+          112,
+          144,
+          17,
+          57
+        ],
+        [
+          16,
+          48,
+          131,
+          169
+        ],
+        [
+          112,
+          144,
+          131,
+          169
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          116,
+          140,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          116,
+          140,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 7638,
+        "connected_from_spawn": 7638,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    },
+    {
+      "stage": 8,
+      "world": "Natt",
+      "mode": "repeat",
+      "new_rectangles": [
+        [
+          20,
+          48,
+          17,
+          57
+        ],
+        [
+          100,
+          128,
+          17,
+          57
+        ],
+        [
+          20,
+          48,
+          131,
+          169
+        ],
+        [
+          100,
+          128,
+          131,
+          169
+        ]
+      ],
+      "prior_rev1_rectangles": [
+        [
+          20,
+          44,
+          0,
+          43
+        ],
+        [
+          100,
+          124,
+          0,
+          43
+        ],
+        [
+          20,
+          44,
+          139,
+          186
+        ],
+        [
+          100,
+          124,
+          139,
+          186
+        ]
+      ],
+      "source_only_l3_reachability": {
+        "source_only_l3_centers": 6498,
+        "connected_from_spawn": 6498,
+        "all_free_centers_connected": true,
+        "central_x80_y63_to119_passable": true
+      }
+    }
+  ]
+}
