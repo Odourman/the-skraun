@@ -25,8 +25,9 @@ F6B{n}Cold:
         dc.w F6B{n}Cold
 """
 from fullgame1_world_renderer_patch import patch_bank0, patch_bank2 as safety_bank2, patch_bank3 as stage_render_bank3
+from fullgame1_adaptive_p1_patch import adaptive_bank0
 from fullgame1_hud_patch import bank0 as hud_bank0, bank1 as hud_bank1, bank3 as hud_bank3, gameover_bank2, gameover_bank3
-(OUT/"bank0.asm").write_text(hud_bank0(patch_bank0((ROOT/"scripts"/"fullgame1_actor_bank0.asm").read_text())))
+(OUT/"bank0.asm").write_text(adaptive_bank0(hud_bank0(patch_bank0((ROOT/"scripts"/"fullgame1_actor_bank0.asm").read_text()))))
 (OUT/"bank1.asm").write_text(hud_bank1((ROOT/"scripts"/"fullgame1_sound_bank1.asm").read_text()))
 from fullgame1_arrow_patch import patch_bank2, patch_bank3
 from fullgame1_geometry_patch import cache_bank2, cache_bank3
