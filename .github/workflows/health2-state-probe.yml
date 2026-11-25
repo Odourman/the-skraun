@@ -1,0 +1,45 @@
+name: HEALTH-2 raw Stella state probe
+on:
+  push:
+    branches:
+      - experiment/health2-deep-debug-optimization-20261125
+    paths:
+      - experiments/fullgame1_arrow_halo_20261125/**
+      - scripts/health2_*
+      - .github/workflows/health2-state-probe.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  state-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native DASM, Stella debugger and X automation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
+      - name: Assemble frozen F6 candidate and verify exact ROM identity
+        run: |
+          python3 experiments/fullgame1_arrow_halo_20261125/build.py
+          cd build/arrow_halo_romdev4
+          sha256sum -c SHA256SUMS.txt
+          test "$(sha256sum THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin | cut -d' ' -f1)" = "bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
+          mkdir -p ../fullgame1
+          cp THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin ../fullgame1/THE_SKRAUN_FULLGAME1_F6_NTSC.bin
+      - name: Probe the 17 legacy scenes with actual RIOT RAM dumps
+        run: |
+          bash scripts/health2_stella_state_probe.sh
+          python3 scripts/health2_state_probe.py
+      - name: Preserve raw source, ROM, debugger traces and RAM probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: HEALTH2-RAW-STATE-PROBE
+          path: |
+            build/arrow_halo_romdev4/
+            build/fullgame1/HEALTH2_RAW_STATE_PROBE.json
+            build/fullgame1/regression/scenes/
+            scripts/health2_*
+          if-no-files-found: warn
