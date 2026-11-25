@@ -148,6 +148,37 @@ HudExitToGraphics:
     s=once(s,"        ORG $F6E3\nAudioEntryTrampoline:",hud+"\n        ORG $F6E3\nAudioEntryTrampoline:","bank1 HUD code")
     return s
 
+def gameover_bank2(s):
+    # Font display resides in the old unused 193B L2 halo table.
+    # Score and lives are already visible in HUD. The bitmap is bank3.
+    a="SoundFrames = $BF"
+    if s.count(a)!=1:raise ValueError("GameOver symbol anchor lost")
+    s=s.replace(a,"WorldPFPtr  = $EC\n"+a,1)
+    a="""GameOver:
+        lda #$42
+        sta COLUBK"""
+    b="""GameOver:
+        lda #$30
+        sta WorldPFPtr
+        lda #$FB
+        sta WorldPFPtr+1
+        lda #$42
+        sta COLUBK"""
+    return once(s,a,b,"red GAME OVER PF pointer")
+
+def gameover_bank3(s):
+    # PF2 halo rectangle has already been removed by the world-renderer
+    # transform. This old 193-byte L2 table is no longer fetched by visible
+    # raster; it can become an obvious GAME OVER mark in the same page.
+    a=s.index("HaloL2Rows:\n")
+    b=s.index("        ORG $FC00\n",a)
+    glyph=["1110111","1000101","1010101","1010101","1110111"]
+    rows=[0]*8+[int(bits,2) for bits in glyph]+[0]*11
+    if len(rows)!=24:raise ValueError("wrong game-over map length")
+    table="GameOverMap:\n        dc.b "+",".join(f"$"+"{v:02X}" for v in reversed(rows))
+    table+="\n        ds 169,0 ; keep FC00 index table physically aligned\n"
+    return s[:a]+table+s[b:]
+
 def bank3(s):
     s=once(s,"        jsr SelectEnemyArt ; offscreen identity/pose, never after GRP1 beam deadline\n",
            "        jsr SelectEnemyArt ; offscreen identity/pose, never after GRP1 beam deadline\n        jsr HudBankEnter    ; prepare current score and lives after motion\n","HUD vblank")
