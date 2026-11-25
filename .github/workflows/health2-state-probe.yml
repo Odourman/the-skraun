@@ -5,6 +5,7 @@ on:
       - experiment/health2-deep-debug-optimization-20261125
     paths:
       - .github/workflows/health2-state-probe.yml
+      - scripts/health2_*
   workflow_dispatch:
 permissions:
   contents: read
@@ -33,6 +34,9 @@ jobs:
       - name: Summarize state assertions
         if: always()
         run: python3 scripts/health2_state_report.py build/fullgame1
+      - name: Rank measured natural-scene frame CPU workload
+        if: always()
+        run: python3 scripts/health2_cycle_summary.py build/fullgame1/regression/scenes build/fullgame1/HEALTH2_DYNAMIC_CYCLE_SUMMARY.json
       - name: Assert expected game states (known gaps leave this run red)
         if: always()
         run: python3 scripts/health2_assert_states.py build/fullgame1
@@ -62,4 +66,5 @@ jobs:
             scripts/fullgame1_romdev_v_positions.sh
             experiments/health2_position_doublestep.patch
             .github/workflows/health2-state-probe.yml
+          docs/health2/
           if-no-files-found: warn
