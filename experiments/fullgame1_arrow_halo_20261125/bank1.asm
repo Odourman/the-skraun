@@ -197,7 +197,7 @@ HudNextRow:
         iny
         cpy #5
         bcc HudPrepareRow
-        jmp HudExitToGraphics
+        jmp HaloVisualSelect
 HudFont:
         dc.b $77,$55,$55,$55,$77 ; 0
         dc.b $22,$63,$22,$22,$77 ; 1
@@ -212,6 +212,38 @@ HudFont:
 HudBase:
         dc.b $00,$05,$0A,$0F,$14,$19,$1E,$23,$28,$2D
 
+        ORG $F400
+; P0 stays exact U1-LEG1 in normal play. Active halo expands visual
+; source to a precomputed frozen A-pose with 3+2 gold tips on each side;
+; player can continue moving, but walking pose freezes for 30f.
+HaloVisualSelect:
+        lda $99           ; real HalfH remains untouched for collision
+        sta $EB           ; display half-height consumed by bank3 only
+        lda #0
+        sta $0B           ; REFP0, normal sprite already physically flipped in ROM
+        lda $9E           ; HaloFrames
+        beq HVSExit
+        lda $A0           ; HaloRadius (18/28/38)
+        sta $EB
+        ldx $82           ; Level
+        lda HaloRuneLo,x
+        sta $8B           ; GfxPtr low
+        lda HaloRuneHi,x
+        sta $8C           ; GfxPtr high
+        lda HaloRuneHeight,x
+        sta $88           ; SpriteHeight (37/57/77)
+        lda $8E           ; Facing (0=right,1=left)
+        beq HVSExit
+        lda #8
+        sta $0B           ; hardware pixel-exact horizontal mirror
+HVSExit:
+        jmp HudExitToGraphics
+HaloRuneLo:
+        dc.b 0,$92,$B7,$B2
+HaloRuneHi:
+        dc.b 0,$FD,$FD,$F9
+HaloRuneHeight:
+        dc.b 0,37,57,77
         ORG $F6BB
 HudEntryFromGraphics:
         jmp HudPrepare
