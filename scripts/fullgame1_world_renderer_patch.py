@@ -103,9 +103,7 @@ def patch_bank3(s):
         sta PF1"""
     after="""        ldy WorldPFIndex,x
         lda (WorldPFPtr),y
-        sta PF1
-        txa
-        tay          ; restore physical raster row for ENAM1/ENABL"""
+        sta PF1"""
     if s.count(before)!=2:raise ValueError("PF1 pointer changes="+str(s.count(before)))
     s=s.replace(before,after)
     old="""        ldy EnemyIndexScan,x
@@ -159,6 +157,52 @@ DynamicEnemyWrite:
     s=s.replace(gate,gate+"""        lda #$9E
         sta COLUP1
 """)
+    # Reuse the *same* precomputed 8-line metatile index for M1 and BL.
+    # This avoids 4 new cycles in the over-budget physical hot raster.
+    # Visual projectile/BL snap to 8-raster-line bands; logical collision
+    # remains exact X/Y and the 2-frame projectile freshness gate.
+    orig="""        lda ArrowY
+        cmp #48
+        bcc MissileRowOff
+        cmp #176
+        bcs MissileRowOff
+        clc
+        adc #$90             ; $F890 + ArrowY (seed at $F940)
+        sta ArrowRowPtr
+        lda #$F8
+        adc #0
+        sta ArrowRowPtr+1"""
+    repl="""        ; Only active arrows reach here; overscan logic validates bounds.
+        ; Low seed pointer = $F92A + ceil(ArrowY / 8).
+        ; Metatile Y = floor((176-ArrowY) / 8), so seed $F940
+        ; enables one real 8-line missile band without per-line cost.
+        lda ArrowY
+        clc
+        adc #7
+        lsr
+        lsr
+        lsr
+        clc
+        adc #$2A
+        sta ArrowRowPtr
+        lda #$F9
+        sta ArrowRowPtr+1"""
+    if s.count(orig)!=1:raise ValueError("metatile M1 preframe source changed")
+    s=s.replace(orig,repl)
+    orig="""        lda #0
+        sta OrbRowPtr
+        lda #$FD
+        sta OrbRowPtr+1"""
+    repl="""        lda #$38    ; FD3F seed at metatile band 7 (BL orb)
+        sta OrbRowPtr
+        lda #$FD
+        sta OrbRowPtr+1"""
+    if s.count(orig)!=1:raise ValueError("metatile BL pointer source changed")
+    s=s.replace(orig,repl)
+    orig="""        dc.b $02,$02         ; 2 physical M1 scanlines; real TIA ENAM1 bit1"""
+    repl="""        dc.b $02,$00         ; 8 physical scanlines per one visible M1 band"""
+    if s.count(orig)!=1:raise ValueError("one-band M1 seed source changed")
+    s=s.replace(orig,repl)
     return s
 
 def patch_bank2(s):
