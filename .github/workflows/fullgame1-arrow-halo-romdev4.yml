@@ -5,6 +5,7 @@ on:
       - experiment/fullgame1-arrow-halo-romdev4-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
+      - scripts/fullgame1_stella_120_measured.sh
       - .github/workflows/fullgame1-arrow-halo-romdev4.yml
   workflow_dispatch:
 permissions:
@@ -37,6 +38,8 @@ jobs:
         run: |
           bash scripts/fullgame1_stella_regression.sh
           python3 scripts/fullgame1_report_scenes.py
+      - name: Measure 120 actual consecutive Level3 frames individually (not mere saved states)
+        run: bash scripts/fullgame1_stella_120_measured.sh
       - name: Archive ROM, 4 readable sources, DASM/NTSC debugger proof
         if: always()
         uses: actions/upload-artifact@v4
