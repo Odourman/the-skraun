@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the frozen experimental arrow/halo renderer from four readable F6 banks.
+"""Build the current three-level runic halo and true ArrowY renderer from four readable F6 banks.
 User-authorized FULLGAME-1 scope on branch from frozen adaptive PR #53.
 REAL DASM required. Output reproducible, no "released" claim implied.
 """
@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUT = ROOT / "build" / "arrow_halo_romdev4"
 OUT.mkdir(parents=True, exist_ok=True)
-EXPECTED = "564ac02c7a748dfe7c77c96e4b1f22a9267876959470e4fa781cb8c0a8a94fa9"
+EXPECTED = "a9189404275d4c3e5f04c246033290384c64d0ffcc127ff73229522d9a81e8a3"
 BASELINE = "d2a0a1b57ac9c78b2af14f77800f7c1ecf99aaa43f60e8c4216974f18aed2a0e"
 parts = []
 usage = []
