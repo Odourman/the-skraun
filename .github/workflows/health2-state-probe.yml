@@ -26,7 +26,7 @@ jobs:
           test "$(sha256sum THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin | cut -d' ' -f1)" = "bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
           mkdir -p ../fullgame1
           cp THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin ../fullgame1/THE_SKRAUN_FULLGAME1_F6_NTSC.bin
-      - name: Capture real RIOT RAM from 16 joystick scenes
+      - name: Capture natural-scene RAM and a calibrated stage-transition checkpoint
         run: |
           bash scripts/health2_stella_state_probe.sh
           python3 scripts/health2_state_probe.py
