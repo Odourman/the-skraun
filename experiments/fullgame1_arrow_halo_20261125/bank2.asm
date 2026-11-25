@@ -500,10 +500,12 @@ CopyRepeat:
         rts
 
 SetWorldColors:
-        ; TIA BL width tracks level: L1=2px, L2=4px, L3=8px.
-        ; Match M0 gold side arc thickness without any hot-scanline cost.
+        ; HEALTH-001: persist 1-based Stage REF when updating ball size.
+        ; HEALTH-002 CORRECTED: D4/D5 = 00:1, 10:2, 20:4, 30:8 clocks.
         ldx Level
-        lda HaloBLWidths,x
+        lda Stage
+        and #1
+        ora HaloBLWidths,x
         sta CTRLPF
         ; Animated gold player silhouette follows real P0 X/Y.
         lda HaloFrames
@@ -556,7 +558,7 @@ WorldPFColors:
 WorldBGColors:
         dc.b $00,$00,$00,$02,$02,$04,$04,$00,$00
 HaloBLWidths:
-        dc.b $10,$10,$20,$30 ; TIA 2/4/8px ball, same original PF mirror
+        dc.b $00,$10,$20,$30 ; index 0 unused, L1=2 L2=4 L3=8 color clocks
 
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
