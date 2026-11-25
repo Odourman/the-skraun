@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 OUT = ROOT / "build" / "arrow_halo_romdev4"
 OUT.mkdir(parents=True, exist_ok=True)
-EXPECTED = "9f5cc2440405ffeb9ca25eaf62a9deafd1432f90d4db56d2863f863cf19bda90"
+EXPECTED = "2587a1a1a6905c5447cbe4cd44ea92b495346450ab2727f298af36a5fee28572"
 BASELINE = "d2a0a1b57ac9c78b2af14f77800f7c1ecf99aaa43f60e8c4216974f18aed2a0e"
 parts = []
 usage = []
