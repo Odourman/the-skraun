@@ -1,0 +1,38 @@
+name: FULLGAME-1 adaptive P1 same-Y priority scheduler (native DASM/Stella)
+on:
+  push:
+    branches: [experiment/fullgame1-adaptive-p1-scheduler-20261125]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  adaptive-scheduler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original 6507 assembler and Stella debugger
+        run: |
+          sudo sed -i 's|http://us-east-2.ec2.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources || true
+          timeout 180 sudo apt-get update -qq -o Acquire::Retries=2 -o Acquire::http::Timeout=18
+          timeout 600 sudo apt-get install -y --no-install-recommends dasm stella xvfb xdotool scrot
+      - name: Build all four full F6 banks and verify exact baseline-preserving ROM
+        run: |
+          python3 scripts/fullgame1_build.py
+          cd build/fullgame1
+          sha256sum -c SHA256SUMS.txt
+          test "$(stat -c %s THE_SKRAUN_FULLGAME1_F6_NTSC.bin)" = "16384"
+          echo "d2a0a1b57ac9c78b2af14f77800f7c1ecf99aaa43f60e8c4216974f18aed2a0e  THE_SKRAUN_FULLGAME1_F6_NTSC.bin" | sha256sum -c -
+      - name: Genuine Stella bootstrap
+        run: bash scripts/fullgame1_stella.sh
+      - name: 17 joystick/FIRE real NTSC scenes and reporter
+        run: |
+          bash scripts/fullgame1_stella_regression.sh
+          python3 scripts/fullgame1_report_scenes.py
+      - name: Preserve real build and emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SKRAUN-ADAPTIVE-P1-24F-REAL-DASM-STELLA
+          path: build/fullgame1/
+          if-no-files-found: warn
