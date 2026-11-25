@@ -40,6 +40,7 @@ ENABL       = $1F
 HMP0        = $20
 HMP1        = $21
 HMBL        = $24
+VDELP1      = $26
 HMOVE       = $2A
 INPT4       = $3C
 SWCHA       = $0280
@@ -128,6 +129,7 @@ ClrTIA:
         sta PlayerY
         lda #1
         sta Level
+        sta VDELP1       ; GRP0 at next WSYNC transfers previous GRP1 to delayed latch
         lda #$0C
         sta COLUP0
         lda #$86
@@ -176,9 +178,11 @@ Frame:
         cmp #3
         bne PhaseGood
         lda Phase
-        and #$80          ; wrap gait phase without losing SELECT edge latch
+        and #$C0          ; preserve SELECT and gameover release latches
         sta Phase
 PhaseGood:
+        lda Lives
+        beq MotionSkipDead
         jsr DetectDiagonal
         lda PlayerX
         sta BaseX
@@ -187,28 +191,11 @@ PhaseGood:
         jsr MoveX
         jsr MoveY
         jsr DebugLevel
+MotionSkipDead:
         jsr UpdateScale
         jsr UpdateGait
         jsr SelectEnemyArt ; offscreen identity/pose, never after GRP1 beam deadline
         jsr HudBankEnter    ; prepare current score and lives after motion
-        lda HaloFrames
-        beq HaloPointerOff
-        ; Source-only geometry: FF80 marker aligned to real PlayerY.
-        lda PlayerY
-        clc
-        adc #1
-        lsr
-        clc
-        adc #$28      ; FF80 - (88-ceil(PlayerY/2))
-        sta HaloRowPtr
-        lda #$FF
-        sta HaloRowPtr+1
-        jmp HaloPointerReady
-HaloPointerOff:
-        lda #$01      ; all-zero guard FF01..FF60 when inactive
-        sta HaloRowPtr
-        lda #$FF
-        sta HaloRowPtr+1
 HaloPointerReady:
         lda PlayerX
         sec
@@ -280,7 +267,7 @@ BlankWait:
         sta VBLANK
         lda #0
         sta PF2
-        jmp VisibleGate  ; preframe physical M1 or gold halo path
+        jmp GateDispatch ; gameover has dedicated no-sprite kernel
 Visible:
         sta WSYNC
         sta GRP0
@@ -888,6 +875,10 @@ OrbDone:
         rts
 
 UpdateAttack:
+        lda Lives
+        bne AttackLive
+        rts
+AttackLive:
         lda TargetFlash
         beq NoFlash
         dec TargetFlash
@@ -932,41 +923,25 @@ AttackRadius:
         sta HaloRadius
         rts
 
-CheckHaloHit:
-        lda HaloFrames
-        beq NoTargetHit
-        lda TargetAlive
-        beq NoTargetHit
-        lda PlayerX
-        sec
-        sbc KnightX
-        bcs HitAbsX
-        eor #$FF
-        clc
-        adc #1
-HitAbsX:
-        sta $E9
-        lda PlayerY
-        sec
-        sbc #96
-        bcs HitAbsY
-        eor #$FF
-        clc
-        adc #1
-HitAbsY:
+GateDispatch:
+        lda Lives
+        bne GateAlive
+        jsr HudDraw
+        ldx #187           ; dead kernel measured 261: one dedicated extra line
+DeadScreenLine:
+        sta WSYNC
+        txa
+        lsr
+        lsr
+        lsr
         tay
-        lda $E9
-        jsr OctagonOutside
-        bcs NoTargetHit
-        lda #0
-        sta TargetAlive
-        sta COLUP1
-        lda #$42
-        sta COLUBK             ; transient kill feedback
-        lda #20
-        sta TargetFlash
-NoTargetHit:
-        rts
+        lda GameOverMap,y
+        sta PF1
+        dex
+        bne DeadScreenLine
+        jmp VisibleDone
+GateAlive:
+        jmp VisibleGate
 
 PositionP1:
         sta WSYNC
@@ -1337,9 +1312,9 @@ PlayPF1:
         dc.b $80,$80,$80,$80,$C0,$C0,$C0,$C0,$E0,$E0,$E0,$E0,$F0,$F0,$F0,$F0,$7C,$7C,$7C,$7C,$38,$38,$38,$38
         ORG $FD00
 OrbScan:
-        ds 63,0
-        ds 16,2     ; original orb occupies 32 physical lines at new pair index
-        ds 65,0     ; align tracer source to FD90
+        ds 70,0
+        ds 4,2      ; compact eight physical lines around the orb collision center
+        ds 70,0     ; align tracer source to FD90
 HaloTraceCore:
         dc.b 2,0
 HaloL1Rune:
@@ -1360,12 +1335,18 @@ GameOverMap:
 HaloTracerPrepare:
         lda HaloFrames
         beq TracerUseOrb
+        ; Keep the real orb every other frame while it exists. If it
+        ; was consumed, the BL slot can show a rim on *every* frame.
         lda FrameCount
         and #1
-        beq TracerUseOrb
-        ; BL covers the left side normally, alternates sides when M1
-        ; is flying (the M0 kernel slot is then unavailable).
+        bne TracerOdd
+        lda OrbMask
+        bne TracerUseOrb
+        jmp TracerRight
+TracerOdd:
         lda ArrowDX
+        beq TracerLeft
+        lda OrbMask
         beq TracerLeft
         lda FrameCount
         and #2
@@ -1393,8 +1374,8 @@ TracerUseOrb:
         sta OrbRowPtr
         lda #$FD
         sta OrbRowPtr+1
-        lda OrbX
-        jmp TracerSetBallX
+        ; BL already restored by the previous overscan OrbDirty path.
+        rts
 TracerNoOrb:
         lda #$01
         sta OrbRowPtr
@@ -1411,7 +1392,7 @@ TracerSetBallX:
 ; The RIOT VBLANK budget check prevents the prior stage2 87-line failure.
 TracerBudgetCheck:
         lda INTIM
-        cmp #9
+        cmp #6
         bcc TracerBudgetReturn
         jmp HaloTracerPrepare
 TracerBudgetReturn:
@@ -1421,10 +1402,10 @@ TracerBudgetReturn:
 ; 2-line mask centered on the REAL PlayerY; X sides are +/- HaloRadius.
 ; M0/BL Gold are independent of real Ranger M1 arrow.
 NewHaloSetup:
-        ; Optimized: shared HMOVE recovers 1-2 setup scanlines.
-        ; Guard at nine 64-cycle ticks for both M0 and BL.
+        ; Single BL reposition needs at most two WSYNC waits and setup.
+        ; Retain conservative guard for optional two-object path below.
         lda INTIM
-        cmp #9
+        cmp #6
         bcc NewHaloQuickReturn
         lda #0
         sta ENAM0
@@ -1465,7 +1446,7 @@ NewHaloQuickReturn:
 HaloLeftX:
         lda PlayerX
         sec
-        sbc HaloRadius
+        sbc $8F
         bcc HaloXInvalid
         clc
         adc #2
@@ -1475,7 +1456,7 @@ HaloRightX:
         ldx Level
         lda PlayerX
         clc
-        adc HaloRadius
+        adc $8F
         cmp #159
         bcs HaloXInvalid
         sec

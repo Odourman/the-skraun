@@ -21,7 +21,7 @@ for stage in range(1,9):
 OUT=R/"build/arrow_halo_romdev4"
 rom=(OUT/"THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin").read_bytes()
 sha=hashlib.sha256(rom).hexdigest()
-checks["actual_ROM_SHA"] = len(rom)==16384 and sha=="bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5"
+checks["actual_ROM_SHA"] = len(rom)==16384 and sha=="3977c1e04e2cb5a43944e32477b8fa6f443bff270e3af8db4ae3d25e497b9647"
 result={"classification":"SOURCE_ONLY_WITH_REAL_DASM_MANIFEST","checks":checks,"pass":all(checks.values()),"SHA256":sha}
 (OUT/"MAINV_HEALTH_CORRECTED_TESTS.json").write_text(json.dumps(result,indent=2)+"\n")
 print(json.dumps(result,indent=2))

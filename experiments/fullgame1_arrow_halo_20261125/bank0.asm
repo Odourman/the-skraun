@@ -3,6 +3,7 @@
 ; and currently display on one fixed Y-band. No claim of full game/3 sprites.
         processor 6502
 COLUP1    = $07
+NUSIZ1    = $05
 AUDC0     = $15
 AUDF0     = $17
 AUDV0     = $19
@@ -432,6 +433,72 @@ LifeRemains:
         sta PlayerY
         rts
 
+        ORG $F400
+; Exact neutral dual-knight copies. Only when Y, facing, neutral art and
+; spacing match the hardware. Never enable duplicates with an active M1.
+; Ranger scheduling remains intact; it is never replaced with a copy.
+ExactNeutralPair:
+        pha
+        lda #$10
+        sta NUSIZ1
+        pla
+        cmp #2
+        bcs PairReturn
+        pha
+        lda ArrowDX
+        bne PairReject
+        lda K1Alive
+        and K2Alive
+        beq PairReject
+        lda K1Warn
+        ora K1Strike
+        ora K2Warn
+        ora K2Strike
+        bne PairReject
+        lda K1Y
+        cmp K2Y
+        bne PairReject
+        ; Neutral REFP1 is derived from relative player X; require same side.
+        lda K1X
+        cmp PlayerX
+        lda #0
+        rol
+        sta ScratchMin
+        lda K2X
+        cmp PlayerX
+        lda #0
+        rol
+        cmp ScratchMin
+        bne PairReject
+        ldx #0
+        lda K2X
+        sec
+        sbc K1X
+        bcs PairGap
+        eor #$FF
+        clc
+        adc #1
+        inx
+PairGap:
+        ldy #$11
+        cmp #16
+        beq PairAccept
+        ldy #$12
+        cmp #32
+        beq PairAccept
+        ldy #$14
+        cmp #64
+        bne PairReject
+PairAccept:
+        sty NUSIZ1
+        pla
+        txa
+PairReturn:
+        rts
+PairReject:
+        pla
+        rts
+
         ORG $F6C3
 ; Entered immediately after LDA $FFF6 in bank2 at the same physical PC.
 AuxiliaryEntryTrampoline:
@@ -651,7 +718,20 @@ ReserveDone:
         rts
 
 ChooseP1:
+        lda K1Alive
+        ora K2Alive
+        ora RAlive
+        bne ChooseLiveP1
+        ; No phantom knight during stage-clear pause.
+        sta TargetAlive
+        lda #200          ; x=1..186 minus 200 never selects 0..15
+        sta EnemyBottom
+        lda #$10
+        sta NUSIZ1
+        rts
+ChooseLiveP1:
         jsr AdaptiveSelect
+        jsr ExactNeutralPair
         sta DrawSlot
         cmp #1
         beq ChooseK2
@@ -683,7 +763,7 @@ K1NeutralTint:
         lda #$9E       ; original light-blue armour
 K1ColorDone:
         sta COLUP1
-        lda #169
+        lda #170          ; preload P1 for next physical row via VDELP1
         sec
         sbc K1Y
         sta EnemyBottom
@@ -714,7 +794,7 @@ K2NeutralTint:
         lda #$9E       ; original light-blue armour
 K2ColorDone:
         sta COLUP1
-        lda #169
+        lda #170          ; preload P1 for next physical row via VDELP1
         sec
         sbc K2Y
         sta EnemyBottom
@@ -744,7 +824,7 @@ RangerThreatTint:
         lda #$9E        ; visible arrow/bow overrides camouflaged green
 RangerSafeTint:
         sta COLUP1
-        lda #169
+        lda #170          ; preload P1 for next physical row via VDELP1
         sec
         sbc RY
         sta EnemyBottom
