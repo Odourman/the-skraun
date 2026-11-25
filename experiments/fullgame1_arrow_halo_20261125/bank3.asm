@@ -220,32 +220,30 @@ HaloPointerReady:
         sec
         sbc $EB           ; bank1 chooses regular half-height or radial rune height
         sta RenderBottom
+        ; Each object RESP and fine-HM register is set on its own WSYNC.
+        ; One shared HMOVE after all three positions preserves the same
+        ; physical X, while recovering 1-2 precious VBLANK scanlines.
         lda #0
-        sta HMP1          ; stale previous-frame motion must not move P1
-        sta HMBL          ; nor move BL on P0's HMOVE
+        sta HMP0
+        sta HMP1
+        sta HMM1
+        sta HMBL
         lda RenderX
         jsr PositionP0
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMP0          ; essential: second HMOVE must not move P0 again
-        lda KnightX       ; one sequential P1 diagnostic actor, canon 3 independent OPEN
+        lda KnightX
         jsr PositionP1
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMP1          ; clear after P1's own motion
-        ; M1 independent TIA missile from P1, genuine per-frame X updates.
-        ; Only move/position active missile; no BL or P0 object ownership stolen.
         lda ArrowDX
         beq NoMissilePosition
         lda ArrowX
         jsr PositionMissile1
+NoMissilePosition:
         sta WSYNC
         sta HMOVE
         lda #0
+        sta HMP0
+        sta HMP1
         sta HMM1
-NoMissilePosition:
+        sta HMBL
         jsr NewHaloSetup
         ; Point M1's two enabled raster bytes at a *fixed screen Y*.
         ; Off pointer always full 193 zero bytes in preserved FF guard.
@@ -1400,7 +1398,7 @@ TracerSetBallX:
 ; The RIOT VBLANK budget check prevents the prior stage2 87-line failure.
 TracerBudgetCheck:
         lda INTIM
-        cmp #12
+        cmp #9
         bcc TracerBudgetReturn
         jmp HaloTracerPrepare
 TracerBudgetReturn:
@@ -1410,18 +1408,17 @@ TracerBudgetReturn:
 ; 2-line mask centered on the REAL PlayerY; X sides are +/- HaloRadius.
 ; M0/BL Gold are independent of real Ranger M1 arrow.
 NewHaloSetup:
-        ; Keep VBLANK within its physical timer when L3 HUD/rune is busy.
-        ; If fewer than 12 * 64 CPU cycles remain, skip optional M0/BL
-        ; positioning; preserve P0 rune and M1 arrow unmodified.
+        ; Optimized: shared HMOVE recovers 1-2 setup scanlines.
+        ; Guard at nine 64-cycle ticks for both M0 and BL.
         lda INTIM
-        cmp #12
+        cmp #9
         bcc NewHaloQuickReturn
         lda #0
         sta ENAM0
         lda HaloFrames
         beq HaloSetupCaps
         lda INTIM
-        cmp #14
+        cmp #11
         bcc HaloSetupCaps   ; never steal more than remaining VBLANK
         lda FrameCount
         and #1
