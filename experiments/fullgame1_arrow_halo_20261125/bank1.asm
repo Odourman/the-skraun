@@ -212,7 +212,24 @@ HudNoKnight2:
         beq HudNoRanger
         ora #$20
 HudNoRanger:
-        sta $95           ; HUD threat bits; redrawn next frame
+        ; A fourth, independent HUD indicator warns of ANY imminent hit.
+        ; It is not tied to the currently selected P1 display slot.
+        ldx $D2          ; K1 sword telegraph
+        bne HudDangerActive
+        ldx $D9          ; K2 sword telegraph
+        bne HudDangerActive
+        ldx $D3          ; K1 active strike
+        bne HudDangerActive
+        ldx $DA          ; K2 active strike
+        bne HudDangerActive
+        ldx $E0          ; Ranger bow draw
+        bne HudDangerActive
+        ldx $A3          ; Ranger projectile still in flight
+        beq HudDangerDone
+HudDangerActive:
+        ora #$10
+HudDangerDone:
+        sta $95
         jmp HaloVisualSelect
 HudFont:
         dc.b $77,$55,$55,$55,$77 ; 0
