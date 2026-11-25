@@ -4,6 +4,7 @@ on:
     branches:
       - experiment/fullgame1-arrow-halo-romdev4-20261125
       - experiment/fullgame1-halo-combat-readability-20261125
+      - experiment/fullgame1-final-gameplay-push-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh
