@@ -68,7 +68,31 @@ WorldRects:
 """
     for i,rect in enumerate(SOLIDS):
         code+="        dc.b "+asc([v for r in rect for v in r])+" ; world "+str(i+1)+"\n"
-    return s[:a]+code+s[b:]
+    s=s[:a]+code+s[b:]
+    # A knight may only hurt the player if it occupied the visible P1
+    # slot for the just-rendered frame; P1 can display only one actor.
+    s=s.replace("KnightCanHit:\n        lda Invuln\n","""KnightCanHit:
+        cpx #0
+        bne KnightCheck2Visible
+        lda DrawSlot
+        beq KnightIsVisible
+        jmp KnightIsHidden
+KnightCheck2Visible:
+        lda DrawSlot
+        cmp #1
+        beq KnightIsVisible
+KnightIsHidden:
+        lda #0
+        rts
+KnightIsVisible:
+        lda Invuln
+""")
+    # Prevent same-frame invisible hits after arrow creation in overscan:
+    # ArrowCool is no longer used as a 180-frame cooldown (RCool is).
+    a="ArrowCooldownSet:\n        ldx Stage\n"
+    if s.count(a)!=1:raise ValueError("arrow freshness source")
+    s=s.replace(a,"ArrowCooldownSet:\n        lda #2\n        sta $9D\n        ldx Stage\n")
+    return s
 
 def patch_bank3(s):
     if s.count("EnemyRowPtr = $B6")!=1:raise ValueError("bank3 sprite symbol")
@@ -121,4 +145,44 @@ DynamicEnemyWrite:
     s=s[:a]+world+s[b:]
     a=s.index("EnemyIndexScan:");b=s.index("        ORG $FD00\n",a)
     lut="WorldPFIndex:\n"+"".join("        ds 8,"+str(i)+"\n" for i in range(24))+"        ds 1,23\n"
-    return s[:a]+lut+s[b:]
+    s=s[:a]+lut+s[b:]
+    # TIA M1 shares player-1 color. Give it a contrast-safe physical
+    # color even when the world-camouflaged Ranger was selected.
+    gate="""VisibleGate:
+        ldx #192
+        lda ArrowDX
+        beq GateNormal
+"""
+    if s.count(gate)!=1:raise ValueError("M1 gating source")
+    s=s.replace(gate,gate+"""        lda #$9E
+        sta COLUP1
+""")
+    return s
+
+def patch_bank2(s):
+    # Renderer companion: tracking P0 light/gold is X/Y-physical and
+    # replaces the old rectangular PF2 ring. Logical radius unchanged.
+    a="""SetWorldColors:
+        ; Eight provisional color identities, but ONE common obstacle map.
+        ; World PF must become gold under active halo (PLAY1-H test B).
+        ldx Stage
+"""
+    b="""SetWorldColors:
+        ; Animated gold player silhouette follows real P0 X/Y.
+        lda HaloFrames
+        beq P0AuraInactive
+        lda #$2E
+        sta $06
+        jmp P0AuraReady
+P0AuraInactive:
+        lda #$0E
+        sta $06
+P0AuraReady:
+        ldx Stage
+"""
+    if s.count(a)!=1:raise ValueError("P0 aura source")
+    s=s.replace(a,b)
+    a="TestArrowBody:\n        lda Invulnerable\n"
+    if s.count(a)!=1:raise ValueError("arrow damage gate")
+    s=s.replace(a,"TestArrowBody:\n        lda ArrowCool\n        bne TestArrowWalls\n        lda Invulnerable\n")
+    return s
