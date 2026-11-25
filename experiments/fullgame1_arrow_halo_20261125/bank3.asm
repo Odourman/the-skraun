@@ -347,8 +347,6 @@ VisibleDone:
         jsr UpdateOrb
         jsr UpdateAttack
         nop
-        nop
-        nop
         jsr GameBankEnter ; F8 gameplay tick in overscan ONLY
         lda OrbDirty
         beq OrbXPlaced
@@ -769,6 +767,10 @@ VisibleArrow:
         lda (EnemyRowPtr),y
         jmp DynamicArrowEnemyWrite
 DynamicArrowEnemyBlank:
+        ; M1 flight must not hide BL orb or the left halo mark.
+        ; Only P1-blank rows have enough room for an ENABL update.
+        lda (OrbRowPtr),y
+        sta ENABL
         lda (HaloRowPtr),y
         sta ENAM0
         lda #0
@@ -790,7 +792,7 @@ ArrowNextSpriteBlank:
         bne VisibleArrow
         jmp VisibleDone
 
-        ORG $F459
+        ORG $F45B
 PF0Choices:
         dc.b 0,$80,0
 PF1Choices:
@@ -1003,10 +1005,8 @@ RadiusTable:
         dc.b 0,18,28,38
 RecoverTable:
         dc.b 0,60,36,15
-HaloMaskTable:
-        dc.b 0,$03,$1F,$FF
-HaloBaseLo: dc.b 0,$B0,$C0,$D0
-HaloBaseHi: dc.b 0,$F7,$FA,$FD
+        ; Reclaim 12 dead bytes: legacy HaloMaskTable/HaloBaseLo/Hi
+        ; had no live assembly reference.
 
 ; Source original R3 K1 exact eight bytes $18,$3C,$7E,$DB,$5A,$24,$66,$42,
 ; each displayed twice, in decreasing scanline X index order.
