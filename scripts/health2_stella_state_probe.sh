@@ -11,6 +11,8 @@ import sys
 src=Path(sys.argv[1]).read_text()
 checks=[
   (' stress_120;do',';do'),
+  ('for k in _scanEnd _scan _sCycles _cClocks _fWsyncCycles _fTimReadCycles _bank',
+   'for k in _scanEnd _fCycles _scan _sCycles _cClocks _fWsyncCycles _fTimReadCycles _bank'),
   ("if [ \"$scene\" = knight_strike ];then echo 'frame #30';fi",
    "if [ \"$scene\" = knight_strike ];then echo 'frame #23';fi"),
   ("          echo 'joy0Fire #1';;\n      esac\n      ;;\n    stress_120)",
