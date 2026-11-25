@@ -32,6 +32,7 @@ from fullgame1_arrow_patch import patch_bank2, patch_bank3
 from fullgame1_geometry_patch import cache_bank2, cache_bank3
 from fullgame1_actor_patch import actors_bank2, actors_bank3
 from fullgame1_world_patch import world_bank3
+from fullgame1_sparse_kernel_patch import sparse_kernel_bank3
 from fullgame1_sound_patch import sound_bank2, sound_bank3
 for i, name in ((2,"gameplay5_bank0.asm"),(3,"gameplay5_bank1.asm")):
     original_source=(SRC/name).read_text()
@@ -42,6 +43,7 @@ for i, name in ((2,"gameplay5_bank0.asm"),(3,"gameplay5_bank1.asm")):
     updated_source=(sound_bank2(updated_source) if i==2 else sound_bank3(updated_source))
     updated_source=(safety_bank2(updated_source) if i==2 else stage_render_bank3(updated_source))
     if i==3: updated_source=gameover_bank3(hud_bank3(updated_source))
+    if i==3: updated_source=sparse_kernel_bank3(updated_source)
     else: updated_source=gameover_bank2(updated_source)
     (OUT/f"bank{i}.asm").write_text(updated_source)
 parts=[]
