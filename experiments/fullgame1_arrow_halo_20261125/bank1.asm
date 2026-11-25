@@ -197,6 +197,22 @@ HudNextRow:
         iny
         cpy #5
         bcc HudPrepareRow
+        ; Independent five-row threat status. The $95 scratch holds a
+        ; completed score digit until this point; free thereafter.
+        lda #0
+        ldx $D5           ; K1 alive
+        beq HudNoKnight1
+        ora #$80
+HudNoKnight1:
+        ldx $DC           ; K2 alive
+        beq HudNoKnight2
+        ora #$40
+HudNoKnight2:
+        ldx $E3           ; Ranger alive
+        beq HudNoRanger
+        ora #$20
+HudNoRanger:
+        sta $95           ; HUD threat bits; redrawn next frame
         jmp HaloVisualSelect
 HudFont:
         dc.b $77,$55,$55,$55,$77 ; 0
