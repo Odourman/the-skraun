@@ -769,8 +769,10 @@ VisibleArrow:
         lda (EnemyRowPtr),y
         jmp DynamicArrowEnemyWrite
 DynamicArrowEnemyBlank:
-        lda (HaloRowPtr),y
-        sta ENAM0
+        ; Same cycle count as the old M0 write. BL stays visible while
+        ; physical M1 flies; M0's outer side tracer gives way temporarily.
+        lda (OrbRowPtr),y
+        sta ENABL
         lda #0
 DynamicArrowEnemyWrite:
         sta GRP1
@@ -1067,12 +1069,12 @@ HudBankReturn:
         rts
         ORG $F6C4
 HudDraw:
-        ldy Lives
-        lda HudLifeMasks,y
-        sta PF0
         ldx #0
 HudDrawRow:
         sta WSYNC
+        ldy Lives
+        lda HudLifeMasks,y
+        sta PF0           ; left half: actual lives on all five HUD rows
         lda $90,x
         sta PF1
         cpx #3
@@ -1083,6 +1085,12 @@ HudPF2Tail:
         lda $97,x
 HudPF2Write:
         sta PF2
+        ; Second PF0 write only after the left-half beam passed PF0.
+        ; Right-half PF0 becomes the three independent actor indicators.
+        nop
+        nop
+        lda $95
+        sta PF0
         inx
         cpx #5
         bne HudDrawRow
