@@ -670,7 +670,18 @@ ChooseK1:
         sta SwordRest
         lda K1Facing
         sta KnightDir
-        lda #$9E
+        lda K1Strike
+        beq K1WarnTint
+        lda #$46       ; warm bright strike cue while dangerous
+        bne K1ColorDone
+K1WarnTint:
+        lda K1Warn
+        beq K1NeutralTint
+        lda #$2E       ; stable golden 24f sword telegraph
+        bne K1ColorDone
+K1NeutralTint:
+        lda #$9E       ; original light-blue armour
+K1ColorDone:
         sta COLUP1
         lda #169
         sec
@@ -690,7 +701,18 @@ ChooseK2:
         sta SwordRest
         lda K2Facing
         sta KnightDir
-        lda #$9E
+        lda K2Strike
+        beq K2WarnTint
+        lda #$46       ; warm bright strike cue while dangerous
+        bne K2ColorDone
+K2WarnTint:
+        lda K2Warn
+        beq K2NeutralTint
+        lda #$2E       ; stable golden 24f sword telegraph
+        bne K2ColorDone
+K2NeutralTint:
+        lda #$9E       ; original light-blue armour
+K2ColorDone:
         sta COLUP1
         lda #169
         sec
@@ -712,6 +734,15 @@ ChooseRanger:
         sta KnightDir
         ldx Stage
         lda RangerColors,x
+        ldx ArrowDX
+        bne RangerThreatTint
+        ldx RDraw
+        bne RangerThreatTint
+        ldx RRelease
+        beq RangerSafeTint
+RangerThreatTint:
+        lda #$9E        ; visible arrow/bow overrides camouflaged green
+RangerSafeTint:
         sta COLUP1
         lda #169
         sec
@@ -854,7 +885,7 @@ WorldRects:
         dc.b $09,$23,$18,$3E,$80,$97,$16,$38,$0C,$27,$87,$A5,$7F,$97,$87,$A5 ; world 7
         dc.b $0A,$23,$1D,$37,$82,$99,$19,$3D,$0F,$28,$88,$A5,$7A,$94,$84,$A2 ; world 8
 
-        ORG $FA40
+        ORG $FA80
 ; Adaptive display-only scheduler. Runs once per game frame in blanking.
 ; Priority: active sword > 24f telegraph > Ranger bow pose > live actors.
 ; Fast 3/4-frame lock for a single threat, 1/4 fair other actors.

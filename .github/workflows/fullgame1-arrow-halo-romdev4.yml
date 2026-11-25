@@ -1,8 +1,9 @@
-name: FULLGAME-1 ArrowY radial-halo experimental 16KiB F6
+name: FULLGAME-1 F6 adaptive combat halo/arrow native DASM + Stella
 on:
   push:
     branches:
       - experiment/fullgame1-arrow-halo-romdev4-20261125
+      - experiment/fullgame1-halo-combat-readability-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh

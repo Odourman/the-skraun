@@ -140,6 +140,8 @@ ClrTIA:
         sta CTRLPF      ; original 4 mirrored obstacles; 2x BL orb
         lda #$9E
         sta COLUP1      ; light-blue diagnostic knight byte, NOT final palette
+        lda #$10
+        sta NUSIZ1      ; 2-pixel physical M1, while P1 stays 1x
         lda #2
         sta OrbMask
         lda #1
@@ -218,32 +220,30 @@ HaloPointerReady:
         sec
         sbc $EB           ; bank1 chooses regular half-height or radial rune height
         sta RenderBottom
+        ; Each object RESP and fine-HM register is set on its own WSYNC.
+        ; One shared HMOVE after all three positions preserves the same
+        ; physical X, while recovering 1-2 precious VBLANK scanlines.
         lda #0
-        sta HMP1          ; stale previous-frame motion must not move P1
-        sta HMBL          ; nor move BL on P0's HMOVE
+        sta HMP0
+        sta HMP1
+        sta HMM1
+        sta HMBL
         lda RenderX
         jsr PositionP0
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMP0          ; essential: second HMOVE must not move P0 again
-        lda KnightX       ; one sequential P1 diagnostic actor, canon 3 independent OPEN
+        lda KnightX
         jsr PositionP1
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMP1          ; clear after P1's own motion
-        ; M1 independent TIA missile from P1, genuine per-frame X updates.
-        ; Only move/position active missile; no BL or P0 object ownership stolen.
         lda ArrowDX
         beq NoMissilePosition
         lda ArrowX
         jsr PositionMissile1
+NoMissilePosition:
         sta WSYNC
         sta HMOVE
         lda #0
+        sta HMP0
+        sta HMP1
         sta HMM1
-NoMissilePosition:
+        sta HMBL
         jsr NewHaloSetup
         ; Point M1's two enabled raster bytes at a *fixed screen Y*.
         ; Off pointer always full 193 zero bytes in preserved FF guard.
@@ -666,7 +666,7 @@ B_VISUAL_LEFT:
 ; at arena y=[24,48); lower x=[24,44) reflected to [116,136)
 ; at arena y=[136,152). 4 solids, not final world map.
 ; This physical scanline map is indexed by X=192..1 in VisibleLoop.
-        ORG $F398
+        ORG $F3A0
 ; Visible sprite source in compact indexed ROM tables. Pixel-exact 16 rows.
 ; This replaces obsolete 193B standalone K1-warning profile (space for code).
 SelectEnemyArtImpl:
@@ -742,8 +742,8 @@ VisibleGate:
         ldx #186
         lda ArrowDX
         beq GateNormal
-        lda #$9E
-        sta COLUP1
+        ; COLUP1 chosen by threat-aware K1/K2/Ranger logic in overscan;
+        ; never hide a golden sword warning when M1 is active.
         ; Preserve visual projectile while halo active, even when off-radius.
         ; PF2 halo outline is suppressed during M1 frames (visual PARTIAL).
         lda #0
@@ -806,7 +806,7 @@ HeightHalf:
 SpriteHeights:
         dc.b 0,12,24,36
 PlayerSizes:
-        dc.b 0,0,$15,$27 ; M0 missile 1/2/4px, same P0 level width bits
+        dc.b 0,$10,$25,$37 ; M0 gold halo side thickness L1=2px, L2=4px, L3=8px
 ; Obsolete unused MapLow/MapHigh removed, no dynamic RowMapPtr reader.\nArtLo:
         dc.b <A_VISUAL_RIGHT,<B_VISUAL_RIGHT,<A_VISUAL_LEFT,<B_VISUAL_LEFT
 ArtHi:
@@ -1277,13 +1277,13 @@ M0PositionLoop:
         rts
         ORG $F9B2
 HaloL3Rune:
-        dc.b $18,$3C,$7E,$00,$00,$00,$00,$00,$00,$00,$00,$18
-        dc.b $3C,$00,$00,$00,$00,$00,$00,$00,$06,$06,$06,$C4
-        dc.b $C4,$C4,$64,$64,$64,$3C,$3C,$3C,$3C,$3C,$3C,$3D
-        dc.b $3D,$3D,$FE,$FE,$FE,$7C,$7C,$7C,$66,$66,$66,$5A
-        dc.b $5A,$5A,$7E,$7E,$7E,$24,$24,$24,$00,$00,$00,$00
-        dc.b $00,$00,$00,$00,$3C,$18,$00,$00,$00,$00,$00,$00
-        dc.b $00,$00,$7E,$3C,$18
+        dc.b $18,$3C,$7E,$24,$24,$24,$42,$42,$42,$42,$42,$5A
+        dc.b $7E,$42,$42,$42,$42,$81,$81,$81,$87,$87,$87,$C5
+        dc.b $C5,$C5,$E5,$E5,$E5,$BD,$BD,$BD,$BD,$BD,$BD,$BD
+        dc.b $BD,$BD,$FF,$FF,$FF,$FD,$FD,$FD,$E7,$E7,$E7,$DB
+        dc.b $DB,$DB,$FF,$FF,$FF,$A5,$A5,$A5,$81,$81,$81,$81
+        dc.b $42,$42,$42,$42,$7E,$5A,$42,$42,$42,$42,$42,$24
+        dc.b $24,$24,$7E,$3C,$18
         ORG $FA00
 PlayPF1:
 ; World 1: four 2-line PF render entries per 8-row world metatile
@@ -1334,16 +1334,16 @@ OrbScan:
 HaloTraceCore:
         dc.b 2,0
 HaloL1Rune:
-        dc.b $18,$3C,$7E,$00,$00,$18,$3C,$00,$00,$00,$00,$00
-        dc.b $06,$C4,$64,$3C,$3C,$3D,$FE,$7C,$66,$5A,$7E,$24
-        dc.b $00,$00,$00,$00,$00,$00,$3C,$18,$00,$00,$7E,$3C
+        dc.b $18,$3C,$7E,$42,$42,$5A,$7E,$42,$42,$81,$81,$81
+        dc.b $87,$C5,$E5,$BD,$BD,$BD,$FF,$FD,$E7,$DB,$FF,$A5
+        dc.b $81,$81,$81,$81,$42,$42,$7E,$5A,$42,$42,$7E,$3C
         dc.b $18
 HaloL2Rune:
-        dc.b $18,$3C,$7E,$00,$00,$00,$00,$00,$18,$3C,$00,$00
-        dc.b $00,$00,$00,$00,$06,$06,$C4,$C4,$64,$64,$3C,$3C
-        dc.b $3C,$3C,$3D,$3D,$FE,$FE,$7C,$7C,$66,$66,$5A,$5A
-        dc.b $7E,$7E,$24,$24,$00,$00,$00,$00,$00,$00,$00,$3C
-        dc.b $18,$00,$00,$00,$00,$00,$7E,$3C,$18
+        dc.b $18,$3C,$7E,$24,$42,$42,$42,$42,$5A,$7E,$42,$42
+        dc.b $42,$81,$81,$81,$87,$87,$C5,$C5,$E5,$E5,$BD,$BD
+        dc.b $BD,$BD,$BD,$BD,$FF,$FF,$FD,$FD,$E7,$E7,$DB,$DB
+        dc.b $FF,$FF,$A5,$A5,$81,$81,$81,$81,$42,$42,$42,$7E
+        dc.b $5A,$42,$42,$42,$42,$24,$7E,$3C,$18
         ds 16,0    ; FDF0..FDFF original OrbScan zero-guard
         ORG $FE00
 GameOverMap:
@@ -1398,7 +1398,7 @@ TracerSetBallX:
 ; The RIOT VBLANK budget check prevents the prior stage2 87-line failure.
 TracerBudgetCheck:
         lda INTIM
-        cmp #12
+        cmp #9
         bcc TracerBudgetReturn
         jmp HaloTracerPrepare
 TracerBudgetReturn:
@@ -1408,18 +1408,17 @@ TracerBudgetReturn:
 ; 2-line mask centered on the REAL PlayerY; X sides are +/- HaloRadius.
 ; M0/BL Gold are independent of real Ranger M1 arrow.
 NewHaloSetup:
-        ; Keep VBLANK within its physical timer when L3 HUD/rune is busy.
-        ; If fewer than 12 * 64 CPU cycles remain, skip optional M0/BL
-        ; positioning; preserve P0 rune and M1 arrow unmodified.
+        ; Optimized: shared HMOVE recovers 1-2 setup scanlines.
+        ; Guard at nine 64-cycle ticks for both M0 and BL.
         lda INTIM
-        cmp #12
+        cmp #9
         bcc NewHaloQuickReturn
         lda #0
         sta ENAM0
         lda HaloFrames
         beq HaloSetupCaps
         lda INTIM
-        cmp #14
+        cmp #11
         bcc HaloSetupCaps   ; never steal more than remaining VBLANK
         lda FrameCount
         and #1
