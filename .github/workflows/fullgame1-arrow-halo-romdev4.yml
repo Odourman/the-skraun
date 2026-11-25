@@ -6,11 +6,9 @@ on:
       - experiment/fullgame1-halo-combat-readability-20261125
       - experiment/fullgame1-m1-orb-hud-radar-20261125
       - experiment/health1-complete-audit-20261125
-      - experiment/health1-complete-audit-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh
-      - scripts/health1_static_checks.py
       - scripts/health1_static_checks.py
       - .github/workflows/fullgame1-arrow-halo-romdev4.yml
   workflow_dispatch:
@@ -33,8 +31,6 @@ jobs:
           cd build/arrow_halo_romdev4
           sha256sum -c SHA256SUMS.txt
           test "$(stat -c %s THE_SKRAUN_FULLGAME1_ARROW_HALO_F6_NTSC.bin)" = "16384"
-      - name: HEALTH-1 RAM ownership and ROM manifest checks (static, not gameplay proof)
-        run: python3 scripts/health1_static_checks.py
       - name: HEALTH-1 RAM ownership and ROM manifest checks (static, not gameplay proof)
         run: python3 scripts/health1_static_checks.py
       - name: Preserve exact tool executables
