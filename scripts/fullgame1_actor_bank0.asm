@@ -104,9 +104,9 @@ ClearActorRAM:
         sta K2Y
         lda #1
         sta K2Alive
-        lda #81
+        lda #140       ; Ranger enters away from P0, no point-blank arrow
         sta RX
-        lda #96
+        lda #88        ; accessible open center-right corridor in all 8 worlds
         sta RY
         lda #1
         sta RAlive
