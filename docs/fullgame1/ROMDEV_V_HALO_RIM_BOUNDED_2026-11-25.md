@@ -1,0 +1,7 @@
+# ROM DEVELOPMENT V – cardinal halo-rim iteration (2026-11-25)
+Issue #50; MAIN V full-game authorization. Frozen PR58 bab7dce7af7be1d6ed4381833ee5fab37d8143b3, ROM 83f35c6d1c24be9391a845d377b4d24ee9d2b20647ca5f993d3cb54e646acbfa; PR56 and PR57 unchanged.
+## Local native evidence
+V1 bb7db027779f96fc02cff5b92dc94113e8db6a4b4ecf20ad537a33e08db598a5 (16384 bytes F6). Real DASM four-bank build. 17/17 legacy joystick endpoint tests at 262, 120/120 separately typed frame scans at 262, 24/24 synthetic L3 sequence at 262. Legacy stage2_L3 route actually ended at Stage 1 Level 2 (not a L3 proof). Natural 120 run ended on Level 2; no claim of complete gameplay.
+At physical VisibleGate PC F406 bank3, synthetic player (80,88), level=3, logical radius=38, arrow x120, phases 1/3: baseline M1 position 122 and BL92/92, V1 M1=122 and BL40/107, P0=64 and P1=33 unchanged. Level was injected; CTRLPF initially has previous frame width. These are physical position registers, not a closed pixel contour.
+Rejected V2 19d33a481ee4649af935fd866c48b4efa273181764d07f33bb630c3746bdc45d grouped all fine shifts under one HMOVE. Despite 17/17 and 120/120 and 24/24 endpoint results, M1 moved to 78 instead of 122 at identical fixtures. Not integrated.
+V1 changes no logical hit model, player mask, stage map, or combat rules. The visual effect remains discontinuous, phase-dependent, and may disappear on budget guard; P1 remains one physical sprite/frame. No full release, no merge, no independent verification. Do not treat endpoint labels as asserted states. 
