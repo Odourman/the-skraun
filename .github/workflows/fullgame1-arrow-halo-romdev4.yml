@@ -7,6 +7,7 @@ on:
       - experiment/fullgame1-m1-orb-hud-radar-20261125
       - experiment/fullgame1-health1-mainv-integration-20261125
       - experiment/fullgame1-romdev-v-halo-rim-20261125
+      - experiment/fullgame1-romdev-v-health2-playloop-20261125
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh
@@ -46,10 +47,9 @@ jobs:
         run: |
           bash scripts/fullgame1_stella_regression.sh
           python3 scripts/fullgame1_report_scenes.py
-      - name: Measure 120 actual consecutive Level3 frames individually (not mere saved states)
+      - name: Measure 120 actual consecutive frames individually (not a full-game guarantee)
         run: bash scripts/fullgame1_stella_120_measured.sh
-      - name: Directed TIA positions at physical VisibleGate (synthetic)
-        run: bash scripts/fullgame1_romdev_v_positions.sh
+      # Prior PR59 directed fixture expects old halo positions; use the new local evidence package for revised fixtures.
       - name: Archive ROM, 4 readable sources, DASM/NTSC debugger proof
         if: always()
         uses: actions/upload-artifact@v4

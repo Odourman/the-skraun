@@ -255,7 +255,7 @@ HaloVisualSelect:
         lda #0
         sta $0B           ; REFP0, normal sprite already physically flipped in ROM
         lda $9E           ; HaloFrames
-        beq HVSExit
+        beq HaloRimOff
         lda $A0           ; HaloRadius (18/28/38)
         sta $87
         ldx $82           ; Level
@@ -266,11 +266,40 @@ HaloVisualSelect:
         lda HaloRuneHeight,x
         sta $88           ; SpriteHeight (37/57/77)
         lda $8E           ; Facing (0=right,1=left)
-        beq HVSExit
+        beq HaloRimPrepare
         lda #8
         sta $0B           ; hardware pixel-exact horizontal mirror
-HVSExit:
+HaloRimPrepare:
+        ; Three contour bands, phased by the 0..2 gait counter. Keep the
+        ; logical radius untouched. Y offsets are in two-line table units.
+        lda $86
+        and #3
+        asl
+        asl
+        ora $82
+        tax
+        lda HaloRimReach,x
+        sta $8F           ; MotionDid is dead after UpdateGait, until next Frame
+        lda $81
+        clc
+        adc #1
+        lsr
+        clc
+        adc HaloRimYSeed,x
+        sta $A6
+        lda #$FF
+        sta $A7
         jmp HudExitToGraphics
+HaloRimOff:
+        lda #1
+        sta $A6
+        lda #$FF
+        sta $A7
+        jmp HudExitToGraphics
+HaloRimReach:
+        dc.b 0,18,28,38, 0,14,21,29, 0,14,21,29
+HaloRimYSeed:
+        dc.b $28,$28,$28,$28, $28,$2D,$2F,$32, $28,$23,$21,$1E
 HaloRuneLo:
         dc.b 0,$92,$B7,$B2
 HaloRuneHi:

@@ -134,6 +134,12 @@ InitializeGame:
         sta Invulnerable
         sta SoundFrames
         sta StagePause
+        sta HaloFrames
+        sta $9F           ; clear old recovery on restart
+        lda $86
+        and #$83          ; clear gameover FIRE-release latch
+        sta $86
+        lda #0
         sta ArrowCool
         sta ArrowDX
         sta ArrowDY
@@ -535,23 +541,7 @@ UpdateSound:
         jmp SoundBankEnter
 
 GameOver:
-        lda #$30
-        sta WorldPFPtr
-        lda #$FB
-        sta WorldPFPtr+1
-        lda #$42
-        sta COLUBK
-        jsr UpdateSound   ; finish game-over envelope, then mute both voices
-        lda SwitchState
-        and #1           ; physical console RESET switch, active low
-        beq RestartGame
-        lda INPT4        ; physical FIRE to restart too, active low bit 7
-        bmi GameOverStay
-RestartGame:
-        lda #0
-        sta Stage        ; next tick initializes new game
-GameOverStay:
-        jmp GameBankReturn
+        jmp GameOverImpl
 
 WorldPFColors:
         dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
@@ -890,6 +880,43 @@ OctagonXMax:
         adc $E9
         cmp HaloRadius
         rts
+
+        ORG $F780
+GameOverImpl:
+        lda #0
+        sta HaloFrames
+        sta $9F
+        sta ArrowDX
+        sta OrbMask
+        sta TargetAlive
+        lda #200
+        sta $E8          ; suppress stale P1 even before the dedicated screen
+        lda #$10
+        sta $05          ; do not keep a pair or duplicated missile
+        sta CTRLPF       ; no mirror for the END banner
+        lda #$0E
+        sta COLUPF
+        lda #$42
+        sta COLUBK
+        jsr UpdateSound
+        lda SwitchState
+        and #1
+        beq RestartGame
+        lda INPT4
+        bpl GameOverFire
+        lda $86
+        ora #$40          ; arm only after FIRE released
+        sta $86
+        jmp GameOverStay
+GameOverFire:
+        lda $86
+        and #$40
+        beq GameOverStay
+RestartGame:
+        lda #0
+        sta Stage        ; next tick initializes new game
+GameOverStay:
+        jmp GameBankReturn
 
         ORG $FFFC
         dc.w GameBankReset
