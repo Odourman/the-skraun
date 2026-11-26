@@ -8,6 +8,7 @@ on:
       - experiment/fullgame1-health1-mainv-integration-20261125
       - experiment/fullgame1-romdev-v-halo-rim-20261125
       - experiment/fullgame1-romdev-v-health2-playloop-20261125
+      - experiment/fullgame1-romdev-v-revision3-20261126
     paths:
       - experiments/fullgame1_arrow_halo_20261125/**
       - scripts/fullgame1_stella_120_measured.sh

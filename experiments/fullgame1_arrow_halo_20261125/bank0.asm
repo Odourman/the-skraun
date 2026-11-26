@@ -956,14 +956,14 @@ WorldPFLo:
 WorldPFHi:
         dc.b $FA,$FA,$FA,$FA,$FB,$FB,$FB,$FC,$FC
 WorldRects:
-        dc.b $0A,$1F,$18,$32,$80,$97,$18,$32,$0E,$27,$87,$A1,$7A,$94,$87,$A1 ; world 1
-        dc.b $0A,$22,$1C,$3D,$7B,$94,$14,$31,$0F,$2A,$86,$9E,$7C,$97,$89,$A2 ; world 2
-        dc.b $08,$24,$15,$37,$7F,$99,$1A,$3A,$0A,$27,$87,$A5,$7F,$98,$8A,$A4 ; world 3
-        dc.b $09,$22,$19,$3B,$7C,$99,$1A,$3F,$0B,$23,$83,$A5,$7F,$99,$88,$A0 ; world 4
-        dc.b $09,$1E,$16,$37,$81,$97,$1B,$3D,$0C,$25,$87,$A5,$7B,$97,$8A,$A5 ; world 5
-        dc.b $0A,$27,$18,$3B,$7D,$99,$16,$36,$0A,$21,$8A,$A1,$80,$98,$87,$A2 ; world 6
-        dc.b $09,$23,$18,$3E,$80,$97,$16,$38,$0C,$27,$87,$A5,$7F,$97,$87,$A5 ; world 7
-        dc.b $0A,$23,$1D,$37,$82,$99,$19,$3D,$0F,$28,$88,$A5,$7A,$94,$84,$A2 ; world 8
+        dc.b $10,$30,$06,$30,$70,$90,$06,$30,$10,$30,$78,$A4,$70,$90,$78,$A4 ; Revision 3 stage 1, internal Y = arena Y - 9
+        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$78,$A4,$64,$80,$78,$A4 ; Revision 3 stage 2, internal Y = arena Y - 9
+        dc.b $10,$30,$0A,$2C,$70,$90,$0A,$2C,$10,$30,$7E,$9E,$70,$90,$7E,$9E ; Revision 3 stage 3, internal Y = arena Y - 9
+        dc.b $14,$30,$0A,$2C,$64,$80,$0A,$2C,$14,$30,$7E,$9E,$64,$80,$7E,$9E ; Revision 3 stage 4, internal Y = arena Y - 9
+        dc.b $10,$2C,$06,$30,$74,$90,$06,$30,$10,$30,$7A,$A2,$70,$90,$7A,$A2 ; Revision 3 stage 5, internal Y = arena Y - 9
+        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$7A,$A2,$64,$80,$7A,$A2 ; Revision 3 stage 6, internal Y = arena Y - 9
+        dc.b $10,$30,$08,$30,$70,$90,$08,$30,$10,$30,$7A,$A0,$70,$90,$7A,$A0 ; Revision 3 stage 7, internal Y = arena Y - 9
+        dc.b $14,$30,$08,$30,$64,$80,$08,$30,$14,$30,$7A,$A0,$64,$80,$7A,$A0 ; Revision 3 stage 8, internal Y = arena Y - 9
 
         ORG $FA80
 ; Adaptive display-only scheduler. Runs once per game frame in blanking.
@@ -1019,22 +1019,23 @@ ASPickK2:
         ldx #1
         jmp ASMajority
 ASBoth:
-        lda FrameCount
+        lda $86           ; 3-phase gait counter, also used for display fairness
         and #3
-        cmp #3
         bne ASBothKnight
         lda RAlive
-        bne ASPickRanger
+        beq ASBothKnight
+        lda #2            ; direct Ranger turn, do not feed back into majority scheduler
+        rts
 ASBothKnight:
         lda FrameCount
         and #1
         rts
 ASMajority:
-        lda FrameCount
+        lda $86           ; two of three frames prioritize the active attack
         and #3
         bne ASReturnHigh
-        ; On every fourth frame deliberately give an *other* living
-        ; character the turn, so a 24-frame telegraph has >=18 frames
+        ; On every third frame deliberately give an *other* living
+        ; character the turn, so a 24-frame telegraph has >=16 frames
         ; with the warning knight without indefinitely hiding the Ranger.
         jsr ASRoundRobin
         sta DrawSlot

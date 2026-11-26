@@ -78,6 +78,10 @@ GameInitialized:
         ; Finish this frame: first new-stage audio tick occurs next frame.
         jmp GameBankReturn
 GamePauseOnly:
+        ; Completed wave: no stationary projectile during the two-second clear pause.
+        lda #0
+        sta ArrowDX
+        sta ArrowDY
         jsr SetWorldColors
         jsr UpdateSound
         jmp GameBankReturn
