@@ -737,6 +737,167 @@ SwordWarnX:
 SwordWarnY:
         dc.b 0,9,13,18
 
+        ORG $F580
+; Mode high nibble 1..4 = edge, bit1 = returning, RRelease clip offset.
+; X axis uses pre-shifted neutral masks at hardware-safe X8/X152.
+; Y top traverses signed Y; bottom uses a padded mask to prevent HUD wrap.
+EdgeTraversal:
+        lda RAlive
+        lsr
+        lsr
+        lsr
+        lsr
+        tay
+        dey
+        lda RAlive
+        and #2
+        beq EdgeLeaving
+        jmp EdgeReturning
+EdgeLeaving:
+        lda RRelease
+        bne EdgeOutStep
+        lda RY
+        cmp #12
+        bcc EdgeOutStep
+        cmp #159
+        bcs EdgeOutStep
+        lda EdgeX,y
+        cmp RX
+        bne EdgeTarget
+        lda EdgeY,y
+        cmp RY
+        bne EdgeTarget
+        ; Do not empty the arena: two other remaining enemies required.
+        lda StageKills
+        clc
+        adc #2
+        cmp KillsNeed
+        bcc EdgeOutStep
+        lda #1
+        sta RAlive
+        rts
+EdgeTarget:
+        lda EdgeX,y
+        sta ScratchIX
+        lda EdgeY,y
+        sta ScratchY
+        ldx #1
+        jmp RangerMoveTarget
+EdgeOutStep:
+        cpy #2
+        bcc EdgeHorizontalOut
+        beq EdgeTopOut
+        lda RY
+        cmp #168
+        beq EdgeBottomOut
+        inc RY
+        rts
+EdgeBottomOut:
+        lda FrameCount
+        and #1
+        bne EdgeDone
+        inc RRelease
+        inc RRelease
+        lda RRelease
+        cmp #16
+        bcc EdgeDone
+        bcs EdgeDepart
+EdgeTopOut:
+        dec RY
+        lda RY
+        cmp #242
+        bne EdgeDone
+        beq EdgeDepart
+EdgeHorizontalOut:
+        ; 2-color-clock mask shifts, one per two frames.
+        lda FrameCount
+        and #1
+        bne EdgeDone
+        inc RRelease
+        inc RRelease
+        lda RRelease
+        cmp #8
+        bcc EdgeDone
+EdgeDepart:
+        sty RRelease
+        lda #150
+        sta RCool
+        lda #2
+        sta RAlive
+EdgeDone:
+        rts
+EdgeEnter:
+        ; RX/RY already selected and proven distant from player.
+        tya
+        clc
+        adc #1
+        asl
+        asl
+        asl
+        asl
+        ora #7
+        sta RAlive
+        lda #0
+        sta RDraw
+        sta RRelease
+        cpy #2
+        bcc EdgeEnterHorizontal
+        beq EdgeEnterTop
+        lda #168
+        sta RY
+        lda #14
+        bne EdgeEnterClip
+EdgeEnterTop:
+        lda #244
+        sta RY
+        rts
+EdgeEnterHorizontal:
+        lda #6
+EdgeEnterClip:
+        sta RRelease
+        rts
+EdgeReturning:
+        cpy #2
+        bcc EdgeReturnHorizontal
+        beq EdgeReturnTop
+        lda RRelease
+        beq EdgeReturnBottomY
+        lda FrameCount
+        and #1
+        bne EdgeDone
+        dec RRelease
+        dec RRelease
+        rts
+EdgeReturnBottomY:
+        dec RY
+        lda RY
+        cmp #158
+        bne EdgeDone
+        beq EdgeFinish
+EdgeReturnTop:
+        inc RY
+        lda RY
+        cmp #12
+        bne EdgeDone
+        beq EdgeFinish
+EdgeReturnHorizontal:
+        lda FrameCount
+        and #1
+        bne EdgeDone
+        lda RRelease
+        beq EdgeFinish
+        dec RRelease
+        dec RRelease
+        bne EdgeDone
+EdgeFinish:
+        lda #3
+        sta RAlive
+        lda #0
+        sta RRelease
+        lda #30
+        sta RCool
+        rts
+
         ORG $F6C3
 ; Entered immediately after LDA $FFF6 in bank2 at the same physical PC.
 AuxiliaryEntryTrampoline:
@@ -758,6 +919,20 @@ RangerDoneEarly:
 RangerExists:
         lda HaloFrames
         beq RangerTimers
+        ; Non-combat during partial traversal and entry. Full visible approach is hittable.
+        lda RAlive
+        cmp #$10
+        bcc RangerHaloCheck
+        and #2
+        bne RangerTimers
+        lda RRelease
+        bne RangerTimers
+        lda RY
+        cmp #12
+        bcc RangerTimers
+        cmp #159
+        bcs RangerTimers
+RangerHaloCheck:
         lda PlayerX
         sec
         sbc RX
@@ -792,6 +967,10 @@ RangerMovementCheck:
         ldx #14
         jsr RangerBlocked
         beq RangerMovementDone
+        ; When the physical overscan budget is low, defer optional alternate axis.
+        lda $284
+        cmp #7
+        bcc RangerRestorePosition
         lda FrameCount
         and #4
         bne RangerFallbackY
@@ -819,6 +998,7 @@ RangerFallbackY:
 RangerFallbackCheck:
         jsr RangerBlocked
         beq RangerMovementDone
+RangerRestorePosition:
         lda ScratchMin
         sta RX
         lda ScratchMax
@@ -975,10 +1155,18 @@ ChooseRanger:
         lda RX
         sta KnightX
         lda RAlive
+        cmp #$10
+        bcc RangerNormalPose
+        lda #0
+        sta SwordWarn
+        sta SwordStrike
+        beq RangerPoseReady
+RangerNormalPose:
         lda RDraw
         sta SwordWarn
         lda RRelease
         sta SwordStrike
+RangerPoseReady:
         lda RAlive
         and #8
         sta KnightDir
@@ -1175,6 +1363,9 @@ ASCheckRanger:
         lda RAlive
         and #1
         beq ASRoundRobin
+        lda RAlive
+        cmp #$10
+        bcs ASPickRanger
         lda RDraw
         ora RRelease
         beq ASRoundRobin
@@ -1423,9 +1614,9 @@ RangerNormal:
         dec RDraw
         bne RangerDoneNear
         jsr RangerDistance
-        cmp #30
+        cmp #26
         bcc RangerAbort
-        cmp #45
+        cmp #53
         bcs RangerAbort
         lda ArrowDX
         bne RangerAbort
@@ -1450,19 +1641,23 @@ RangerCoolTick:
         beq RangerRate
         dec RCool
 RangerRate:
-        lda FrameCount
-        and #3
-        beq RangerRateTick
-        cmp #3
-        bne RangerDoneNear
 RangerRateTick:
         jsr RangerDistance
         tay
         lda RAlive
         and #4
         beq RangerBand
-        cpy #32
-        bcs RangerInwardClear
+        lda RX
+        cmp #64
+        bcc RangerInwardJump
+        cmp #97
+        bcs RangerInwardJump
+        lda RY
+        cmp #78
+        bcc RangerInwardJump
+        cmp #99
+        bcc RangerInwardClear
+RangerInwardJump:
         jmp RangerInward
 RangerInwardClear:
         lda RAlive
@@ -1477,17 +1672,19 @@ RangerBand:
         cmp RetreatThreshold,x
         bcs RangerRetreat
         tya
-        cmp #45
+        cmp #53
         bcs RangerApproach
         lda RCool
         bne RangerDoneNear
         tya
-        cmp #36
+        cmp #40
         bcc RangerRetreat
         lda ArrowDX
         bne RangerDoneNear
         jsr RangerLaneRefined
-        beq RangerApproach
+        bne RangerStartAim
+        jmp RangerReposition
+RangerStartAim:
         lda #30
         sta RDraw
         lda #$70
@@ -1499,7 +1696,7 @@ RangerThreat:
         bne RangerRetreat
         lda StageKills
         clc
-        adc #1
+        adc #2
         cmp KillsNeed
         bcs RangerRetreat  ; do not begin a five-second empty-arena escape
         lda RX
@@ -1528,12 +1725,24 @@ RangerCommitExit:
         sta RAlive
         rts
 RangerApproach:
+        ldx #0
         lda PlayerX
         sta ScratchIX
         lda PlayerY
         sta ScratchY
         jmp RangerMoveTarget
 RangerRetreat:
+        ; If escape is unavailable or declined, avoid indefinite wall pressure.
+        lda RX
+        cmp #13
+        bcc RangerReposition
+        cmp #148
+        bcs RangerReposition
+        lda RY
+        cmp #17
+        bcc RangerReposition
+        cmp #154
+        bcs RangerReposition
         ; Reflect the target toward a distant lane, avoiding permanent wall pressure.
         lda RX
         cmp PlayerX
@@ -1560,61 +1769,22 @@ RetreatY:
         lda ScratchIX
         cmp RX
         bne RetreatMove
+RangerReposition:
         lda RAlive
         ora #4
         sta RAlive
 RangerInward:
-        lda #80
-        sta ScratchIX
         lda #88
         sta ScratchY
+        lda #80
+        sta ScratchIX
+        ldx #0
+        jmp RangerMoveTarget
 RetreatMove:
+        ldx #1
         jmp RangerMoveTarget
 RangerExitMove:
-        lda FrameCount
-        and #3
-        beq ExitMoveTick
-        cmp #3
-        bne ExitDone
-ExitMoveTick:
-        lda RAlive
-        lsr
-        lsr
-        lsr
-        lsr
-        tay
-        dey
-        lda EdgeX,y
-        cmp RX
-        bne ExitTarget
-        lda EdgeY,y
-        cmp RY
-        beq RangerDepart
-ExitTarget:
-        lda EdgeX,y
-        sta ScratchIX
-        lda EdgeY,y
-        sta ScratchY
-        jmp RangerMoveTarget
-RangerDepart:
-        ; Abort only before crossing the edge if already the last enemy.
-        lda StageKills
-        clc
-        adc #1
-        cmp KillsNeed
-        bcc RangerDepartAllowed
-        lda #1
-        sta RAlive
-        rts
-RangerDepartAllowed:
-        sty RRelease
-        lda #150
-        sta RCool
-        lda #2
-        sta RAlive
-        rts
-ExitDone:
-        rts
+        jmp EdgeTraversal
 RangerAway:
         lda FrameCount
         and #1
@@ -1673,15 +1843,8 @@ ReturnNext:
 AwayDone:
         rts
 RangerReturn:
-        lda #3
-        sta RAlive
-        lda #0
-        sta RDraw
-        sta RRelease
-        lda #30
-        sta RCool
-        rts
-EdgeX: dc.b 8,152,80,80
+        jmp EdgeEnter
+EdgeX: dc.b 3,155,80,80
 EdgeY: dc.b 88,88,12,158
 RetreatThreshold: dc.b 0,128,128,102,102,78,78,54,54
 RangerDistance:
@@ -1714,6 +1877,13 @@ DistXMax:
         adc ScratchMin
         rts
 RangerMoveTarget:
+        ; Approach: 7/8 straight, 6/8 diagonal. Retreat: 8/8 straight, 7/8 diagonal.
+        lda FrameCount
+        and #7
+        bne RangerCheckDiagonal
+        cpx #0
+        beq ExitDone
+RangerCheckDiagonal:
         lda RX
         cmp ScratchIX
         beq RangerRateOK
@@ -1722,7 +1892,12 @@ RangerMoveTarget:
         beq RangerRateOK
         lda FrameCount
         and #7
+        beq ExitDone
+        cmp #4
         bne RangerRateOK
+        cpx #0
+        bne RangerRateOK
+ExitDone:
         rts
 RangerRateOK:
         lda RX
@@ -1733,16 +1908,15 @@ RangerRateOK:
         cmp ScratchIX
         beq RangerMoveY
         bcc RangerMoveRight
-        cmp #8
+        cmp #4
         bcc RangerMoveY
-        beq RangerMoveY
         dec RX
         lda RAlive
         ora #8
         sta RAlive
         jmp RangerMoveY
 RangerMoveRight:
-        cmp #152
+        cmp #155
         bcs RangerMoveY
         inc RX
         lda RAlive

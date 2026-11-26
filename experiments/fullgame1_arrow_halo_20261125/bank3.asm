@@ -227,9 +227,14 @@ NoMissilePosition:
         sta HMOVE
         lda #0
         sta HMP0
-        sta HMP1
         sta HMM1
         sta HMBL
+        ; Let P1 motion clocks finish before clearing its fine motion latch.
+        ldx #3
+P1MotionWait:
+        dex
+        bne P1MotionWait
+        sta HMP1
         jsr RestoreOrbIfVisible
         jsr NewHaloSetup
         jsr SetBallWidth
@@ -353,6 +358,7 @@ VisibleDone:
         lda #0
         sta GRP0
         sta GRP1
+        sta GRP0          ; flush P1 delayed latch before HUD / next frame
         sta ENABL
         sta ENAM1
         sta ENAM0
@@ -635,6 +641,13 @@ P0Loop:
 ; All four user-approved bitmap tables are TOP_FIRST in source and
 ; reversed for the decreasing X visible kernel. RIGHT label uses the
 ; ORIGINAL U1-LEG1 LEFT source bitmap, and vice versa. Frozen bit-exact.
+        ORG $F36D
+EdgeMask2:
+        dc.b $33,$12,$14,$0C,$0C,$1D,$1F,$1C,$1C,$1C,$1C,$0C,$1C,$14,$1E,$0E
+EdgeMask4:
+        dc.b $0C,$04,$05,$03,$03,$07,$07,$07,$07,$07,$07,$03,$07,$05,$07,$03
+EdgeMask6:
+        dc.b $03,$01,$01,$00,$00,$01,$01,$01,$01,$01,$01,$00,$01,$01,$01,$00
         ORG $F3A0
 ; Visible sprite source in compact indexed ROM tables. Pixel-exact 16 rows.
 ; This replaces obsolete 193B standalone K1-warning profile (space for code).
@@ -700,7 +713,7 @@ RangerFace:
 RangerFleeFace:
         lda KnightDir
         sta REFP1
-        rts
+        jmp EdgeArt
 ; Additional F6 bank3 visible loop: M1 takes place of PF2 halo for these frames.
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
@@ -970,6 +983,10 @@ PlayL2P3:
 ; They are written only by offscreen bank0 game code on stage transitions.
 RectRAMLo:
         dc.b 0,$C0,$D0,$E0
+        ORG $F654
+EdgeBottomMask:
+        dc.b $CC,$48,$50,$32,$31,$75,$7D,$71,$72,$70,$70,$30,$70,$50,$78,$38
+        ds 16,0
         ORG $F680
 GameBankEnter:
         lda $FFF8         ; F8: switch to bank 0 on read
@@ -997,6 +1014,43 @@ HudBankEnter:
 HudBankReturn:
         rts
         ORG $F6C4
+EdgeArt:
+        lda $E3
+        cmp #$10
+        bcc EdgeArtDone
+        and #$F0
+        cmp #$40
+        beq EdgeArtBottom
+        cmp #$30
+        beq EdgeArtDone
+        ; Outward facing for left, right; inward entry uses same physical
+        ; clipped pixels until clear of the edge (avoids opposite-side wrap).
+        ldx #0
+        cmp #$20
+        beq EdgeArtFacing
+        ldx #8
+EdgeArtFacing:
+        stx REFP1
+        lda $E1
+        beq EdgeArtDone
+        asl
+        asl
+        asl
+        clc
+        adc #<EdgeMask2-16
+        sta EnemyRowPtr
+        lda #>EdgeMask2
+        sta EnemyRowPtr+1
+        rts
+EdgeArtBottom:
+        lda $E1
+        clc
+        adc #<EdgeBottomMask
+        sta EnemyRowPtr
+        lda #>EdgeBottomMask
+        sta EnemyRowPtr+1
+EdgeArtDone:
+        rts
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
         dc.b $06,$06,$C4,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3C
