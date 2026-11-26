@@ -27,7 +27,7 @@ jobs:
           result=0
           timeout 12s env SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy \
             XDG_CONFIG_HOME="$artifacts/config" SKRAUN_COMMANDS="$artifacts/commands" \
-            LD_PRELOAD="$artifacts/input.so" stella -debug -dbg.logbreaks 1 -audio.enabled 0 \
+            LD_PRELOAD="$artifacts/input.so" stella -debug -logtoconsole 1 -dbg.logbreaks 1 -audio.enabled 0 \
             -threads 0 -vsync 0 -video software -fullscreen 0 "$rom" >"$artifacts/stella.log" 2>&1 || result=$?
           test "$result" -eq 0 || test "$result" -eq 124
           python3 - "$artifacts" <<'PY'
