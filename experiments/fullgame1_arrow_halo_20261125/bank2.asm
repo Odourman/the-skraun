@@ -697,7 +697,7 @@ ArrowMinXOK:
         jmp ArrowDestroy
 ArrowMaxXOK:
         lda ArrowY
-        cmp #48
+        cmp #6  ; upper arena margin, within the M1 row table guard
         bcc ArrowDestroy
         cmp #176
         bcs ArrowDestroy
