@@ -754,9 +754,16 @@ RestoreOrbIfVisible:
         cmp #8
         bcc OrbRestoreSkip
         lda OrbX
+        clc
+        adc #3               ; convert gameplay center to this RESPBL loop's input
         jsr PositionBall
         sta WSYNC
         sta HMOVE
+        ; Allow the TIA motion clocks to finish before clearing HMBL.
+        ldx #6
+OrbMotionWait:
+        dex
+        bne OrbMotionWait
         lda #0
         sta HMBL
         sta OrbDirty
