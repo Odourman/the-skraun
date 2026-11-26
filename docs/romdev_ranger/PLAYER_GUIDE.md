@@ -1,0 +1,6 @@
+# The Skraun – spelguide (PR69 Ranger Escape)
+16 KiB F6 NTSC. Joystick port 1, åtta riktningar. FIRE utlöser en halo; släpp och tryck igen efter återhämtning. Tidiga tryckningar buffras inte. Rör dig även under halo och slå sönder pilar. Plocka upp orben ute vid X22/X138 för att växa. Halons räckvidd och attackfrekvens stiger med level. En träff sänker level; på L1 förlorar du ett liv.
+
+Riddarna höjer svärdet, hugger i låst riktning och vilar kort. Rangern går långsammare än riddarna, närmar sig till skotträckvidd, drar bågen, skjuter och retirer­ar. Spring bort från skottlinjen under förvarningen; pilen följer inte efter. Träng Rangern vid en arenakant och han kan försvinna i fem sekunder och återkomma från en annan säker kant. Max en genomförd flykt per banbesök; han börjar eller fullbordar inte en flykt när han redan är sista fienden. Har han hunnit lämna måste du vänta på återkomsten innan banan kan avslutas.
+
+100 poäng/riddare, 250/Ranger. Bonusliv var 5 000:e poäng, max nio. Tre startliv. Åtta banor och pendel tillbaka; allt som lever kvar måste besegras. Fem score-siffror till vänster, liv till höger. Svart förlustvy med endast slutpoängen; FIRE startar inte om. RESET startar ny omgång även under aktivt spel.

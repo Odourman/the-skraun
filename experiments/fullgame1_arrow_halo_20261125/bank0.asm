@@ -75,6 +75,129 @@ AuxMode   = $EF
 ColdBoot:
         lda $FFF9
         jmp $F000
+; Bounded two-segment refinement of the conservative LOS (old fast path first).
+; ScratchMin/Max = x bounds; ScratchIX/Y = y bounds. No new RAM.
+RangerLaneRefined:
+        jsr RangerHasClearLane
+        beq LaneRefine
+        rts
+LaneRefine:
+        lda RX
+        cmp PlayerX
+        bne RefineXDiff
+        lda #0
+        rts
+RefineXDiff:
+        lda RY
+        cmp PlayerY
+        bne RefineYDiff
+        lda #0
+        rts
+RefineYDiff:
+        lda RX
+        cmp PlayerX
+        bcs Half0XHigh
+        sta ScratchMin
+        clc
+        adc PlayerX
+        ror
+        adc #0
+        sta ScratchMax
+        jmp Half0XDone
+Half0XHigh:
+        sta ScratchMax
+        clc
+        adc PlayerX
+        ror
+        sta ScratchMin
+Half0XDone:
+        lda RY
+        cmp PlayerY
+        bcs Half0YHigh
+        sta ScratchIX
+        clc
+        adc PlayerY
+        ror
+        adc #0
+        sta ScratchY
+        jmp Half0YDone
+Half0YHigh:
+        sta ScratchY
+        clc
+        adc PlayerY
+        ror
+        sta ScratchIX
+Half0YDone:
+        jsr LaneHalfBox
+        beq RefineBlocked
+        lda PlayerX
+        cmp RX
+        bcs Half1XHigh
+        sta ScratchMin
+        clc
+        adc RX
+        ror
+        adc #0
+        sta ScratchMax
+        jmp Half1XDone
+Half1XHigh:
+        sta ScratchMax
+        clc
+        adc RX
+        ror
+        sta ScratchMin
+Half1XDone:
+        lda PlayerY
+        cmp RY
+        bcs Half1YHigh
+        sta ScratchIX
+        clc
+        adc RY
+        ror
+        adc #0
+        sta ScratchY
+        jmp Half1YDone
+Half1YHigh:
+        sta ScratchY
+        clc
+        adc RY
+        ror
+        sta ScratchIX
+Half1YDone:
+        jmp LaneHalfBox
+RefineBlocked:
+        lda #0
+        rts
+LaneHalfBox:
+        ldx #0
+LaneBand:
+        lda ScratchY
+        cmp $C2,x
+        bcc LaneNextBand
+        lda ScratchIX
+        cmp $C3,x
+        bcs LaneNextBand
+        lda ScratchMax
+        cmp $C0,x
+        bcc LaneNextBand
+        lda ScratchMin
+        cmp $C1,x
+        bcc RefineBlocked
+        lda ScratchMax
+        cmp $C4,x
+        bcc LaneNextBand
+        lda ScratchMin
+        cmp $C5,x
+        bcc RefineBlocked
+LaneNextBand:
+        cpx #8
+        beq RefineClear
+        ldx #8
+        bne LaneBand
+RefineClear:
+        lda #1
+        rts
+
         ORG $F100
 ActorEntry:
         lda ScratchY
@@ -120,6 +243,8 @@ ClearActorRAM:
         sta RY
         lda #1
         sta RAlive
+        lda #36
+        sta RCool
         lda KillsNeed
         sec
         sbc #3
@@ -171,7 +296,7 @@ AcceptKnightDamage:
 NoKnightHit:
         lda K1Strike,x
         bne KnightReturn
-        lda #30
+        lda #24
         sta K1Rest,x
         rts
 KnightTryRest:
@@ -182,7 +307,7 @@ KnightTryRest:
 KnightReady:
         jsr KnightInRange
         beq KnightChase
-        lda #18
+        lda #16
         sta K1Warn,x
         ; Short telegraph cue: never interrupt an existing sound event.
         lda #$B0
@@ -624,7 +749,11 @@ AuxiliaryReturn:
 
 RangerTick:
         lda RAlive
+        beq RangerDoneEarly
+        and #1
         bne RangerExists
+        jmp RangerAway
+RangerDoneEarly:
         rts
 RangerExists:
         lda HaloFrames
@@ -654,98 +783,47 @@ RangerAbsY:
         sta RAlive
         jmp AwardRanger
 RangerTimers:
-        lda RDraw
-        beq RangerTryRelease
-        dec RDraw
-        bne RangerDone
-        jsr RangerHasClearLane
-        beq RangerFlee
-        jsr SpawnArrow
-        lda #8
-        sta RRelease
+        jmp RangerTactics
 RangerDone:
         rts
-RangerTryRelease:
-        lda RRelease
-        beq RangerTryCool
-        dec RRelease
-        rts
-RangerTryCool:
-        lda RCool
-        beq RangerReady
-        dec RCool
-        jmp RangerFlee
-RangerReady:
-        lda ArrowDX
-        bne RangerFlee
-        jsr RangerHasClearLane
-        beq RangerFlee
-        lda #26
-        sta RDraw
-        lda #$70
-        jsr QueueSound
-        rts
-RangerFlee:
-        lda $86
-        and #3
-        beq RangerDone
-        lda RX
-        sta ScratchMin
-        lda RY
-        sta ScratchMax
-        lda RX
-        cmp PlayerX
-        bcs RangerStepRight
-        cmp #23
-        bcc RangerStepY
-        dec RX
-        jmp RangerStepY
-RangerStepRight:
-        cmp #145
-        bcs RangerStepY
-        inc RX
-RangerStepY:
-        lda RY
-        cmp PlayerY
-        bcs RangerStepUp
-        cmp #145
-        bcs RangerMovementCheck
-        inc RY
-        jmp RangerMovementCheck
-RangerStepUp:
-        cmp #35
-        bcc RangerMovementCheck
-        dec RY
 RangerMovementCheck:
-        ; Ranger center occupies the same bounded 8x16 sprite as
-        ; knights. Reuse the real four-rectangle solid tester at +14.
+        ; On a blocked diagonal try ONE alternate axis per tick, alternating
+        ; on bit2. This bounds the collision cost and still slides along walls.
         ldx #14
-        jsr KnightBlocked
+        jsr RangerBlocked
         beq RangerMovementDone
+        lda FrameCount
+        and #4
+        bne RangerFallbackY
         lda RY
-        cmp ScratchMax
-        beq RangerRejectX
         sta ScratchY
         lda ScratchMax
         sta RY
         lda RX
         cmp ScratchMin
-        beq RangerMovementDone
-        jsr KnightBlocked
+        bne RangerFallbackCheck
+        ; X did not change; try Y only instead.
+        lda ScratchY
+        sta RY
+        jmp RangerFallbackCheck
+RangerFallbackY:
+        lda RX
+        sta ScratchY
+        lda ScratchMin
+        sta RX
+        lda RY
+        cmp ScratchMax
+        bne RangerFallbackCheck
+        lda ScratchY
+        sta RX
+RangerFallbackCheck:
+        jsr RangerBlocked
         beq RangerMovementDone
         lda ScratchMin
         sta RX
-        lda ScratchY
-        sta RY
-        jsr KnightBlocked
-        beq RangerMovementDone
         lda ScratchMax
         sta RY
 RangerMovementDone:
-        rts
-RangerRejectX:
-        lda ScratchMin
-        sta RX
         rts
 
 SpawnArrow:
@@ -818,9 +896,10 @@ ReserveDone:
         rts
 
 ChooseP1:
-        lda K1Alive
+        lda RAlive
+        and #1
+        ora K1Alive
         ora K2Alive
-        ora RAlive
         bne ChooseLiveP1
         ; No phantom knight during stage-clear pause.
         lda #200          ; x=1..186 minus 200 never selects 0..15
@@ -900,7 +979,8 @@ ChooseRanger:
         sta SwordWarn
         lda RRelease
         sta SwordStrike
-        lda #0
+        lda RAlive
+        and #8
         sta KnightDir
         ldx Stage
         lda RangerColors,x
@@ -987,7 +1067,7 @@ NoExtraLife:
         lda StageKills
         cmp KillsNeed
         bcc AwardDone
-        lda #120
+        lda #90
         sta StagePause
         lda #$60
         jsr QueueSound
@@ -1013,7 +1093,7 @@ QueuePriorityVoice1:
 RangerColors:
         dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
 RangerCooldowns:
-        dc.b 0,132,132,108,108,90,90,72,72
+        dc.b 0,176,176,150,150,126,126,102,102
 
 ; Eight physically different map layouts: 4 vertical shifts x mirror/repeat
 ; of the established collision/visual source. No claim of final world art.
@@ -1093,6 +1173,7 @@ ASCheckK2Warn:
         bne ASPickK2
 ASCheckRanger:
         lda RAlive
+        and #1
         beq ASRoundRobin
         lda RDraw
         ora RRelease
@@ -1156,6 +1237,7 @@ ASRRK2:
         rts
 ASRRRanger:
         lda RAlive
+        and #1
         beq ASRRNext
         lda #2
         rts
@@ -1197,10 +1279,6 @@ RepositionSurvivors:
         sta K2Warn
         sta K2Strike
         sta K2Rest
-        sta RDraw
-        sta RRelease
-        lda #90
-        sta RCool
         lda K1Alive
         beq RespawnCheckK2
         lda #122
@@ -1216,7 +1294,16 @@ RespawnCheckK2:
         sta K2Y
 RespawnCheckRanger:
         lda RAlive
+        and #1
         beq RespawnActorsDone
+        lda RAlive
+        and #3
+        sta RAlive
+        lda #0
+        sta RDraw
+        sta RRelease
+        lda #90
+        sta RCool
         lda #140
         sta RX
         lda #88
@@ -1322,6 +1409,387 @@ LaneBlocked:
         lda #0
         rts
 
+; RAlive bit0 present, bit1 escape used; $10/$20/$30/$40 = committed exit (present).
+; $02 = away; RCool=150 half-rate ticks; RRelease=exit index while away.
+; Scratch E8/E9/EA/EB transient, no new persistent RAM.
+RangerTactics:
+        lda RAlive
+        cmp #$10
+        bcc RangerNormal
+        jmp RangerExitMove
+RangerNormal:
+        lda RDraw
+        beq RangerReleaseTick
+        dec RDraw
+        bne RangerDoneNear
+        jsr RangerDistance
+        cmp #30
+        bcc RangerAbort
+        cmp #45
+        bcs RangerAbort
+        lda ArrowDX
+        bne RangerAbort
+        jsr RangerLaneRefined
+        beq RangerAbort
+        jsr SpawnArrow
+        lda #8
+        sta RRelease
+RangerDoneNear:
+        rts
+RangerAbort:
+        lda #36
+        sta RCool
+        rts
+RangerReleaseTick:
+        lda RRelease
+        beq RangerCoolTick
+        dec RRelease
+        rts
+RangerCoolTick:
+        lda RCool
+        beq RangerRate
+        dec RCool
+RangerRate:
+        lda FrameCount
+        and #3
+        beq RangerRateTick
+        cmp #3
+        bne RangerDoneNear
+RangerRateTick:
+        jsr RangerDistance
+        tay
+        lda RAlive
+        and #4
+        beq RangerBand
+        cpy #32
+        bcs RangerInwardClear
+        jmp RangerInward
+RangerInwardClear:
+        lda RAlive
+        and #$FB
+        sta RAlive
+RangerBand:
+        tya
+        cmp #28
+        bcc RangerThreat
+        ldx Stage
+        lda RCool
+        cmp RetreatThreshold,x
+        bcs RangerRetreat
+        tya
+        cmp #45
+        bcs RangerApproach
+        lda RCool
+        bne RangerDoneNear
+        tya
+        cmp #36
+        bcc RangerRetreat
+        lda ArrowDX
+        bne RangerDoneNear
+        jsr RangerLaneRefined
+        beq RangerApproach
+        lda #30
+        sta RDraw
+        lda #$70
+        jmp QueueSound
+RangerThreat:
+        lda RAlive
+        and #3
+        cmp #1
+        bne RangerRetreat
+        lda StageKills
+        clc
+        adc #1
+        cmp KillsNeed
+        bcs RangerRetreat  ; do not begin a five-second empty-arena escape
+        lda RX
+        cmp #38
+        bcc RangerPickLeft
+        cmp #122
+        bcs RangerPickRight
+        lda RY
+        cmp #58
+        bcc RangerPickTop
+        cmp #118
+        bcs RangerPickBottom
+        bcc RangerRetreat
+RangerPickLeft:
+        lda #$11
+        bne RangerCommitExit
+RangerPickRight:
+        lda #$21
+        bne RangerCommitExit
+RangerPickTop:
+        lda #$31
+        bne RangerCommitExit
+RangerPickBottom:
+        lda #$41
+RangerCommitExit:
+        sta RAlive
+        rts
+RangerApproach:
+        lda PlayerX
+        sta ScratchIX
+        lda PlayerY
+        sta ScratchY
+        jmp RangerMoveTarget
+RangerRetreat:
+        ; Reflect the target toward a distant lane, avoiding permanent wall pressure.
+        lda RX
+        cmp PlayerX
+        bcc RetreatLeft
+        lda #152
+        bne RetreatX
+RetreatLeft:
+        lda #8
+RetreatX:
+        sta ScratchIX
+        lda RY
+        cmp PlayerY
+        bcc RetreatUp
+        lda #158
+        bne RetreatY
+RetreatUp:
+        lda #12
+RetreatY:
+        sta ScratchY
+        ; Used escape: at a closed corner, commit to an inward slide until
+        ; the distance is >=32. Not a teleport or a second escape.
+        cmp RY
+        bne RetreatMove
+        lda ScratchIX
+        cmp RX
+        bne RetreatMove
+        lda RAlive
+        ora #4
+        sta RAlive
+RangerInward:
+        lda #80
+        sta ScratchIX
+        lda #88
+        sta ScratchY
+RetreatMove:
+        jmp RangerMoveTarget
+RangerExitMove:
+        lda FrameCount
+        and #3
+        beq ExitMoveTick
+        cmp #3
+        bne ExitDone
+ExitMoveTick:
+        lda RAlive
+        lsr
+        lsr
+        lsr
+        lsr
+        tay
+        dey
+        lda EdgeX,y
+        cmp RX
+        bne ExitTarget
+        lda EdgeY,y
+        cmp RY
+        beq RangerDepart
+ExitTarget:
+        lda EdgeX,y
+        sta ScratchIX
+        lda EdgeY,y
+        sta ScratchY
+        jmp RangerMoveTarget
+RangerDepart:
+        ; Abort only before crossing the edge if already the last enemy.
+        lda StageKills
+        clc
+        adc #1
+        cmp KillsNeed
+        bcc RangerDepartAllowed
+        lda #1
+        sta RAlive
+        rts
+RangerDepartAllowed:
+        sty RRelease
+        lda #150
+        sta RCool
+        lda #2
+        sta RAlive
+        rts
+ExitDone:
+        rts
+RangerAway:
+        lda FrameCount
+        and #1
+        bne AwayDone
+        dec RCool
+        bne AwayDone
+        ; Select a different edge with frame/player/stage variation, try all three.
+        lda FrameCount
+        lsr
+        lsr
+        eor FrameCount
+        eor ScoreLo
+        eor ScoreHi
+        eor PlayerX
+        eor PlayerY
+        eor Stage
+        and #3
+        tay
+        ldx #4
+ReturnTry:
+        cpy RRelease
+        beq ReturnNext
+        lda EdgeX,y
+        sta RX
+        lda EdgeY,y
+        sta RY
+        ; A candidate farther than 36 in either axis is safe even for L3.
+        lda PlayerX
+        sec
+        sbc RX
+        bcs ReturnAbsX
+        eor #$FF
+        adc #1
+ReturnAbsX:
+        cmp #36
+        bcs RangerReturn
+        lda PlayerY
+        sec
+        sbc RY
+        bcs ReturnAbsY
+        eor #$FF
+        adc #1
+ReturnAbsY:
+        cmp #36
+        bcs RangerReturn
+ReturnNext:
+        iny
+        tya
+        and #3
+        tay
+        dex
+        bne ReturnTry
+        ; Geometrically unreachable: at least two edge points are >36 away.
+        lda #1
+        sta RCool
+AwayDone:
+        rts
+RangerReturn:
+        lda #3
+        sta RAlive
+        lda #0
+        sta RDraw
+        sta RRelease
+        lda #30
+        sta RCool
+        rts
+EdgeX: dc.b 8,152,80,80
+EdgeY: dc.b 88,88,12,158
+RetreatThreshold: dc.b 0,128,128,102,102,78,78,54,54
+RangerDistance:
+        lda RX
+        sec
+        sbc PlayerX
+        bcs DistX
+        eor #$FF
+        adc #1
+DistX:
+        sta ScratchMin
+        lda RY
+        sec
+        sbc PlayerY
+        bcs DistY
+        eor #$FF
+        adc #1
+DistY:
+        cmp ScratchMin
+        bcc DistXMax
+        sta ScratchMax
+        lda ScratchMin
+        lsr
+        clc
+        adc ScratchMax
+        rts
+DistXMax:
+        lsr
+        clc
+        adc ScratchMin
+        rts
+RangerMoveTarget:
+        lda RX
+        cmp ScratchIX
+        beq RangerRateOK
+        lda RY
+        cmp ScratchY
+        beq RangerRateOK
+        lda FrameCount
+        and #7
+        bne RangerRateOK
+        rts
+RangerRateOK:
+        lda RX
+        sta ScratchMin
+        lda RY
+        sta ScratchMax
+        lda RX
+        cmp ScratchIX
+        beq RangerMoveY
+        bcc RangerMoveRight
+        cmp #8
+        bcc RangerMoveY
+        beq RangerMoveY
+        dec RX
+        lda RAlive
+        ora #8
+        sta RAlive
+        jmp RangerMoveY
+RangerMoveRight:
+        cmp #152
+        bcs RangerMoveY
+        inc RX
+        lda RAlive
+        and #$F7
+        sta RAlive
+RangerMoveY:
+        lda RY
+        cmp ScratchY
+        beq RangerMoved
+        bcc RangerMoveDown
+        cmp #13
+        bcc RangerMoved
+        dec RY
+        jmp RangerMoved
+RangerMoveDown:
+        cmp #158
+        bcs RangerMoved
+        inc RY
+RangerMoved:
+        jmp RangerMovementCheck
+
+RangerBlocked:
+        ; All eight immutable maps have open side strips and central corridor.
+        lda RX
+        cmp #12
+        bcc RangerFree
+        cmp #148
+        bcs RangerFree
+        cmp #52
+        bcc RangerCheckY
+        cmp #96
+        bcc RangerFree
+RangerCheckY:
+        lda RY
+        clc
+        adc #8
+        cmp $C2
+        bcc RangerFree
+        lda RY
+        sec
+        sbc #8
+        cmp $CB
+        bcs RangerFree
+        jmp KnightBlocked
+RangerFree:
+        lda #0
+        rts
         ORG $FFFC
         dc.w ColdBoot
         dc.w ColdBoot
