@@ -84,6 +84,19 @@ ResetCheckStage:
         jmp GameStartNew
 ResetRunning:
         jmp GameInitialized
+BudgetedSound:
+        ; Multi-award, growth and projectile work can consume the last
+        ; overscan lines. Leave TIA audio and both queued requests intact
+        ; when there is too little time for both envelopes and the return.
+        bit $0285
+        bmi DeferSound
+        lda $0284
+        cmp #6
+        bcc DeferSound
+        jmp SoundBankEnter
+DeferSound:
+        rts
+
         ds $F100-*,0
         ORG $F100
 GameBankTick:
@@ -585,8 +598,7 @@ ColorKeepFlash:
         rts
 
 UpdateSound:
-        ; The entire F6 bank1 sound engine executes during overscan only.
-        jmp SoundBankEnter
+        jmp BudgetedSound
 
 GameOver:
         jmp GameOverImpl
