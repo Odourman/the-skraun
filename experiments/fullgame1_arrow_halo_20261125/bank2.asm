@@ -704,13 +704,14 @@ ArrowMoveThisFrame:
 ArrowMinXOK:
         cmp #151
         bcc ArrowMaxXOK
+ArrowBoundaryDestroy:
         jmp ArrowDestroy
 ArrowMaxXOK:
         lda ArrowY
         cmp #6  ; upper arena margin, within the M1 row table guard
-        bcc ArrowDestroy
+        bcc ArrowBoundaryDestroy
         cmp #176
-        bcs ArrowDestroy
+        bcs ArrowBoundaryDestroy
         ; Halo intercepts projectile even through solids; checked first.
         lda HaloFrames
         beq TestArrowBody
@@ -765,28 +766,28 @@ AcceptArrowDamage:
         jsr ApplySwordDamage  ; shared level-down / lose-life / i-frames
         jmp ArrowDestroy
 TestArrowWalls:
-        ; Conservative physical-world collision: actual 4 collision
-        ; rectangles in $C0-$CF, L1 expanded padding. No fake pass for
-        ; pixel-perfect PF wall edge; no collision-table or stack overlap.
+        ; Two nonoverlapping vertical bands, with independent horizontal pairs.
         ldx #0
-ArrowWallLoop:
+        lda ArrowY
+        cmp $C2
+        bcc ArrowDone
+        cmp $C3
+        bcc ArrowWallBand
+        cmp $CA
+        bcc ArrowDone
+        cmp $CB
+        bcs ArrowDone
+        ldx #8
+ArrowWallBand:
         lda ArrowX
         cmp $C0,x
-        bcc NextArrowWall
+        bcc ArrowDone
         cmp $C1,x
-        bcs NextArrowWall
-        lda ArrowY
-        cmp $C2,x
-        bcc NextArrowWall
-        cmp $C3,x
         bcc ArrowDestroy
-NextArrowWall:
-        inx
-        inx
-        inx
-        inx
-        cpx #16
-        bcc ArrowWallLoop
+        cmp $C4,x
+        bcc ArrowDone
+        cmp $C5,x
+        bcc ArrowDestroy
 ArrowDone:
         rts
 ArrowDestroy:

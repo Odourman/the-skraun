@@ -908,8 +908,9 @@ PlayL1P3:
         dc.b $06,$C4,$64,$3C,$3C,$7D,$7F,$3E,$66,$5A,$7E,$24
 PrepareHudLife:
         lda #0
-        sta JoyState       ; HUD repeat flag after gameplay motion is complete
         sta COLUBK         ; the HUD is black even in the dark blue arenas
+        lda #$21          ; duplicate after rows 0 and 5 of seven physical rows
+        sta JoyState       ; movement input is dead until the next frame
         ldy Lives
         bne HudLivePointer
         lda #1
@@ -1398,17 +1399,15 @@ HudPF2Write:
         lda #0
         sta PF0
         nop
-        sta PF1
+        nop
+        nop
+        sta PF1             ; after all left PF1 pixels
         lda (HudLifePtr),y
         nop
-        sta PF2             ; right PF2 bits 4..6 at X144..155
-        txa
-        and #3
-        bne HudAdvance
+        nop
+        sta PF2             ; after left PF2, before right PF2 at X128
         lsr JoyState
-        bcs HudAdvance
-        inc JoyState
-        bne HudDrawRow      ; top and base of the five-row glyph double
+        bcs HudDrawRow      ; repeat first and last glyph rows
 HudAdvance:
         iny
         inx

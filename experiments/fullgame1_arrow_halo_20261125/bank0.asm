@@ -262,10 +262,10 @@ KnightMovementCheck:
         sta ScratchY
         lda ScratchMax
         sta K1Y,x
-        jsr KnightBlocked
-        beq KnightMovementDone
         lda K1X,x
         cmp ScratchMin
+        beq KnightMovementDone
+        jsr KnightBlocked
         beq KnightMovementDone
         lda ScratchMin
         sta K1X,x
@@ -283,55 +283,42 @@ KnightRejectX:
         rts
 
 KnightBlocked:
-        ; Test a conservatively bounded 8x16 real P1 sprite against the
-        ; current four *unexpanded* world rectangles C0..CF. X is actor
-        ; record offset (0 for K1, 7 for K2); Y scans obstacle records.
-        ; The two top rectangles share $C3 and the two bottom
-        ; rectangles share $CA. The open cross-lane needs no X tests.
+        ; Select the vertical band first; stage 5 has different X ranges.
+        ; Normal actor movement and spawns keep Y in 33..155 inclusive:
+        ; y+8 is always >= top min; y-8 is always < bottom max.
+        ldy #0
         lda K1Y,x
         sec
         sbc #8
         cmp $C3
-        bcc KnightCheckRects
+        bcc KnightCheckX
         adc #15
         cmp $CA
-        bcs KnightCheckRects
-        lda #0
-        rts
-KnightCheckRects:
-        ldy #0
-KnightBlockRect:
+        bcc KnightNotBlocked
+        ldy #8
+KnightCheckX:
         lda K1X,x
         clc
         adc #4
         cmp $C0,y
-        bcc KnightBlockNext
-        lda K1X,x
-        sec
-        sbc #4
-        cmp $C1,y
-        bcs KnightBlockNext
-        lda K1Y,x
-        clc
-        adc #8
-        cmp $C2,y
-        bcc KnightBlockNext
-        lda K1Y,x
-        sec
+        bcc KnightNotBlocked
+        cmp $C4,y
+        bcc KnightCheckLeft
         sbc #8
-        cmp $C3,y
-        bcs KnightBlockNext
-        lda #1
-        rts
-KnightBlockNext:
-        tya
-        clc
-        adc #4
-        tay
-        cpy #16
-        bcc KnightBlockRect
+        cmp $C5,y
+        bcc KnightBlockedYes
+        bcs KnightNotBlocked
+KnightCheckLeft:
+        sbc #7
+        cmp $C1,y
+        bcc KnightBlockedYes
+KnightNotBlocked:
         lda #0
         rts
+KnightBlockedYes:
+        lda #1
+        rts
+        ds $F2AF-*,0
 
 KnightInRange:
         lda PlayerX
@@ -741,10 +728,10 @@ RangerMovementCheck:
         sta ScratchY
         lda ScratchMax
         sta RY
-        jsr KnightBlocked
-        beq RangerMovementDone
         lda RX
         cmp ScratchMin
+        beq RangerMovementDone
+        jsr KnightBlocked
         beq RangerMovementDone
         lda ScratchMin
         sta RX
