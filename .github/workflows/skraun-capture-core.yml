@@ -1,0 +1,27 @@
+name: Build pinned Stella capture core
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/skraun-capture-core.yml'
+jobs:
+  core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: stella-emu/stella
+          ref: '7.0'
+          path: stella
+          persist-credentials: false
+      - name: Build capture core
+        run: |
+          make -C stella/src/os/libretro -j 2 platform=unix
+          mkdir -p capture-core
+          cp stella/src/os/libretro/stella_libretro.so stella/License.txt capture-core/
+          git -C stella rev-parse HEAD >capture-core/SOURCE_COMMIT.txt
+          (cd capture-core && sha256sum stella_libretro.so >SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stella-7.0-capture-core
+          path: capture-core

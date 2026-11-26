@@ -23,8 +23,8 @@ SwitchState = $84
 OrbMask     = $9C
 ArrowCool   = $9D      ; legitimate reuse: consumed OrbTimer never read GAMEPLAY-3
 HaloFrames  = $9E
-TargetAlive = $A1
-TargetFlash = $A2
+ArrowMajor= $A1     ; bit 7 selects Y as the major axis
+ArrowMinor= $A2     ; magnitude of the minor axis
 Stage       = $AA
 StageDir    = $AB
 Lives       = $AC
@@ -33,7 +33,7 @@ ScoreHi     = $AE
 KnightX     = $AF
 SwordWarn   = $B0
 SwordStrike = $B1
-SwordRest   = $B2
+ArrowError= $B2     ; projectile error accumulator
 Invulnerable= $B3
 StageKills  = $B4
 KillsNeed   = $B5
@@ -91,6 +91,7 @@ StagePauseDone:
         jmp GameOver
 GameRunning:
         lda Invulnerable
+        bmi RunRespawnFrame
         beq InvulnDone
         dec Invulnerable
 InvulnDone:
@@ -116,11 +117,26 @@ HaloSoundAlreadyPlayed:
         jsr UpdateSound
         jmp GameBankReturn
 
+RunRespawnFrame:
+        ; A life was lost in the preceding overscan. Reset only the
+        ; surviving opponents; no AI or queued projectile can run here.
+        lda #60
+        sta Invulnerable
+        lda #0
+        sta ArrowDX
+        sta ArrowDY
+        sta ArrowCool
+        lda #2
+        sta ScratchY
+        jsr ActorBankEnter
+        jsr SetWorldColors
+        jsr UpdateSound
+        jmp GameBankReturn
+
 InitializeGame:
         lda #1
         sta Stage
         sta StageDir
-        sta TargetAlive
         sta Level
         lda #3
         sta Lives
@@ -134,9 +150,10 @@ InitializeGame:
         sta BonusHi
         sta SwordWarn
         sta SwordStrike
-        sta SwordRest
+        sta ArrowError
         sta Invulnerable
         sta SoundFrames
+        sta $85
         sta StagePause
         sta HaloFrames
         sta $9F           ; clear old recovery on restart
@@ -193,7 +210,7 @@ DreamCount:
         rts
 
 TargetEliminated:
-        lda TargetFlash
+        lda ArrowMinor
         bne TargetDeadWait
         ; Two sequential 100-point P1 knight proxies, final ranger
         ; proxy of each stage awards 250. Not simultaneous opponents.
@@ -253,13 +270,12 @@ NoBonus:
         jmp TargetDeadWait
 MoreTargets:
         lda #1
-        sta TargetAlive
         lda #125
         sta KnightX
         lda #0
         sta SwordWarn
         sta SwordStrike
-        sta SwordRest
+        sta ArrowError
         lda #$9E
         sta COLUP1
 TargetDeadWait:
@@ -292,7 +308,7 @@ SetNewStage:
         sta StageKills
         sta SwordWarn
         sta SwordStrike
-        sta SwordRest
+        sta ArrowError
         sta ArrowCool
         sta ArrowDX
         sta ArrowDY
@@ -301,7 +317,6 @@ SetNewStage:
         lda #2
         sta OrbMask
         lda #1
-        sta TargetAlive
         lda #125
         sta KnightX
         lda #80
@@ -351,12 +366,12 @@ StrikeFinished:
         lda SwordStrike
         bne KnightDone
         lda #60
-        sta SwordRest
+        sta ArrowError
         jmp KnightDone
 NoStrike:
-        lda SwordRest
+        lda ArrowError
         beq ReadyKnight
-        dec SwordRest
+        dec ArrowError
         lda #$9E
         sta COLUP1
         jmp KnightDone
@@ -450,9 +465,9 @@ ApplySwordDamage:
         lda #60          ; GAMEPLAY-5 C: ~1s real invulnerability
         sta Invulnerable
         lda #$C0
-        cmp SoundFrames
+        cmp $85
         bcc DamageAlreadyQueued
-        sta SoundFrames
+        sta $85
 DamageAlreadyQueued:
         lda Level
         cmp #1
@@ -463,8 +478,10 @@ LoseLife:
         dec Lives
         bne ExtraLifeStillHere
         lda #$E0
-        sta SoundFrames
+        sta $85
 ExtraLifeStillHere:
+        lda #$BC
+        sta Invulnerable
         lda #80
         sta PlayerX
         lda #88
@@ -523,25 +540,10 @@ SetWorldColors:
         and #1
         ora #$10
         sta CTRLPF
-        ; Animated gold player silhouette follows real P0 X/Y.
-        lda HaloFrames
-        beq P0AuraInactive
-        lda #$2E
-        sta $06
-        jmp P0AuraReady
-P0AuraInactive:
-        lda #$0E
-        sta $06
-P0AuraReady:
         ldx Stage
-        lda HaloFrames
-        nop
-        nop
         lda WorldPFColors,x
         sta COLUPF
 ColorHaloActive:
-        lda TargetFlash
-        bne ColorKeepFlash
         lda WorldBGColors,x
         sta COLUBK
 ColorKeepFlash:
@@ -599,12 +601,12 @@ RangerNotDrawing:
         dec SwordStrike
         bne RangerCombatDone
         lda #60
-        sta SwordRest
+        sta ArrowError
         rts
 RangerNotReleased:
-        lda SwordRest
+        lda ArrowError
         beq RangerReady
-        dec SwordRest
+        dec ArrowError
         rts
 RangerReady:
         lda ArrowCool
@@ -684,10 +686,8 @@ ArrowIsActive:
         beq ArrowMoveThisFrame
         rts
 ArrowMoveThisFrame:
+        jsr StepArrow
         lda ArrowX
-        clc
-        adc ArrowDX
-        sta ArrowX
         cmp #10
         bcs ArrowMinXOK
         jmp ArrowDestroy
@@ -697,10 +697,7 @@ ArrowMinXOK:
         jmp ArrowDestroy
 ArrowMaxXOK:
         lda ArrowY
-        clc
-        adc ArrowDY
-        sta ArrowY
-        cmp #48
+        cmp #6  ; upper arena margin, within the M1 row table guard
         bcc ArrowDestroy
         cmp #176
         bcs ArrowDestroy
@@ -901,7 +898,6 @@ GameOverImpl:
         sta $9F
         sta ArrowDX
         sta OrbMask
-        sta TargetAlive
         lda #200
         sta $E8          ; suppress stale P1 even before the dedicated screen
         lda #$10
@@ -921,6 +917,39 @@ RestartGame:
         sta Stage        ; next tick initializes new game
 GameOverStay:
         jmp GameBankReturn
+
+        ORG $F840
+StepArrow:
+        lda ArrowMajor
+        and #$7F
+        sta $EB            ; actor-bank mailbox is dead after ActorBankEnter
+        lda ArrowError
+        clc
+        adc ArrowMinor
+        cmp $EB
+        bcc ArrowMajorOnly
+        sbc $EB
+        sta ArrowError
+        lda ArrowY
+        clc
+        adc ArrowDY
+        sta ArrowY
+        jmp AdvanceArrowX
+ArrowMajorOnly:
+        sta ArrowError
+        bit ArrowMajor
+        bpl AdvanceArrowX
+        lda ArrowY
+        clc
+        adc ArrowDY
+        sta ArrowY
+        rts
+AdvanceArrowX:
+        lda ArrowX
+        clc
+        adc ArrowDX
+        sta ArrowX
+        rts
 
         ORG $FFFC
         dc.w GameBankReset

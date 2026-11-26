@@ -1,4 +1,4 @@
-name: Skraun renderer native DASM and Stella
+name: Skraun production native DASM and Stella
 on:
   pull_request:
     paths:
@@ -36,10 +36,10 @@ jobs:
           log = (out / "stella.log").read_text()
           synchronized = [
               (int(frame), int(scan) + 3)
-              for frame, scan in re.findall(r"^WTrap\[00\]:\s+(\d+)\s+(\d+) .*\| 3/f05d ", log, re.M)
+              for frame, scan in re.findall(r"^WTrap\[00\]:\s+(\d+)\s+(\d+) .*\| 3/f05b ", log, re.M)
               if int(frame) >= 2
           ]
-          assert len(synchronized) >= 630, len(synchronized)
+          assert len(synchronized) >= 633, len(synchronized)
           assert all(lines == 262 for _, lines in synchronized), [x for x in synchronized if x[1] != 262]
           session = (out / "session.txt").read_text().replace("\n", "")
           assert re.search(r"print _scanEnd.*?#\s*262", session), session

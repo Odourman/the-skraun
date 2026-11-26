@@ -79,8 +79,8 @@ ArrowCool   = $9D       ; 0..180 actual release cooldown, unused GAMEPLAY-3 OrbT
 HaloFrames  = $9E       ; 30 NTSC frames when FIRE pressed
 HaloRecover = $9F       ; 60/36/15 f cooldown AFTER halo ends
 HaloRadius  = $A0       ; logical 360-degree square/Chebyshev radius
-TargetAlive = $A1       ; one frozen original R3 knight P1 dummy
-TargetFlash = $A2       ; death feedback countdown
+ArrowMajor= $A1     ; bit 7 selects Y as the major axis
+ArrowMinor= $A2     ; magnitude of the minor axis
 ArrowDX     = $A3  ; -1/+1 when flying, 0 inactive
 ArrowDY     = $A4  ; -1/0/+1 fixed at release
 KnightDir   = $A5  ; attack facing locked at warning initiation, old unused HaloVisualMask   ; previous level-dependent contour bits
@@ -95,7 +95,7 @@ ScoreHi     = $AE
 KnightX     = $AF
 SwordWarn   = $B0
 SwordStrike = $B1
-SwordRest   = $B2
+ArrowError= $B2     ; projectile error accumulator
 Invulnerable= $B3
 StageKills  = $B4
 KillsNeed   = $B5
@@ -147,7 +147,6 @@ ClrTIA:
         lda #2
         sta OrbMask
         lda #1
-        sta TargetAlive
         lda #125
         jsr PositionP1
         lda #96
@@ -708,6 +707,8 @@ RangerFleeFace:
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
         jsr HudDraw
+        lda $8F             ; restore world color before the first arena row
+        sta COLUPF
         ldx #186
         lda #0
         jmp Visible
@@ -732,14 +733,14 @@ PF1Choices:
         dc.b 0,$E0,$3E
 MinCX:  dc.b 0,8,12,20
 MaxCX:  dc.b 0,153,149,141
-MinCY:  dc.b 0,10,16,22
-MaxCY:  dc.b 0,167,161,155
+MinCY:  dc.b 0,10,14,19
+MaxCY:  dc.b 0,167,163,158
 WidthHalf:
         dc.b 0,4,8,16
 HeightHalf:
-        dc.b 0,6,12,18
+        dc.b 0,6,10,15
 SpriteHeights:
-        dc.b 0,12,24,36
+        dc.b 0,12,20,30
 PlayerSizes:
         dc.b 0,$10,$25,$37 ; M0 gold halo side thickness L1=2px, L2=4px, L3=8px
 RestoreOrbIfVisible:
@@ -821,13 +822,6 @@ UpdateAttack:
         bne AttackLive
         rts
 AttackLive:
-        lda TargetFlash
-        beq NoFlash
-        dec TargetFlash
-        bne NoFlash
-        lda #0
-        sta COLUBK
-NoFlash:
         lda HaloFrames
         beq AttackInactive
         dec HaloFrames
@@ -937,17 +931,17 @@ PlayL1P3:
         ORG $F600     ; GAMEPLAY-5 A: page-align L2 24-row bank1 P0 table.
                       ; A5 causal trial: old $F5FE crosses page for 22/24 rows.
 PlayL2P0:
-        dc.b $06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3D,$3D
-        dc.b $FE,$FE,$7C,$7C,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+        dc.b $06,$06,$C4,$64,$64,$3C,$3C,$3C,$3D,$3D,$FE,$FE
+        dc.b $7C,$66,$66,$5A,$5A,$7E,$24,$24
 PlayL2P1:
-        dc.b $60,$60,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$BE,$BE
-        dc.b $FE,$FE,$7C,$7C,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+        dc.b $60,$60,$23,$26,$26,$3C,$3C,$3C,$BE,$BE,$FE,$FE
+        dc.b $7C,$66,$66,$5A,$5A,$7E,$24,$24
 PlayL2P2:
-        dc.b $60,$60,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$BC,$BC
-        dc.b $7F,$7F,$3E,$3E,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+        dc.b $60,$60,$23,$26,$26,$3C,$3C,$3C,$BC,$BC,$7F,$7F
+        dc.b $3E,$66,$66,$5A,$5A,$7E,$24,$24
 PlayL2P3:
-        dc.b $06,$06,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$7D,$7D
-        dc.b $7F,$7F,$3E,$3E,$66,$66,$5A,$5A,$7E,$7E,$24,$24
+        dc.b $06,$06,$C4,$64,$64,$3C,$3C,$3C,$7D,$7D,$7F,$7F
+        dc.b $3E,$66,$66,$5A,$5A,$7E,$24,$24
 ; Three runtime collision tables live at RIOT $C0/$D0/$E0.
 ; They are written only by offscreen bank0 game code on stage transitions.
 RectRAMLo:
@@ -981,21 +975,21 @@ HudBankReturn:
         ORG $F6C4
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
-        dc.b $06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
-        dc.b $3C,$3C,$3C,$3D,$3D,$3D,$FE,$FE,$FE,$7C,$7C,$7C
-        dc.b $66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+        dc.b $06,$06,$C4,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3C
+        dc.b $3D,$3D,$3D,$FE,$FE,$7C,$7C,$7C,$66,$66,$5A,$5A
+        dc.b $5A,$7E,$7E,$24,$24,$24
 PlayL3P1:
-        dc.b $60,$60,$60,$23,$23,$23,$26,$26,$26,$3C,$3C,$3C
-        dc.b $3C,$3C,$3C,$BE,$BE,$BE,$FE,$FE,$FE,$7C,$7C,$7C
-        dc.b $66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+        dc.b $60,$60,$23,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$3C
+        dc.b $BE,$BE,$BE,$FE,$FE,$7C,$7C,$7C,$66,$66,$5A,$5A
+        dc.b $5A,$7E,$7E,$24,$24,$24
 PlayL3P2:
-        dc.b $60,$60,$60,$23,$23,$23,$26,$26,$26,$3C,$3C,$3C
-        dc.b $3C,$3C,$3C,$BC,$BC,$BC,$7F,$7F,$7F,$3E,$3E,$3E
-        dc.b $66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+        dc.b $60,$60,$23,$23,$23,$26,$26,$3C,$3C,$3C,$3C,$3C
+        dc.b $BC,$BC,$BC,$7F,$7F,$3E,$3E,$3E,$66,$66,$5A,$5A
+        dc.b $5A,$7E,$7E,$24,$24,$24
 PlayL3P3:
-        dc.b $06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
-        dc.b $3C,$3C,$3C,$7D,$7D,$7D,$7F,$7F,$7F,$3E,$3E,$3E
-        dc.b $66,$66,$66,$5A,$5A,$5A,$7E,$7E,$7E,$24,$24,$24
+        dc.b $06,$06,$C4,$C4,$C4,$64,$64,$3C,$3C,$3C,$3C,$3C
+        dc.b $7D,$7D,$7D,$7F,$7F,$3E,$3E,$3E,$66,$66,$5A,$5A
+        dc.b $5A,$7E,$7E,$24,$24,$24
 
 PlayArtLo:
         dc.b <PlayL1P0,<PlayL1P1,<PlayL1P2,<PlayL1P3,<PlayL2P0,<PlayL2P1,<PlayL2P2,<PlayL2P3,<PlayL3P0,<PlayL3P1,<PlayL3P2,<PlayL3P3
@@ -1161,6 +1155,8 @@ M0PositionLoop:
         rts
         ORG $F9B2
 HudDraw:
+        lda #$0E
+        sta COLUPF           ; neutral high contrast in every world
         ; Repeat order during the HUD so each PF register has time
         ; to clear between the left glyphs and the right-half beam.
         lda #$10
