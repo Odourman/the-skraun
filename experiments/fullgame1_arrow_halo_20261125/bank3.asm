@@ -56,7 +56,7 @@ Level       = $82   ; 1,2,3
 JoyState    = $83
 ScoreTop    = $84
 HudLifePtr  = $95
-Phase       = $86       ; gait bits 0..1, held FIRE bit 6, SELECT bit 7
+Phase       = $86       ; gait bits 0..1, held FIRE bit 6, RESET bit 7
 DiagonalSkip= $87
 SpriteHeight= $88
 ArrowRowPtr = $89
@@ -178,7 +178,7 @@ Frame:
         cmp #3
         bne PhaseGood
         lda Phase
-        and #$C0          ; preserve SELECT and gameover release latches
+        and #$C0          ; preserve physical RESET and FIRE latches
         sta Phase
 PhaseGood:
         lda Lives
@@ -698,10 +698,9 @@ RangerFace:
         bmi FacingLeft
         bpl FacingRight
 RangerFleeFace:
-        lda KnightX
-        cmp PlayerX
-        bcc FacingLeft
-        bcs FacingRight
+        lda KnightDir
+        sta REFP1
+        rts
 ; Additional F6 bank3 visible loop: M1 takes place of PF2 halo for these frames.
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:

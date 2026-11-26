@@ -60,11 +60,36 @@ INPT4       = $3C
 
         SEG GameCode
         ORG $F000
-        ds 256,0       ; explicit first-bank start for exact 4096 bytes
+; Active RESET uses Phase bit7, sampled only on a physical press edge.
+; Phase bit6 (manual FIRE latch) and low gait bits are preserved.
+ResetGate:
+        lda SWCHB
+        lsr
+        bcc ResetPressed
+        lda $86
+        bpl ResetCheckStage
+        and #$7F
+        sta $86
+        jmp ResetCheckStage
+ResetPressed:
+        lda $86
+        bmi ResetCheckStage
+        ora #$80
+        sta $86
+        lda #0
+        sta Stage
+ResetCheckStage:
+        lda Stage
+        bne ResetRunning
+        jmp GameStartNew
+ResetRunning:
+        jmp GameInitialized
+        ds $F100-*,0
         ORG $F100
 GameBankTick:
-        lda Stage
-        bne GameInitialized
+        jmp ResetGate
+        nop
+GameStartNew:
         jsr InitializeGame
         ; Stage-0 reset/initialization already performs two bank changes
         ; and map/actor setup. Avoid running all combat/sound work again
@@ -925,14 +950,6 @@ GameOverImpl:
         lda #0
         sta COLUBK
         jsr UpdateSound
-        lda SWCHB
-        and #1
-        beq RestartGame
-        jmp GameOverStay
-RestartGame:
-        lda #0
-        sta Stage        ; next tick initializes new game
-GameOverStay:
         jmp GameBankReturn
 
         ORG $F840
