@@ -767,10 +767,10 @@ EdgeLeaving:
         lda EdgeY,y
         cmp RY
         bne EdgeTarget
-        ; recheck before partial departure
+        ; Do not empty the arena: two other remaining enemies required.
         lda StageKills
         clc
-        adc #1
+        adc #2
         cmp KillsNeed
         bcc EdgeOutStep
         lda #1
@@ -788,11 +788,14 @@ EdgeOutStep:
         bcc EdgeHorizontalOut
         beq EdgeTopOut
         lda RY
-        cmp #170
+        cmp #168
         beq EdgeBottomOut
         inc RY
         rts
 EdgeBottomOut:
+        lda FrameCount
+        and #1
+        bne EdgeDone
         inc RRelease
         inc RRelease
         lda RRelease
@@ -840,7 +843,7 @@ EdgeEnter:
         cpy #2
         bcc EdgeEnterHorizontal
         beq EdgeEnterTop
-        lda #170
+        lda #168
         sta RY
         lda #14
         bne EdgeEnterClip
@@ -859,6 +862,9 @@ EdgeReturning:
         beq EdgeReturnTop
         lda RRelease
         beq EdgeReturnBottomY
+        lda FrameCount
+        and #1
+        bne EdgeDone
         dec RRelease
         dec RRelease
         rts
@@ -911,6 +917,8 @@ RangerTick:
 RangerDoneEarly:
         rts
 RangerExists:
+        lda HaloFrames
+        beq RangerTimers
         ; Non-combat during partial traversal and entry. Full visible approach is hittable.
         lda RAlive
         cmp #$10
@@ -925,8 +933,6 @@ RangerExists:
         cmp #159
         bcs RangerTimers
 RangerHaloCheck:
-        lda HaloFrames
-        beq RangerTimers
         lda PlayerX
         sec
         sbc RX
@@ -961,6 +967,10 @@ RangerMovementCheck:
         ldx #14
         jsr RangerBlocked
         beq RangerMovementDone
+        ; When the physical overscan budget is low, defer optional alternate axis.
+        lda $284
+        cmp #7
+        bcc RangerRestorePosition
         lda FrameCount
         and #4
         bne RangerFallbackY
@@ -988,6 +998,7 @@ RangerFallbackY:
 RangerFallbackCheck:
         jsr RangerBlocked
         beq RangerMovementDone
+RangerRestorePosition:
         lda ScratchMin
         sta RX
         lda ScratchMax
@@ -1603,9 +1614,9 @@ RangerNormal:
         dec RDraw
         bne RangerDoneNear
         jsr RangerDistance
-        cmp #30
+        cmp #26
         bcc RangerAbort
-        cmp #45
+        cmp #53
         bcs RangerAbort
         lda ArrowDX
         bne RangerAbort
@@ -1661,12 +1672,12 @@ RangerBand:
         cmp RetreatThreshold,x
         bcs RangerRetreat
         tya
-        cmp #45
+        cmp #53
         bcs RangerApproach
         lda RCool
         bne RangerDoneNear
         tya
-        cmp #36
+        cmp #40
         bcc RangerRetreat
         lda ArrowDX
         bne RangerDoneNear
@@ -1685,7 +1696,7 @@ RangerThreat:
         bne RangerRetreat
         lda StageKills
         clc
-        adc #1
+        adc #2
         cmp KillsNeed
         bcs RangerRetreat  ; do not begin a five-second empty-arena escape
         lda RX
@@ -1833,7 +1844,7 @@ AwayDone:
         rts
 RangerReturn:
         jmp EdgeEnter
-EdgeX: dc.b 8,152,80,80
+EdgeX: dc.b 3,155,80,80
 EdgeY: dc.b 88,88,12,158
 RetreatThreshold: dc.b 0,128,128,102,102,78,78,54,54
 RangerDistance:
@@ -1897,16 +1908,15 @@ RangerRateOK:
         cmp ScratchIX
         beq RangerMoveY
         bcc RangerMoveRight
-        cmp #8
+        cmp #4
         bcc RangerMoveY
-        beq RangerMoveY
         dec RX
         lda RAlive
         ora #8
         sta RAlive
         jmp RangerMoveY
 RangerMoveRight:
-        cmp #152
+        cmp #155
         bcs RangerMoveY
         inc RX
         lda RAlive

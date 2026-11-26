@@ -227,9 +227,14 @@ NoMissilePosition:
         sta HMOVE
         lda #0
         sta HMP0
-        sta HMP1
         sta HMM1
         sta HMBL
+        ; Let P1 motion clocks finish before clearing its fine motion latch.
+        ldx #3
+P1MotionWait:
+        dex
+        bne P1MotionWait
+        sta HMP1
         jsr RestoreOrbIfVisible
         jsr NewHaloSetup
         jsr SetBallWidth
@@ -636,7 +641,7 @@ P0Loop:
 ; All four user-approved bitmap tables are TOP_FIRST in source and
 ; reversed for the decreasing X visible kernel. RIGHT label uses the
 ; ORIGINAL U1-LEG1 LEFT source bitmap, and vice versa. Frozen bit-exact.
-        ORG $F368
+        ORG $F36D
 EdgeMask2:
         dc.b $33,$12,$14,$0C,$0C,$1D,$1F,$1C,$1C,$1C,$1C,$0C,$1C,$14,$1E,$0E
 EdgeMask4:
