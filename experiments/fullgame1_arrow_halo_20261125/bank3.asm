@@ -47,6 +47,7 @@ INPT4       = $3C
 SWCHA       = $0280
 SWCHB       = $0282
 INTIM       = $0284
+TIMINT      = $0285
 TIM64T      = $0296
 
 PlayerX     = $80   ; CENTRE x in TIA colour clocks, 0..159
@@ -191,7 +192,6 @@ PhaseGood:
         sta MotionDid
         jsr MoveX
         jsr MoveY
-        jsr DebugLevel
 MotionSkipDead:
         jsr UpdateScale
         jsr UpdateGait
@@ -232,7 +232,9 @@ NoMissilePosition:
         sta HMP1
         sta HMM1
         sta HMBL
+        jsr RestoreOrbIfVisible
         jsr NewHaloSetup
+        jsr SetBallWidth
         ; Point M1's two enabled raster bytes at a *fixed screen Y*.
         ; Off pointer always full 193 zero bytes in preserved FF guard.
         lda ArrowDX
@@ -261,59 +263,86 @@ MissileRowOff:
         sta ArrowRowPtr+1
 MissileRowReady:
 BlankWait:
+        bit TIMINT
+        bmi BlankWaitDone
         lda INTIM
         bne BlankWait
+BlankWaitDone:
         sta WSYNC
         lda #0
         sta VBLANK
         lda #0
         sta PF2
         jmp GateDispatch ; gameover has dedicated no-sprite kernel
+; Paired raster kernel: PF1 and BL change once per pair, M1 and M0
+; on the second physical row. P0 stays full one-line, P1 uses VDEL
+; and its native doubled bitmap rows. Color changes only on two blank rows.
 Visible:
         sta WSYNC
         sta GRP0
         ldy WorldPFIndex,x
+        bmi PairColorLine
         lda (WorldPFPtr),y
         sta PF1
-        ; P1 x125 and BL x96 are beyond these register write deadlines.
         lda (OrbRowPtr),y
-        sta ENABL         ; BL orb (alternate frames) or left halo segment
-        ; CHECKPOINT A: no M1 visible writes; no invisible projectile logic
+        sta ENABL
+        jmp PairNextP0
+PairColorLine:
+        cpy #$A7
+        bne PairColorRestore
+        lda $96
+        bne PairColorWrite
+PairColorRestore:
+        lda $8F
+PairColorWrite:
+        sta COLUPF
+        lda #0
+        sta PF1
+        sta ENABL
+PairNextP0:
+        txa
+        sec
+        sbc RenderBottom
+        cmp SpriteHeight
+        bcs PairFirstBlank
+        tay
+        lda (GfxPtr),y
+        dex
+        jmp PairSecond
+PairFirstBlank:
+        lda #0
+        dex
+PairSecond:
+        sta WSYNC
+        sta GRP0
+        ldy WorldPFIndex,x
+        lda (ArrowRowPtr),y
+        sta ENAM1
+        lda (HaloRowPtr),y
+        sta ENAM0
         txa
         sec
         sbc EnemyBottom
         cmp #16
-        bcs DynamicEnemyBlank
+        bcs PairEnemyBlank
         tay
         lda (EnemyRowPtr),y
-        jmp DynamicEnemyWrite
-DynamicEnemyBlank:
-        ; Only P1-blank lines have spare cycles for M0 halo. On P1-live
-        ; lines the existing missile latch persists until next blank line.
-        lda (HaloRowPtr),y
-        sta ENAM0
+        jmp PairEnemyWrite
+PairEnemyBlank:
         lda #0
-DynamicEnemyWrite:
-        sta GRP1          ; exact runtime 8x16 pose, 16B+zero mask via scan remap
-        ; Fixed-centre PF2 ring trial (arena x80/y112), NOT P0-following.
-        ; PREPARE GRP0 for the NEXT visible scanline, x-1.
-        ; Deliberately after PF writes; accumulator persists through
-        ; DEX/BNE and WSYNC so next line writes GRP0 at CPU cycle ~3.
+PairEnemyWrite:
+        sta GRP1
         txa
         sec
         sbc RenderBottom
-        ; For legal 1..192 raster rows, underflow wraps > 78, always
-        ; beyond the original <=36 source height. One compare covers both.
         cmp SpriteHeight
-        bcs NextSpriteBlank
+        bcs PairSecondBlank
         tay
         lda (GfxPtr),y
-        ; HOT P0 ROW: remove unconditional JMP (+3c); duplicate DEX/BNE
-        ; so the GAMEPLAY-4 compact six-pose selection retains hardware raster budget.
         dex
         bne Visible
         jmp VisibleDone
-NextSpriteBlank:
+PairSecondBlank:
         lda #0
         dex
         bne Visible
@@ -338,18 +367,14 @@ VisibleDone:
         nop
         nop
         jsr GameBankEnter ; F8 gameplay tick in overscan ONLY
-        lda OrbDirty
-        beq OrbXPlaced
-        lda OrbX
-        jsr PositionBall
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMBL
-        sta OrbDirty
 OrbXPlaced:
         lda OrbMask
         beq SelectOrbZero
+        lda FrameCount
+        clc
+        adc #1
+        and #2
+        bne SelectOrbZero
         lda #$23    ; FD3F seed for BL orb: 16 two-line pairs, same old Y footprint
         sta OrbRowPtr
         lda #$FD
@@ -362,8 +387,11 @@ SelectOrbZero:
         sta OrbRowPtr+1
 OrbSelected:
 OverScanWait:
+        bit TIMINT
+        bmi OverScanWaitDone
         lda INTIM
         bne OverScanWait
+OverScanWaitDone:
         sta WSYNC
         sta WSYNC          ; GAMEPLAY-2 measured frame 261 -> add one OVERSCAN line, target 262
         jmp Frame
@@ -473,50 +501,37 @@ YGoalCheck:
 MoveYDone:
         rts
 
-; SELECT cycles L1->L2->L3->L1 only when proposed larger size is clear.
-; A blocked grow lights the background red, never embeds body in solids.
-DebugLevel:
-        lda SwitchState
-        and #2
-        bne SelectUp
-        lda Phase
-        and #$80
-        bne DebugDone
-        lda Phase
-        ora #$80
-        sta Phase
-        lda Level
-        cmp #3
-        bne TryGrow
-        lda #1
-        sta Level
-        jmp GrowthOK
-TryGrow:
-        clc
-        adc #1
-        sta TestLevel
-        lda PlayerX
-        sta TryX
-        lda PlayerY
-        sta TryY
-        jsr CandidateValid
-        beq GrowthFail
-        inc Level
-GrowthOK:
-        lda #0
-        sta COLUBK
+; Post-positioning: $FDxx is actual orb mask; $FFxx is rim/off.
+SetBallWidth:
+        ldx #1
+        lda OrbRowPtr+1
+        cmp #$FD
+        beq BallWidthReady
+        lda HaloFrames
+        beq BallWidthReady
+        ldx Level
+BallWidthReady:
+        lda Stage
+        and #1
+        ora BallWidths,x
+        sta CTRLPF
+        ldx Stage
+        lda RasterWorldColors,x
+        sta $8F
+        ldx HaloFrames
+        beq OrbColorReady
+        ldx OrbRowPtr+1
+        cpx #$FD
+        bne OrbColorReady
+        lda #$2E
+OrbColorReady:
+        sta $96
         rts
-GrowthFail:
-        lda #$42
-        sta COLUBK
-        rts
-SelectUp:
-        lda Phase
-        and #$7F
-        sta Phase
-DebugDone:
-        rts
-
+RasterWorldColors:
+        dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
+BallWidths:
+        dc.b 0,$10,$20,$30
+; Life digit font (PF0 D4 first). Three pixels x five raster rows.
 ; For each candidate (TryX,TryY,TestLevel), K0 expanded rectangle
 ; tables: xmin inclusive, xmax exclusive, ymin inclusive, ymax exclusive.
 ; One source-only F01-inspired reflection-friendly scene, NOT canonical.
@@ -634,27 +649,6 @@ P0Loop:
 ; All four user-approved bitmap tables are TOP_FIRST in source and
 ; reversed for the decreasing X visible kernel. RIGHT label uses the
 ; ORIGINAL U1-LEG1 LEFT source bitmap, and vice versa. Frozen bit-exact.
-A_VISUAL_RIGHT:
-        dc.b %00000110,%11000100,%01100100,%00111100
-        dc.b %00111100,%00111101,%11111110,%01111100
-        dc.b %01100110,%01011010,%01111110,%00100100
-B_VISUAL_RIGHT:
-        dc.b %01100000,%00100011,%00100110,%00111100
-        dc.b %00111100,%10111110,%11111110,%01111100
-        dc.b %01100110,%01011010,%01111110,%00100100
-A_VISUAL_LEFT:
-        dc.b %01100000,%00100011,%00100110,%00111100
-        dc.b %00111100,%10111100,%01111111,%00111110
-        dc.b %01100110,%01011010,%01111110,%00100100
-B_VISUAL_LEFT:
-        dc.b %00000110,%11000100,%01100100,%00111100
-        dc.b %00111100,%01111101,%01111111,%00111110
-        dc.b %01100110,%01011010,%01111110,%00100100
-
-; Old MapSmall/MapMedium/MapLarge row indirection was UNUSED since PLAY1-H,\n; real U1-LEG1 P0 is rendered from frozen PlayL1/L2/L3P0..P3 below.\n\n; Visible synthetic obstacles: top x=[12,28) reflected to [132,148)
-; at arena y=[24,48); lower x=[24,44) reflected to [116,136)
-; at arena y=[136,152). 4 solids, not final world map.
-; This physical scanline map is indexed by X=192..1 in VisibleLoop.
         ORG $F3A0
 ; Visible sprite source in compact indexed ROM tables. Pixel-exact 16 rows.
 ; This replaces obsolete 193B standalone K1-warning profile (space for code).
@@ -727,59 +721,23 @@ MissilePosLoop:
 ; Additional F6 bank3 visible loop: M1 takes place of PF2 halo for these frames.
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
-        jsr HudDraw        ; five scoreboard scanlines + blank separator
+        jsr HudDraw
         ldx #186
-        lda ArrowDX
-        beq GateNormal
-        ; COLUP1 chosen by threat-aware K1/K2/Ranger logic in overscan;
-        ; never hide a golden sword warning when M1 is active.
-        ; Preserve visual projectile while halo active, even when off-radius.
-        ; PF2 halo outline is suppressed during M1 frames (visual PARTIAL).
-        lda #0
-        jmp VisibleArrow
-GateNormal:
         lda #0
         jmp Visible
-
-VisibleArrow:
-        sta WSYNC
-        sta GRP0
-        ldy WorldPFIndex,x
-        lda (WorldPFPtr),y
-        sta PF1
-        lda (ArrowRowPtr),y
-        sta ENAM1
-        txa
-        sec
-        sbc EnemyBottom
-        cmp #16
-        bcs DynamicArrowEnemyBlank
-        tay
-        lda (EnemyRowPtr),y
-        jmp DynamicArrowEnemyWrite
-DynamicArrowEnemyBlank:
-        ; Same cycle count as the old M0 write. BL stays visible while
-        ; physical M1 flies; M0's outer side tracer gives way temporarily.
-        lda (OrbRowPtr),y
-        sta ENABL
-        lda #0
-DynamicArrowEnemyWrite:
-        sta GRP1
-        txa
-        sec
-        sbc RenderBottom
-        cmp SpriteHeight
-        bcs ArrowNextSpriteBlank
-        tay
-        lda (GfxPtr),y
-        dex
-        bne VisibleArrow
-        jmp VisibleDone
-ArrowNextSpriteBlank:
-        lda #0
-        dex
-        bne VisibleArrow
-        jmp VisibleDone
+HudLifeOffsets:
+        dc.b 0,5,10,15,20,25,30,35,40,45
+HudLifeDigits:
+        dc.b $70,$50,$50,$50,$70
+        dc.b $20,$30,$20,$20,$70
+        dc.b $70,$40,$70,$10,$70
+        dc.b $70,$40,$70,$40,$70
+        dc.b $50,$50,$70,$40,$40
+        dc.b $70,$10,$70,$40,$70
+        dc.b $70,$10,$70,$50,$70
+        dc.b $70,$40,$40,$40,$40
+        dc.b $70,$50,$70,$50,$70
+        dc.b $70,$50,$70,$40,$70
 
         ORG $F459
 PF0Choices:
@@ -798,33 +756,30 @@ SpriteHeights:
         dc.b 0,12,24,36
 PlayerSizes:
         dc.b 0,$10,$25,$37 ; M0 gold halo side thickness L1=2px, L2=4px, L3=8px
-; Obsolete unused MapLow/MapHigh removed, no dynamic RowMapPtr reader.\nArtLo:
-        dc.b <A_VISUAL_RIGHT,<B_VISUAL_RIGHT,<A_VISUAL_LEFT,<B_VISUAL_LEFT
-ArtHi:
-        dc.b >A_VISUAL_RIGHT,>B_VISUAL_RIGHT,>A_VISUAL_LEFT,>B_VISUAL_LEFT
-RectLo:
-        dc.b 0,<F01Diag_L1,<F01Diag_L2,<F01Diag_L3
-RectHi:
-        dc.b 0,>F01Diag_L1,>F01Diag_L2,>F01Diag_L3
-; K0 source formula: full body +4 margin per side (x & y), half-open.
-F01Diag_L1:
-        dc.b 5,36,15,58
-        dc.b 125,156,15,58
-        dc.b 17,52,127,162
-        dc.b 109,144,127,162
-F01Diag_L2:
-        dc.b 1,40,9,64
-        dc.b 121,160,9,64
-        dc.b 13,56,121,168
-        dc.b 105,148,121,168
-F01Diag_L3:
-        dc.b 0,48,3,70
-        dc.b 113,160,3,70
-        dc.b 5,64,115,174
-        dc.b 97,156,115,174
-
-        ; PLAY1 code/data inserted below
-
+RestoreOrbIfVisible:
+        lda OrbDirty
+        beq OrbRestoreDone
+        lda OrbRowPtr+1
+        cmp #$FD
+        bne OrbRestoreDone
+        lda INTIM
+        cmp #8
+        bcc OrbRestoreSkip
+        lda OrbX
+        jsr PositionBall
+        sta WSYNC
+        sta HMOVE
+        lda #0
+        sta HMBL
+        sta OrbDirty
+OrbRestoreDone:
+        rts
+OrbRestoreSkip:
+        lda #1
+        sta OrbRowPtr
+        lda #$FF
+        sta OrbRowPtr+1
+        rts
 ; ---- PLAY1 frame-independent gameplay: OVERSCAN, not critical scanlines ----
 UpdateOrb:
         lda OrbMask
@@ -907,17 +862,6 @@ TryFire:
         lda #30
         sta HaloFrames
 AttackColor:
-        lda HaloFrames
-        beq AttackOff
-        lda #$2E
-        sta COLUPF       ; TEST B: full arena PF + BL GOLD while active
-        ; Radius is loaded and used in AttackRadius below.
-        jmp AttackRadius
-AttackOff:
-        lda #$86
-        sta COLUPF       ; blue diagnostic world PF+orb when inactive
-        lda #0
-        ; retired unread HaloVisualMask storage, now used by KnightDir
 AttackRadius:
         ldx Level
         lda RadiusTable,x
@@ -927,17 +871,21 @@ AttackRadius:
 GateDispatch:
         lda Lives
         bne GateAlive
-        jsr HudDraw
-        ldx #187           ; dead kernel measured 261: one dedicated extra line
+        lda #0
+        sta $0D
+        sta COLUBK
+        sta CTRLPF
+        sta GRP0
+        sta GRP1
+        sta ENAM0
+        sta ENAM1
+        sta ENABL
+        lda #$0E
+        sta COLUPF
+        jsr DeadHudDraw
+        ldx #187
 DeadScreenLine:
         sta WSYNC
-        txa
-        lsr
-        lsr
-        lsr
-        tay
-        lda GameOverMap,y
-        sta PF1
         dex
         bne DeadScreenLine
         jmp VisibleDone
@@ -1046,11 +994,13 @@ HudBankReturn:
         rts
         ORG $F6C4
 HudDraw:
+        ldy Lives
+        lda HudLifeOffsets,y
+        tay
         ldx #0
 HudDrawRow:
         sta WSYNC
-        ldy Lives
-        lda HudLifeMasks,y
+        lda HudLifeDigits,y
         sta PF0           ; left half: actual lives on all five HUD rows
         lda $90,x
         sta PF1
@@ -1066,8 +1016,9 @@ HudPF2Write:
         ; Right-half PF0 becomes the three independent actor indicators.
         nop
         nop
-        lda $95
+        lda #0
         sta PF0
+        iny
         inx
         cpx #5
         bne HudDrawRow
@@ -1077,8 +1028,6 @@ HudPF2Write:
         sta PF1
         sta PF2
         rts
-HudLifeMasks:
-        dc.b 0,$10,$30,$70,$F0,$F0,$F0,$F0,$F0,$F0
 
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
@@ -1158,12 +1107,12 @@ WorldPFIndex:
         ds 2,31
         ds 2,32
         ds 2,33
-        ds 2,34
+        dc.b $A2,34
         ds 2,35
         ds 2,36
         ds 2,37
         ds 2,38
-        ds 2,39
+        dc.b $A7,39
         ds 2,40
         ds 2,41
         ds 2,42
@@ -1271,62 +1220,54 @@ HaloL3Rune:
         dc.b $24,$24,$7E,$3C,$18
         ORG $FA00
 PlayPF1:
-; WORLD 1 Skog | mirror | 01_fir_A / 01_round_A
         dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
         dc.b $7E,$7E,$7E,$FF,$FF,$FF,$FF,$7E,$7E,$7E,$3C,$3C,$18,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$18,$18,$18,$18,$18,$18,$18,$7E,$FF,$FF,$FF,$7E,$7E,$7E,$7E
         dc.b $3C,$3C,$3C,$18,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 2 Skog | repeat | 02_fir_B / 02_round_B
-        dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
-        dc.b $7E,$7E,$7E,$7F,$7F,$7F,$7F,$7E,$7E,$7E,$3C,$3C,$18,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$7F
+        dc.b $7F,$7F,$7E,$7E,$7E,$38,$7C,$7C,$7C,$38,$38,$38,$10,$10,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$18,$18,$18,$18,$18,$18,$7F,$7F,$7F,$7E,$7E,$7E,$38,$7C,$7C
-        dc.b $7C,$38,$38,$38,$10,$10,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 3 Berg | mirror | 03_peak_A / 03_hill_A
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$18
+        dc.b $18,$18,$18,$18,$18,$18,$18,$3C,$7E,$7E,$7E,$7F,$7F,$7F,$7F,$7E
+        dc.b $7E,$7E,$3C,$3C,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF
         dc.b $FF,$FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C,$3C,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C
         dc.b $3C,$18,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 4 Berg | repeat | 04_peak_B / 04_hill_B
-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7F
-        dc.b $7F,$7F,$7F,$7F,$7F,$3E,$3E,$3E,$1C,$1C,$00,$00,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F
+        dc.b $7E,$7E,$7E,$3E,$3E,$3E,$3E,$1C,$1C,$1C,$08,$08,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7E,$7E,$7E,$3E,$3E,$3E,$3E,$1C
-        dc.b $1C,$1C,$08,$08,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 5 Dröm | mirror | 05_spiral_A / 05_portal_A
+        dc.b $00,$00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$3E,$3E,$3E
+        dc.b $1C,$1C,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$C3,$C3,$C3,$C3,$C3,$C3,$C3,$C3
         dc.b $C3,$E7,$E7,$FF,$FF,$FF,$7E,$7E,$7E,$3C,$3C,$3C,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$FE,$FE,$FE,$82,$82,$82,$BA,$BA,$BA,$8A,$8A,$8A,$FA,$FA,$FA
         dc.b $02,$02,$02,$FE,$FE,$FE,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 6 Dröm | repeat | 06_spiral_B / 06_portal_B
-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$43,$43,$43,$43,$43,$43,$43,$43
-        dc.b $43,$7F,$7F,$7F,$7E,$7E,$7E,$3C,$3C,$3C,$18,$18,$00,$00,$00,$00
+        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$7E,$7E,$7E,$42,$42,$42,$5E
+        dc.b $5E,$5E,$52,$52,$52,$5E,$5E,$5E,$40,$40,$40,$7F,$7F,$7F,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$7E,$7E,$7E,$42,$42,$42,$5E,$5E,$5E,$52,$52,$52,$5E,$5E,$5E
-        dc.b $40,$40,$40,$7F,$7F,$7F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 7 Natt | mirror | 07_wall_A / 07_ruin_A
+        dc.b $43,$43,$43,$43,$43,$43,$43,$43,$43,$7F,$7F,$7F,$7E,$7E,$7E,$3C
+        dc.b $3C,$3C,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         dc.b $FF,$FF,$EF,$EF,$EF,$E7,$E7,$E7,$C7,$C7,$C7,$C7,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
         dc.b $DB,$DB,$DB,$DB,$DB,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-; WORLD 8 Natt | repeat | 08_wall_B / 08_ruin_B
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7F,$7F
-        dc.b $6F,$6F,$6F,$67,$67,$67,$63,$63,$63,$61,$61,$61,$00,$00,$00,$00
+        dc.b $7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$35,$35,$35,$35,$35,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-        dc.b $00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F
-        dc.b $35,$35,$35,$35,$35,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+        dc.b $00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$6F,$6F,$6F,$67,$67,$67,$63,$63
+        dc.b $63,$61,$61,$61,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 ; End at $FD00 (exclusive), eight*96 bytes.
         ORG $FD00
 OrbScan:
@@ -1348,15 +1289,13 @@ HaloL2Rune:
         dc.b $5A,$42,$42,$42,$42,$24,$7E,$3C,$18
         ds 16,0    ; FDF0..FDFF original OrbScan zero-guard
         ORG $FE00
-GameOverMap:
-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$77,$55,$55,$45,$77,$00,$00,$00,$00,$00,$00,$00,$00
 HaloTracerPrepare:
         lda HaloFrames
         beq TracerUseOrb
         ; Keep the real orb every other frame while it exists. If it
         ; was consumed, the BL slot can show a rim on *every* frame.
         lda FrameCount
-        and #1
+        and #2
         bne TracerOdd
         lda OrbMask
         bne TracerUseOrb
@@ -1386,19 +1325,7 @@ TracerXReady:
         lda $96
         jmp TracerSetBallX
 TracerUseOrb:
-        lda OrbMask
-        beq TracerNoOrb
-        lda #$23
-        sta OrbRowPtr
-        lda #$FD
-        sta OrbRowPtr+1
-        ; BL already restored by the previous overscan OrbDirty path.
-        rts
-TracerNoOrb:
-        lda #$01
-        sta OrbRowPtr
-        lda #$FF
-        sta OrbRowPtr+1
+        ; Overscan selected the true next-frame blink pointer and restored BL X.
         rts
 TracerSetBallX:
         jsr PositionBall
@@ -1492,6 +1419,34 @@ HaloXInvalid:
         rts
 HaloRightInset:
         dc.b 0,3,5,9
+DeadHudDraw:
+        ldx #0
+DeadHudRow:
+        sta WSYNC
+        lda $90,x
+        sta PF1
+        cpx #3
+        bcs DeadHudTail
+        lda $E9,x
+        jmp DeadHudPF2
+DeadHudTail:
+        lda $97,x
+DeadHudPF2:
+        sta PF2
+        lda #0
+        ldy #4
+DeadHudDelay:
+        dey
+        bne DeadHudDelay
+        sta PF1
+        nop
+        nop
+        sta PF2
+        inx
+        cpx #5
+        bne DeadHudRow
+        sta WSYNC
+        rts
         ORG $FF01
         ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
 HaloSideRim:
