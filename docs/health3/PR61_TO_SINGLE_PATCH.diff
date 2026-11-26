@@ -1,0 +1,230 @@
+--- a/bank0.asm
++++ b/bank0.asm
+@@ -957,13 +957,13 @@
+         dc.b $FA,$FA,$FA,$FA,$FB,$FB,$FB,$FC,$FC
+ WorldRects:
+         dc.b $10,$30,$06,$30,$70,$90,$06,$30,$10,$30,$78,$A4,$70,$90,$78,$A4 ; Revision 3 stage 1, internal Y = arena Y - 9
+-        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$78,$A4,$64,$80,$78,$A4 ; Revision 3 stage 2, internal Y = arena Y - 9
++        dc.b $14,$30,$08,$34,$64,$80,$08,$34,$14,$30,$76,$A0,$64,$80,$76,$A0 ; HEALTH-3 swapped stage 2 motif rectangles
+         dc.b $10,$30,$0A,$2C,$70,$90,$0A,$2C,$10,$30,$7E,$9E,$70,$90,$7E,$9E ; Revision 3 stage 3, internal Y = arena Y - 9
+-        dc.b $14,$30,$0A,$2C,$64,$80,$0A,$2C,$14,$30,$7E,$9E,$64,$80,$7E,$9E ; Revision 3 stage 4, internal Y = arena Y - 9
++        dc.b $14,$30,$0E,$2E,$64,$80,$0E,$2E,$14,$30,$7A,$9C,$64,$80,$7A,$9C ; HEALTH-3 swapped stage 4 motif rectangles
+         dc.b $10,$2C,$06,$30,$74,$90,$06,$30,$10,$30,$7A,$A2,$70,$90,$7A,$A2 ; Revision 3 stage 5, internal Y = arena Y - 9
+-        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$7A,$A2,$64,$80,$7A,$A2 ; Revision 3 stage 6, internal Y = arena Y - 9
++        dc.b $14,$30,$0A,$32,$64,$80,$0A,$32,$14,$30,$76,$A0,$64,$80,$76,$A0 ; HEALTH-3 swapped stage 6 motif rectangles
+         dc.b $10,$30,$08,$30,$70,$90,$08,$30,$10,$30,$7A,$A0,$70,$90,$7A,$A0 ; Revision 3 stage 7, internal Y = arena Y - 9
+-        dc.b $14,$30,$08,$30,$64,$80,$08,$30,$14,$30,$7A,$A0,$64,$80,$7A,$A0 ; Revision 3 stage 8, internal Y = arena Y - 9
++        dc.b $14,$30,$0A,$30,$64,$80,$0A,$30,$14,$30,$78,$A0,$64,$80,$78,$A0 ; HEALTH-3 swapped stage 8 motif rectangles
+ 
+         ORG $FA80
+ ; Adaptive display-only scheduler. Runs once per game frame in blanking.
+--- a/bank2.asm
++++ b/bank2.asm
+@@ -529,7 +529,8 @@
+ P0AuraReady:
+         ldx Stage
+         lda HaloFrames
+-        bne ColorHaloActive
++        nop
++        nop
+         lda WorldPFColors,x
+         sta COLUPF
+ ColorHaloActive:
+@@ -900,22 +901,13 @@
+         sta CTRLPF       ; no mirror for the END banner
+         lda #$0E
+         sta COLUPF
+-        lda #$42
++        lda #0
+         sta COLUBK
+         jsr UpdateSound
+         lda SwitchState
+         and #1
+         beq RestartGame
+-        lda INPT4
+-        bpl GameOverFire
+-        lda $86
+-        ora #$40          ; arm only after FIRE released
+-        sta $86
+         jmp GameOverStay
+-GameOverFire:
+-        lda $86
+-        and #$40
+-        beq GameOverStay
+ RestartGame:
+         lda #0
+         sta Stage        ; next tick initializes new game
+--- a/bank3.asm
++++ b/bank3.asm
+@@ -907,17 +907,6 @@
+         lda #30
+         sta HaloFrames
+ AttackColor:
+-        lda HaloFrames
+-        beq AttackOff
+-        lda #$2E
+-        sta COLUPF       ; TEST B: full arena PF + BL GOLD while active
+-        ; Radius is loaded and used in AttackRadius below.
+-        jmp AttackRadius
+-AttackOff:
+-        lda #$86
+-        sta COLUPF       ; blue diagnostic world PF+orb when inactive
+-        lda #0
+-        ; retired unread HaloVisualMask storage, now used by KnightDir
+ AttackRadius:
+         ldx Level
+         lda RadiusTable,x
+@@ -927,17 +916,21 @@
+ GateDispatch:
+         lda Lives
+         bne GateAlive
+-        jsr HudDraw
+-        ldx #187           ; dead kernel measured 261: one dedicated extra line
++        lda #0
++        sta $0D
++        sta COLUBK
++        sta CTRLPF
++        sta GRP0
++        sta GRP1
++        sta ENAM0
++        sta ENAM1
++        sta ENABL
++        lda #$0E
++        sta COLUPF
++        jsr DeadHudDraw
++        ldx #187
+ DeadScreenLine:
+         sta WSYNC
+-        txa
+-        lsr
+-        lsr
+-        lsr
+-        tay
+-        lda GameOverMap,y
+-        sta PF1
+         dex
+         bne DeadScreenLine
+         jmp VisibleDone
+@@ -1271,62 +1264,54 @@
+         dc.b $24,$24,$7E,$3C,$18
+         ORG $FA00
+ PlayPF1:
+-; WORLD 1 Skog | mirror | 01_fir_A / 01_round_A
+         dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
+         dc.b $7E,$7E,$7E,$FF,$FF,$FF,$FF,$7E,$7E,$7E,$3C,$3C,$18,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$18,$18,$18,$18,$18,$18,$18,$7E,$FF,$FF,$FF,$7E,$7E,$7E,$7E
+         dc.b $3C,$3C,$3C,$18,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 2 Skog | repeat | 02_fir_B / 02_round_B
+-        dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
+-        dc.b $7E,$7E,$7E,$7F,$7F,$7F,$7F,$7E,$7E,$7E,$3C,$3C,$18,$00,$00,$00
++        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$7F
++        dc.b $7F,$7F,$7E,$7E,$7E,$38,$7C,$7C,$7C,$38,$38,$38,$10,$10,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-        dc.b $00,$18,$18,$18,$18,$18,$18,$7F,$7F,$7F,$7E,$7E,$7E,$38,$7C,$7C
+-        dc.b $7C,$38,$38,$38,$10,$10,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 3 Berg | mirror | 03_peak_A / 03_hill_A
++        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$18
++        dc.b $18,$18,$18,$18,$18,$18,$18,$3C,$7E,$7E,$7E,$7F,$7F,$7F,$7F,$7E
++        dc.b $7E,$7E,$3C,$3C,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF
+         dc.b $FF,$FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C,$3C,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C
+         dc.b $3C,$18,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 4 Berg | repeat | 04_peak_B / 04_hill_B
+-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7F
+-        dc.b $7F,$7F,$7F,$7F,$7F,$3E,$3E,$3E,$1C,$1C,$00,$00,$00,$00,$00,$00
++        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F
++        dc.b $7E,$7E,$7E,$3E,$3E,$3E,$3E,$1C,$1C,$1C,$08,$08,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-        dc.b $00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7E,$7E,$7E,$3E,$3E,$3E,$3E,$1C
+-        dc.b $1C,$1C,$08,$08,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 5 Dröm | mirror | 05_spiral_A / 05_portal_A
++        dc.b $00,$00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$3E,$3E,$3E
++        dc.b $1C,$1C,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$C3,$C3,$C3,$C3,$C3,$C3,$C3,$C3
+         dc.b $C3,$E7,$E7,$FF,$FF,$FF,$7E,$7E,$7E,$3C,$3C,$3C,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$FE,$FE,$FE,$82,$82,$82,$BA,$BA,$BA,$8A,$8A,$8A,$FA,$FA,$FA
+         dc.b $02,$02,$02,$FE,$FE,$FE,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 6 Dröm | repeat | 06_spiral_B / 06_portal_B
+-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$43,$43,$43,$43,$43,$43,$43,$43
+-        dc.b $43,$7F,$7F,$7F,$7E,$7E,$7E,$3C,$3C,$3C,$18,$18,$00,$00,$00,$00
++        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$7E,$7E,$7E,$42,$42,$42,$5E
++        dc.b $5E,$5E,$52,$52,$52,$5E,$5E,$5E,$40,$40,$40,$7F,$7F,$7F,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-        dc.b $00,$7E,$7E,$7E,$42,$42,$42,$5E,$5E,$5E,$52,$52,$52,$5E,$5E,$5E
+-        dc.b $40,$40,$40,$7F,$7F,$7F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 7 Natt | mirror | 07_wall_A / 07_ruin_A
++        dc.b $43,$43,$43,$43,$43,$43,$43,$43,$43,$7F,$7F,$7F,$7E,$7E,$7E,$3C
++        dc.b $3C,$3C,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+         dc.b $FF,$FF,$EF,$EF,$EF,$E7,$E7,$E7,$C7,$C7,$C7,$C7,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+         dc.b $DB,$DB,$DB,$DB,$DB,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-; WORLD 8 Natt | repeat | 08_wall_B / 08_ruin_B
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$7F,$7F,$7F,$7F,$7F,$7F,$7F
+-        dc.b $6F,$6F,$6F,$67,$67,$67,$63,$63,$63,$61,$61,$61,$00,$00,$00,$00
++        dc.b $7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$35,$35,$35,$35,$35,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+         dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+-        dc.b $00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F
+-        dc.b $35,$35,$35,$35,$35,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
++        dc.b $00,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$6F,$6F,$6F,$67,$67,$67,$63,$63
++        dc.b $63,$61,$61,$61,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ ; End at $FD00 (exclusive), eight*96 bytes.
+         ORG $FD00
+ OrbScan:
+@@ -1348,8 +1333,6 @@
+         dc.b $5A,$42,$42,$42,$42,$24,$7E,$3C,$18
+         ds 16,0    ; FDF0..FDFF original OrbScan zero-guard
+         ORG $FE00
+-GameOverMap:
+-        dc.b $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$77,$55,$55,$45,$77,$00,$00,$00,$00,$00,$00,$00,$00
+ HaloTracerPrepare:
+         lda HaloFrames
+         beq TracerUseOrb
+@@ -1492,6 +1475,34 @@
+         rts
+ HaloRightInset:
+         dc.b 0,3,5,9
++DeadHudDraw:
++        ldx #0
++DeadHudRow:
++        sta WSYNC
++        lda $90,x
++        sta PF1
++        cpx #3
++        bcs DeadHudTail
++        lda $E9,x
++        jmp DeadHudPF2
++DeadHudTail:
++        lda $97,x
++DeadHudPF2:
++        sta PF2
++        lda #0
++        ldy #4
++DeadHudDelay:
++        dey
++        bne DeadHudDelay
++        sta PF1
++        nop
++        nop
++        sta PF2
++        inx
++        cpx #5
++        bne DeadHudRow
++        sta WSYNC
++        rts
+         ORG $FF01
+         ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
+ HaloSideRim:

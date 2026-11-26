@@ -1,0 +1,9 @@
+id;grupp;förslag;bevis;spelvinst;spelrisk;nästa prov
+A;G0;konstant miljö-PF;Stella Stage1 L1 PF C6 under aktiv halo;miljön behåller färg;orb har fel färg;tomt lokalt orbband
+B;G0;svart loss och RESET;Stella syntetisk score med F2;noll arena och bara vänsterscore;naturlig dödsrutt återstår;naturlig sekvens och scoregränser
+C;G0;upp- och nedmotiv ±112;Stella pixlar 4 jämna banor och SOURCE_ONLY centergeometri;mer tydlig variation;kollisioner behöver naturlig kontroll;gör 24 rörelseprov
+D;G1;lokalt guldintervall;tomma PF-index 35–38 bevisade i data;kan separera gul orb från miljön;missad färgdeadline;same-Y pil och två kärnor
+E;G2;hel halo står still;Stella X81 mot X92 i rörelseprovet;kan hoppa över flyttkod;tappat tempo och ingen mätt rendererbesparing;avråds tills en mätbar cache finns
+F;G2;världsfärgad orb även under halo;Stella renderscope begränsat;enkel implementation;avviker 4A;användarbeslut om reserv
+G;G1;vertikal P1-återanvändning;SOURCE_ONLY;kan förbättra visuellt antal fiender;timing vid Y-gräns;avgränsad renderdiagnostik
+H;G3;färre logiska fiender;ingen implementation;lägre belastning;förändrad spawn och stridsidentitet;avråds
