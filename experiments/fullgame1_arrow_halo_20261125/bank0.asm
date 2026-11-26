@@ -152,7 +152,8 @@ KnightTimer:
         beq KnightTryStrike
         dec K1Warn,x
         bne KnightReturn
-        lda #7
+        jsr SwordAdvance
+        lda #9
         sta K1Strike,x
         ; Audible sword hit-window cue. Strike outranks prior warning.
         lda #$A0
@@ -165,11 +166,12 @@ KnightTryStrike:
         dec K1Strike,x
         jsr KnightCanHit
         beq NoKnightHit
+AcceptKnightDamage:
         jsr DamagePlayer
 NoKnightHit:
         lda K1Strike,x
         bne KnightReturn
-        lda #36
+        lda #30
         sta K1Rest,x
         rts
 KnightTryRest:
@@ -180,7 +182,7 @@ KnightTryRest:
 KnightReady:
         jsr KnightInRange
         beq KnightChase
-        lda #20
+        lda #18
         sta K1Warn,x
         ; Short telegraph cue: never interrupt an existing sound event.
         lda #$B0
@@ -200,8 +202,19 @@ KnightChase:
         ; All three trials run offscreen in F6 bank0, not in the 76c kernel.
         txa
         eor FrameCount
-        and #3
+        and #7
         beq KnightReturn
+        cmp #4
+        beq KnightReturn
+        cmp #1
+        bne KnightMoveStart
+        lda K1X,x
+        cmp PlayerX
+        beq KnightMoveStart
+        lda K1Y,x
+        cmp PlayerY
+        bne KnightReturn
+KnightMoveStart:
         lda K1X,x
         sta ScratchMin
         lda K1Y,x
@@ -219,15 +232,22 @@ KnightMoveRight:
         bcs KnightStepY
         inc K1X,x
 KnightStepY:
-        lda K1Y,x
-        cmp PlayerY
+        lda PlayerY
+        cpx #0
+        beq KnightTargetReady
+        clc
+        adc #5               ; second knight cuts across the lower shoulder
+KnightTargetReady:
+        cmp K1Y,x
         beq KnightMovementCheck
-        bcc KnightMoveDown
+        bcs KnightMoveDown
+        lda K1Y,x
         cmp #34
         bcc KnightMovementCheck
         dec K1Y,x
         jmp KnightMovementCheck
 KnightMoveDown:
+        lda K1Y,x
         cmp #155
         bcs KnightMovementCheck
         inc K1Y,x
@@ -242,10 +262,10 @@ KnightMovementCheck:
         sta ScratchY
         lda ScratchMax
         sta K1Y,x
-        jsr KnightBlocked
-        beq KnightMovementDone
         lda K1X,x
         cmp ScratchMin
+        beq KnightMovementDone
+        jsr KnightBlocked
         beq KnightMovementDone
         lda ScratchMin
         sta K1X,x
@@ -263,55 +283,42 @@ KnightRejectX:
         rts
 
 KnightBlocked:
-        ; Test a conservatively bounded 8x16 real P1 sprite against the
-        ; current four *unexpanded* world rectangles C0..CF. X is actor
-        ; record offset (0 for K1, 7 for K2); Y scans obstacle records.
-        ; The two top rectangles share $C3 and the two bottom
-        ; rectangles share $CA. The open cross-lane needs no X tests.
+        ; Select the vertical band first; stage 5 has different X ranges.
+        ; Normal actor movement and spawns keep Y in 33..155 inclusive:
+        ; y+8 is always >= top min; y-8 is always < bottom max.
+        ldy #0
         lda K1Y,x
         sec
         sbc #8
         cmp $C3
-        bcc KnightCheckRects
+        bcc KnightCheckX
         adc #15
         cmp $CA
-        bcs KnightCheckRects
-        lda #0
-        rts
-KnightCheckRects:
-        ldy #0
-KnightBlockRect:
+        bcc KnightNotBlocked
+        ldy #8
+KnightCheckX:
         lda K1X,x
         clc
         adc #4
         cmp $C0,y
-        bcc KnightBlockNext
-        lda K1X,x
-        sec
-        sbc #4
-        cmp $C1,y
-        bcs KnightBlockNext
-        lda K1Y,x
-        clc
-        adc #8
-        cmp $C2,y
-        bcc KnightBlockNext
-        lda K1Y,x
-        sec
+        bcc KnightNotBlocked
+        cmp $C4,y
+        bcc KnightCheckLeft
         sbc #8
-        cmp $C3,y
-        bcs KnightBlockNext
-        lda #1
-        rts
-KnightBlockNext:
-        tya
-        clc
-        adc #4
-        tay
-        cpy #16
-        bcc KnightBlockRect
+        cmp $C5,y
+        bcc KnightBlockedYes
+        bcs KnightNotBlocked
+KnightCheckLeft:
+        sbc #7
+        cmp $C1,y
+        bcc KnightBlockedYes
+KnightNotBlocked:
         lda #0
         rts
+KnightBlockedYes:
+        lda #1
+        rts
+        ds $F2AF-*,0
 
 KnightInRange:
         lda PlayerX
@@ -322,7 +329,8 @@ KnightInRange:
         clc
         adc #1
 KnightAbsX:
-        cmp #12
+        ldy Level
+        cmp SwordWarnX,y
         bcs KnightOut
         lda PlayerY
         sec
@@ -332,7 +340,7 @@ KnightAbsX:
         clc
         adc #1
 KnightAbsY:
-        cmp #12
+        cmp SwordWarnY,y
         bcs KnightOut
         lda #1
         rts
@@ -378,20 +386,12 @@ KnightIsHidden:
         lda #0
         rts
 KnightIsVisible:
+        lda SwordStrike    ; snapshot drawn during the current visible frame
+        beq KnightOut
         lda Invuln
         bne KnightOut
-        jsr KnightInRange
+        jsr SwordOverlapsBody
         beq KnightOut
-        lda K1Facing,x
-        bne SwordFacesLeft
-        lda PlayerX
-        cmp K1X,x
-        bcc KnightOut
-        jmp SwordTestObstacles
-SwordFacesLeft:
-        lda PlayerX
-        cmp K1X,x
-        bcs KnightOut
 SwordTestObstacles:
         ; Physical solids $C0-$CF are now unexpanded 4 x 4B.
         ; Test horizontal cast from attackerY through each rectangle.
@@ -532,6 +532,86 @@ PairReject:
         pla
         rts
 
+        ORG $F500
+; Forward blade and inflated player body overlap. The 8-clock P1
+; strike mask extends only a few clocks beyond the centre of the knight.
+SwordOverlapsBody:
+        lda K1Facing,x
+        bne SwordLeftDelta
+        lda PlayerX
+        sec
+        sbc K1X,x
+        jmp SwordForwardDelta
+SwordLeftDelta:
+        lda K1X,x
+        sec
+        sbc PlayerX
+SwordForwardDelta:
+        bcc SwordMiss
+        ldy Level
+        cmp SwordBodyX,y
+        bcs SwordMiss
+SwordCheckY:
+        lda PlayerY
+        sec
+        sbc K1Y,x
+        bcs SwordAbsY
+        eor #$FF
+        clc
+        adc #1
+SwordAbsY:
+        cmp SwordBodyY,y
+        bcs SwordMiss
+SwordBodyHit:
+        lda #1
+        rts
+SwordMiss:
+        lda #0
+        rts
+
+SwordBodyX:
+        dc.b 0,9,13,19
+SwordBodyY:
+        dc.b 0,7,10,13
+SwordAdvance:
+        cpx #7
+        beq SwordLongStep
+        lda Stage
+        cmp #8
+        bcc SwordAdvanceDone  ; the last arena adds the lead knight.s step
+        lda #1
+        bne SwordSetStep
+SwordLongStep:
+        lda #2
+SwordSetStep:
+        sta ScratchY
+        lda K1X,x
+        sta ScratchMin
+        ldy K1Facing,x
+        bne SwordAdvanceLeft
+        clc
+        adc ScratchY
+        cmp #151
+        bcs SwordAdvanceDone
+        bcc SwordTryAdvance
+SwordAdvanceLeft:
+        sec
+        sbc ScratchY
+        cmp #10
+        bcc SwordAdvanceDone
+SwordTryAdvance:
+        sta K1X,x
+        jsr KnightBlocked
+        beq SwordAdvanceDone
+        lda ScratchMin
+        sta K1X,x
+SwordAdvanceDone:
+        rts
+SwordWarnX:
+        dc.b 0,12,15,22
+SwordWarnY:
+        dc.b 0,9,13,18
+
         ORG $F6C3
 ; Entered immediately after LDA $FFF6 in bank2 at the same physical PC.
 AuxiliaryEntryTrampoline:
@@ -600,15 +680,14 @@ RangerReady:
         bne RangerFlee
         jsr RangerHasClearLane
         beq RangerFlee
-        lda #20
+        lda #26
         sta RDraw
         lda #$70
         jsr QueueSound
         rts
 RangerFlee:
-        lda FrameCount
+        lda $86
         and #3
-        cmp #1
         beq RangerDone
         lda RX
         sta ScratchMin
@@ -649,10 +728,10 @@ RangerMovementCheck:
         sta ScratchY
         lda ScratchMax
         sta RY
-        jsr KnightBlocked
-        beq RangerMovementDone
         lda RX
         cmp ScratchMin
+        beq RangerMovementDone
+        jsr KnightBlocked
         beq RangerMovementDone
         lda ScratchMin
         sta RX
@@ -934,7 +1013,7 @@ QueuePriorityVoice1:
 RangerColors:
         dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
 RangerCooldowns:
-        dc.b 0,90,90,72,72,60,60,48,48
+        dc.b 0,132,132,108,108,90,90,72,72
 
 ; Eight physically different map layouts: 4 vertical shifts x mirror/repeat
 ; of the established collision/visual source. No claim of final world art.

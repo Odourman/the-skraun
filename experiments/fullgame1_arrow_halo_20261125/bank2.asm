@@ -160,7 +160,7 @@ InitializeGame:
         sta HaloFrames
         sta $9F           ; clear old recovery on restart
         lda $86
-        and #$83          ; clear gameover FIRE-release latch
+        and #$C3          ; preserve sampled FIRE through RESET
         sta $86
         lda #0
         sta ArrowCool
@@ -691,7 +691,7 @@ ArrowCooldownDone:
         bne ArrowIsActive
         rts
 ArrowIsActive:
-        lda FrameCount
+        lda $86
         and #3
         bne ArrowMoveThisFrame
         rts
@@ -704,13 +704,14 @@ ArrowMoveThisFrame:
 ArrowMinXOK:
         cmp #151
         bcc ArrowMaxXOK
+ArrowBoundaryDestroy:
         jmp ArrowDestroy
 ArrowMaxXOK:
         lda ArrowY
         cmp #6  ; upper arena margin, within the M1 row table guard
-        bcc ArrowDestroy
+        bcc ArrowBoundaryDestroy
         cmp #176
-        bcs ArrowDestroy
+        bcs ArrowBoundaryDestroy
         ; Halo intercepts projectile even through solids; checked first.
         lda HaloFrames
         beq TestArrowBody
@@ -748,8 +749,8 @@ TestArrowBody:
         clc
         adc #1
 ArrowBodyAbsX:
-        sec
-        sbc HalfW
+        ldy Level
+        cmp ArrowCoreHalfW,y
         bcs TestArrowWalls
         lda ArrowY
         sec
@@ -759,34 +760,34 @@ ArrowBodyAbsX:
         clc
         adc #1
 ArrowBodyAbsY:
-        sec
-        sbc HalfH
+        cmp ArrowCoreHalfH,y
         bcs TestArrowWalls
+AcceptArrowDamage:
         jsr ApplySwordDamage  ; shared level-down / lose-life / i-frames
         jmp ArrowDestroy
 TestArrowWalls:
-        ; Conservative physical-world collision: actual 4 collision
-        ; rectangles in $C0-$CF, L1 expanded padding. No fake pass for
-        ; pixel-perfect PF wall edge; no collision-table or stack overlap.
+        ; Two nonoverlapping vertical bands, with independent horizontal pairs.
         ldx #0
-ArrowWallLoop:
+        lda ArrowY
+        cmp $C2
+        bcc ArrowDone
+        cmp $C3
+        bcc ArrowWallBand
+        cmp $CA
+        bcc ArrowDone
+        cmp $CB
+        bcs ArrowDone
+        ldx #8
+ArrowWallBand:
         lda ArrowX
         cmp $C0,x
-        bcc NextArrowWall
+        bcc ArrowDone
         cmp $C1,x
-        bcs NextArrowWall
-        lda ArrowY
-        cmp $C2,x
-        bcc NextArrowWall
-        cmp $C3,x
         bcc ArrowDestroy
-NextArrowWall:
-        inx
-        inx
-        inx
-        inx
-        cpx #16
-        bcc ArrowWallLoop
+        cmp $C4,x
+        bcc ArrowDone
+        cmp $C5,x
+        bcc ArrowDestroy
 ArrowDone:
         rts
 ArrowDestroy:
@@ -799,6 +800,12 @@ ArrowSoundHigherPriority:
         sta ArrowDX
         sta ArrowDY
         rts
+
+        ; Solid central torso, independent of the full movement box.
+ArrowCoreHalfW:
+        dc.b 0,4,7,13
+ArrowCoreHalfH:
+        dc.b 0,6,9,13
 
         ; Exact corresponding shared-address bank trampolines.
         ORG $F680
