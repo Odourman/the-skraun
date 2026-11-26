@@ -206,7 +206,7 @@ HaloPointerReady:
         sec
         sbc PlayerY
         sec
-        sbc $87           ; bank1 chooses regular half-height or radial rune height
+        sbc HalfH
         sta RenderBottom
         ; Each object RESP and fine-HM register is set on its own WSYNC.
         ; One shared HMOVE after all three positions preserves the same
@@ -501,36 +501,24 @@ YGoalCheck:
 MoveYDone:
         rts
 
-; Post-positioning: $FDxx is actual orb mask; $FFxx is rim/off.
 SetBallWidth:
-        ldx #1
-        lda OrbRowPtr+1
-        cmp #$FD
-        beq BallWidthReady
-        lda HaloFrames
-        beq BallWidthReady
-        ldx Level
-BallWidthReady:
+        ; BL belongs only to the orb. Its width and world reflection
+        ; never depend on the player level or halo phase.
         lda Stage
         and #1
-        ora BallWidths,x
+        ora #$10
         sta CTRLPF
         ldx Stage
         lda RasterWorldColors,x
         sta $8F
         ldx HaloFrames
         beq OrbColorReady
-        ldx OrbRowPtr+1
-        cpx #$FD
-        bne OrbColorReady
         lda #$2E
 OrbColorReady:
         sta $96
         rts
 RasterWorldColors:
         dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
-BallWidths:
-        dc.b 0,$10,$20,$30
 ; Life digit font (PF0 D4 first). Three pixels x five raster rows.
 ; For each candidate (TryX,TryY,TestLevel), K0 expanded rectangle
 ; tables: xmin inclusive, xmax exclusive, ymin inclusive, ymax exclusive.
@@ -684,7 +672,7 @@ PoseChosen:
         ; Knight visual facing locks during warning/strike,
         ; free chase and Ranger face toward player at other times.
         cpx #3
-        bcs NormalEnemyFace
+        bcs RangerFace
         lda SwordWarn
         ora SwordStrike
         beq NormalEnemyFace
@@ -695,6 +683,7 @@ NormalEnemyFace:
         lda KnightX
         cmp PlayerX
         bcc FacingRight
+FacingLeft:
         lda #8
         sta REFP1
         rts
@@ -702,22 +691,19 @@ FacingRight:
         lda #0
         sta REFP1
         rts
-PositionMissile1:
-        sta WSYNC
-        sec
-MissilePosLoop:
-        sbc #15
-        bcs MissilePosLoop
-        eor #7
-        asl
-        asl
-        asl
-        asl
-        sta HMM1
-        sta RESM1
-        rts
-
-
+RangerFace:
+        cpx #4
+        beq NormalEnemyFace ; bow draw faces its target
+        bcc RangerFleeFace
+        lda ArrowDX         ; after release keep the projectile's fixed facing
+        beq NormalEnemyFace
+        bmi FacingLeft
+        bpl FacingRight
+RangerFleeFace:
+        lda KnightX
+        cmp PlayerX
+        bcc FacingLeft
+        bcs FacingRight
 ; Additional F6 bank3 visible loop: M1 takes place of PF2 halo for these frames.
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
@@ -993,42 +979,6 @@ HudBankEnter:
 HudBankReturn:
         rts
         ORG $F6C4
-HudDraw:
-        ldy Lives
-        lda HudLifeOffsets,y
-        tay
-        ldx #0
-HudDrawRow:
-        sta WSYNC
-        lda HudLifeDigits,y
-        sta PF0           ; left half: actual lives on all five HUD rows
-        lda $90,x
-        sta PF1
-        cpx #3
-        bcs HudPF2Tail
-        lda $E9,x
-        jmp HudPF2Write
-HudPF2Tail:
-        lda $97,x
-HudPF2Write:
-        sta PF2
-        ; Second PF0 write only after the left-half beam passed PF0.
-        ; Right-half PF0 becomes the three independent actor indicators.
-        nop
-        nop
-        lda #0
-        sta PF0
-        iny
-        inx
-        cpx #5
-        bne HudDrawRow
-        sta WSYNC
-        lda #0
-        sta PF0
-        sta PF1
-        sta PF2
-        rts
-
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
         dc.b $06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
@@ -1210,14 +1160,52 @@ M0PositionLoop:
         sta RESM0
         rts
         ORG $F9B2
-HaloL3Rune:
-        dc.b $18,$3C,$7E,$24,$24,$24,$42,$42,$42,$42,$42,$5A
-        dc.b $7E,$42,$42,$42,$42,$81,$81,$81,$87,$87,$87,$C5
-        dc.b $C5,$C5,$E5,$E5,$E5,$BD,$BD,$BD,$BD,$BD,$BD,$BD
-        dc.b $BD,$BD,$FF,$FF,$FF,$FD,$FD,$FD,$E7,$E7,$E7,$DB
-        dc.b $DB,$DB,$FF,$FF,$FF,$A5,$A5,$A5,$81,$81,$81,$81
-        dc.b $42,$42,$42,$42,$7E,$5A,$42,$42,$42,$42,$42,$24
-        dc.b $24,$24,$7E,$3C,$18
+HudDraw:
+        ; Repeat order during the HUD so each PF register has time
+        ; to clear between the left glyphs and the right-half beam.
+        lda #$10
+        sta CTRLPF
+        ldy Lives
+        lda HudLifeOffsets,y
+        tay
+        ldx #0
+HudDrawRow:
+        sta WSYNC
+        lda HudLifeDigits,y
+        sta PF0           ; left half: actual lives on all five HUD rows
+        lda $90,x
+        sta PF1
+        cpx #3
+        bcs HudPF2Tail
+        lda $E9,x
+        jmp HudPF2Write
+HudPF2Tail:
+        lda $97,x
+HudPF2Write:
+        sta PF2
+        ; Clear only after the final left-half bit of each register.
+        nop
+        nop
+        lda #0
+        sta PF0
+        nop
+        nop
+        sta PF1
+        nop
+        nop
+        nop
+        sta PF2
+        iny
+        inx
+        cpx #5
+        bne HudDrawRow
+        sta WSYNC
+        lda Stage
+        and #1
+        ora #$10
+        sta CTRLPF
+        rts
+
         ORG $FA00
 PlayPF1:
         dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
@@ -1273,108 +1261,86 @@ PlayPF1:
 OrbScan:
         ds 70,0
         ds 4,2      ; compact eight physical lines around the orb collision center
-        ds 70,0     ; align tracer source to FD90
-HaloTraceCore:
-        dc.b 2,0
-HaloL1Rune:
-        dc.b $18,$3C,$7E,$42,$42,$5A,$7E,$42,$42,$81,$81,$81
-        dc.b $87,$C5,$E5,$BD,$BD,$BD,$FF,$FD,$E7,$DB,$FF,$A5
-        dc.b $81,$81,$81,$81,$42,$42,$7E,$5A,$42,$42,$7E,$3C
-        dc.b $18
-HaloL2Rune:
-        dc.b $18,$3C,$7E,$24,$42,$42,$42,$42,$5A,$7E,$42,$42
-        dc.b $42,$81,$81,$81,$87,$87,$C5,$C5,$E5,$E5,$BD,$BD
-        dc.b $BD,$BD,$BD,$BD,$FF,$FF,$FD,$FD,$E7,$E7,$DB,$DB
-        dc.b $FF,$FF,$A5,$A5,$81,$81,$81,$81,$42,$42,$42,$7E
-        dc.b $5A,$42,$42,$42,$42,$24,$7E,$3C,$18
-        ds 16,0    ; FDF0..FDFF original OrbScan zero-guard
+        ds 86,0    ; separate cap table at $FDA0
+HaloCapRows:
+        dc.b 2,2
+        ds $FE00-*,0      ; all indexed cap reads remain in zero-padded FD
         ORG $FE00
-HaloTracerPrepare:
-        lda HaloFrames
-        beq TracerUseOrb
-        ; Keep the real orb every other frame while it exists. If it
-        ; was consumed, the BL slot can show a rim on *every* frame.
-        lda FrameCount
-        and #2
-        bne TracerOdd
-        lda OrbMask
-        bne TracerUseOrb
-        jmp TracerRight
-TracerOdd:
-        lda ArrowDX
-        beq TracerLeft
-        lda OrbMask
-        beq TracerLeft
-        lda FrameCount
-        and #2
-        bne TracerRight
-TracerLeft:
-        jsr HaloLeftX
-        jmp TracerXReady
-TracerRight:
-        jsr HaloRightX
-TracerXReady:
-        bcc TracerUseOrb
-        sta $96           ; P0 was positioned in offscreen setup; HUD $E9..$EB stays intact
-        lda HaloRowPtr
-        sta OrbRowPtr
-        lda HaloRowPtr+1
-        sta OrbRowPtr+1
-        lda #1
-        sta OrbDirty
-        lda $96
-        jmp TracerSetBallX
-TracerUseOrb:
-        ; Overscan selected the true next-frame blink pointer and restored BL X.
-        rts
-TracerSetBallX:
-        jsr PositionBall
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMBL
-        rts
-; The RIOT VBLANK budget check prevents the prior stage2 87-line failure.
-TracerBudgetCheck:
-        lda INTIM
-        cmp #10
-        bcc TracerBudgetReturn
-        jmp HaloTracerPrepare
-TracerBudgetReturn:
-        rts
-
-; Dedicated offscreen M0 halo reposition. Both M0 and BL see same 34-line
-; 2-line mask centered on the REAL PlayerY; X sides are +/- HaloRadius.
-; M0/BL Gold are independent of real Ranger M1 arrow.
 NewHaloSetup:
-        ; Hide M0 if no new position can be scheduled. RESMP0=2 suppresses the
-        ; missile while attached, even if the hot loop writes ENAM0.
+        ; Attach M0 until it has a valid, current-frame halo position.
         lda #2
         sta RESMP0
-        ; Single BL reposition needs at most two WSYNC waits and setup.
-        ; Retain conservative guard for optional two-object path below.
-        lda INTIM
-        cmp #10
-        bcc NewHaloQuickReturn
-        lda #0
-        sta ENAM0
+        lda #1
+        sta HaloRowPtr
+        lda #$FF
+        sta HaloRowPtr+1
         lda HaloFrames
-        beq HaloSetupCaps
-        lda ArrowDX
-        bne HaloSetupCaps  ; do not spend blank time on an unused M0 slot
+        bne HaloCheckBudget
+        rts
+HaloCheckBudget:
+        bit TIMINT
+        bmi HaloSetupDone
         lda INTIM
-        cmp #16
-        bcc HaloSetupCaps
+        bmi HaloSetupDone
+        cmp #12
+        bcc HaloSetupDone
         lda FrameCount
         and #1
-        beq HaloSideLeft
-        jsr HaloRightX
-        jmp HaloSideCheck
-HaloSideLeft:
-        jsr HaloLeftX
-HaloSideCheck:
-        bcc HaloSetupCaps
-HaloSideXPosition:
+        bne HaloCap
+        lda PlayerY
+        lsr
+        adc #$28           ; ceil(PlayerY/2) + side-band seed
+        sta HaloRowPtr
+        lda FrameCount
+        and #2
+        bne HaloAtRight
+        lda PlayerX
+        sec
+        sbc HaloRadius
+        cmp #5
+        bcc HaloSetupDone
+        cmp #160
+        bcs HaloSetupDone
+        bcc HaloPosition
+HaloAtRight:
+        lda PlayerX
+        clc
+        adc HaloRadius
+        cmp #159
+        bcs HaloSetupDone
+        ldx Level
+        sbc HaloRightInset,x ; carry is clear, includes one-clock origin correction
+        jmp HaloPosition
+HaloCap:
+        lda FrameCount
+        and #2
+        bne HaloCapBottom
+        lda PlayerY
+        sec
+        sbc HaloRadius
+        bcc HaloSetupDone
+        bcs HaloCapY
+HaloCapBottom:
+        lda PlayerY
+        clc
+        adc HaloRadius
+HaloCapY:
+        cmp #6
+        bcc HaloSetupDone
+        cmp #171
+        bcs HaloSetupDone
+        lsr
+        adc #$48           ; HaloCapRows - 88 with ceil(Y/2)
+        sta HaloRowPtr
+        lda #$FD
+        sta HaloRowPtr+1
+        ldx Level
+        lda HaloCapSizes,x
+        sta NUSIZ0
+        lda PlayerX
+        sec
+        sbc HaloCapInset,x
+HaloPosition:
         ldx #0
         stx RESMP0
         jsr PositionMissile0
@@ -1382,43 +1348,14 @@ HaloSideXPosition:
         sta HMOVE
         lda #0
         sta HMM0
-HaloSetupCaps:
-        jsr TracerBudgetCheck
-        rts
-
-NewHaloQuickReturn:
-        lda #0
-        sta ENAM0
-        rts
- ; Short cardinal rim segments: use the same octagonal radius as hits.
- ; Carry set only for an entirely on-screen segment. Right-side start
- ; accounts for the physical 2/4/8-clock width. At dy=0..5 the segment
- ; marks the reach boundary to within its own width, not an 8px inset.
-HaloLeftX:
-        lda PlayerX
-        sec
-        sbc $8F
-        bcc HaloXInvalid
-        clc
-        adc #2
-        cmp #6
-        rts
-HaloRightX:
-        ldx Level
-        lda PlayerX
-        clc
-        adc $8F
-        cmp #159
-        bcs HaloXInvalid
-        sec
-        sbc HaloRightInset,x
-        sec
-        rts
-HaloXInvalid:
-        clc
+HaloSetupDone:
         rts
 HaloRightInset:
-        dc.b 0,3,5,9
+        dc.b 0,2,4,8
+HaloCapInset:
+        dc.b 0,4,6,6
+HaloCapSizes:
+        dc.b 0,$20,$35,$37
 DeadHudDraw:
         ldx #0
 DeadHudRow:
@@ -1447,6 +1384,22 @@ DeadHudDelay:
         bne DeadHudRow
         sta WSYNC
         rts
+PositionMissile1:
+        sta WSYNC
+        sec
+MissilePosLoop:
+        sbc #15
+        bcs MissilePosLoop
+        eor #7
+        asl
+        asl
+        asl
+        asl
+        sta HMM1
+        sta RESM1
+        rts
+
+
         ORG $FF01
         ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
 HaloSideRim:

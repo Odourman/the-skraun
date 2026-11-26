@@ -166,69 +166,24 @@ HudPrepare:
         HudCombineRow HudPF2High,HudPF2Low,2,$EB
         HudCombineRow HudPF2High,HudPF2Low,3,$9A
         HudCombineRow HudPF2High,HudPF2Low,4,$9B
-        jmp HaloVisualSelect
+        jmp PrepareHaloColor
 
         ORG $F400
-; P0 stays exact U1-LEG1 in normal play. Active halo expands visual
-; source to a precomputed frozen A-pose with 3+2 gold tips on each side;
-; player can continue moving, but walking pose freezes for 30f.
-HaloVisualSelect:
-        lda $99           ; real HalfH remains untouched for collision
-        sta $87           ; safe after movement (was DiagonalSkip)
+PrepareHaloColor:
+        ; The graphics pointer, facing and height from UpdateGait/UpdateScale
+        ; remain live during attacks. P0 and the halo missile share COLUP0.
         lda #0
-        sta $0B           ; REFP0, normal sprite already physically flipped in ROM
-        lda $9E           ; HaloFrames
-        beq HaloRimOff
-        lda $A0           ; HaloRadius (18/28/38)
-        sta $87
-        ldx $82           ; Level
-        lda HaloRuneLo,x
-        sta $8B           ; GfxPtr low
-        lda HaloRuneHi,x
-        sta $8C           ; GfxPtr high
-        lda HaloRuneHeight,x
-        sta $88           ; SpriteHeight (37/57/77)
-        lda $8E           ; Facing (0=right,1=left)
-        beq HaloRimPrepare
-        lda #8
-        sta $0B           ; hardware pixel-exact horizontal mirror
-HaloRimPrepare:
-        ; Three contour bands, phased by the 0..2 gait counter. Keep the
-        ; logical radius untouched. Y offsets are in two-line table units.
-        lda $86
-        and #3
-        asl
-        asl
-        ora $82
-        tax
-        lda HaloRimReach,x
-        sta $8F           ; MotionDid is dead after UpdateGait, until next Frame
-        lda $81
-        clc
-        adc #1
-        lsr
-        clc
-        adc HaloRimYSeed,x
-        sta $A6
-        lda #$FF
-        sta $A7
+        sta $0B
+        lda $9E
+        beq PlayerSilver
+        lda #$2E
+        bne WritePlayerColor
+PlayerSilver:
+        lda #$0E
+WritePlayerColor:
+        sta $06
         jmp HudExitToGraphics
-HaloRimOff:
-        lda #1
-        sta $A6
-        lda #$FF
-        sta $A7
-        jmp HudExitToGraphics
-HaloRimReach:
-        dc.b 0,18,28,38, 0,14,21,29, 0,14,21,29
-HaloRimYSeed:
-        dc.b $28,$28,$28,$28, $28,$2D,$2F,$32, $28,$23,$21,$1E
-HaloRuneLo:
-        dc.b 0,$92,$B7,$B2
-HaloRuneHi:
-        dc.b 0,$FD,$FD,$F9
-HaloRuneHeight:
-        dc.b 0,37,57,77
+
         ORG $F500
 ; Five rows per table. Each row is indexed by BCD digit 0 through 9.
 ; Preserve the original score font and the TIA's opposite PF bit orders.

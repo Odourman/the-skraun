@@ -1,0 +1,52 @@
+name: Skraun renderer native DASM and Stella
+on:
+  pull_request:
+    paths:
+      - 'experiments/fullgame1_arrow_halo_20261125/**'
+      - 'docs/romdev_final/ci/**'
+      - '.github/workflows/skraun-renderer-native.yml'
+jobs:
+  rom-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native tools
+        run: sudo apt-get update && sudo apt-get install -y dasm stella
+      - name: Assemble and replay known timing regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifacts="$PWD/native-renderer-test"
+          rom="$PWD/build/fullgame1/THE_SKRAUN_FULLGAME1_F6_NTSC.bin"
+          mkdir -p "$artifacts/config/stella"
+          python3 experiments/fullgame1_arrow_halo_20261125/build.py
+          sha256sum "$rom" | tee "$artifacts/rom.sha256"
+          cc -Wall -Wextra -shared -fPIC docs/romdev_final/ci/sdl_input.c -o "$artifacts/input.so" -ldl
+          printf 'trapWrite $00\nexec %s/docs/romdev_final/ci/stage2_L3.script\nprint _scanEnd\nsaveSes %s/session.txt\n' "$PWD" "$artifacts" >"$artifacts/commands"
+          result=0
+          timeout 12s env SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy \
+            XDG_CONFIG_HOME="$artifacts/config" SKRAUN_COMMANDS="$artifacts/commands" \
+            LD_PRELOAD="$artifacts/input.so" stella -debug -logtoconsole 1 -dbg.logbreaks 1 -audio.enabled 0 \
+            -threads 0 -vsync 0 -video software -fullscreen 0 "$rom" >"$artifacts/stella.log" 2>&1 || result=$?
+          test "$result" -eq 0 || test "$result" -eq 124
+          python3 - "$artifacts" <<'PY'
+          import pathlib, re, sys
+          out = pathlib.Path(sys.argv[1])
+          log = (out / "stella.log").read_text()
+          synchronized = [
+              (int(frame), int(scan) + 3)
+              for frame, scan in re.findall(r"^WTrap\[00\]:\s+(\d+)\s+(\d+) .*\| 3/f05d ", log, re.M)
+              if int(frame) >= 2
+          ]
+          assert len(synchronized) >= 630, len(synchronized)
+          assert all(lines == 262 for _, lines in synchronized), [x for x in synchronized if x[1] != 262]
+          session = (out / "session.txt").read_text().replace("\n", "")
+          assert re.search(r"print _scanEnd.*?#\s*262", session), session
+          print(f"{len(synchronized)} synchronized frames, all 262 lines")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: skraun-renderer-native
+          path: native-renderer-test
