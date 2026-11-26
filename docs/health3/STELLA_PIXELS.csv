@@ -1,0 +1,11 @@
+variant,scene,top_left_nonblack,top_right_nonblack,arena_nonblack,forest_rgb,gold_rgb
+HEALTH3-baseline,natural_move_halo,504,544,6350,0,7280
+HEALTH3-baseline,fixture_death_idle,800,800,59840,0,0
+HEALTH3-color,natural_move_halo,504,544,6350,6992,288
+HEALTH3-color,fixture_death_idle,800,800,59840,0,0
+HEALTH3-combined,natural_move_halo,504,544,6350,6992,288
+HEALTH3-combined,fixture_death_idle,296,296,0,0,0
+HEALTH3-locked,natural_move_halo,504,544,6446,6992,384
+HEALTH3-locked,fixture_death_idle,296,296,0,0,0
+HEALTH3-single,natural_move_halo,504,544,6350,6992,288
+HEALTH3-single,fixture_death_idle,296,0,0,0,0

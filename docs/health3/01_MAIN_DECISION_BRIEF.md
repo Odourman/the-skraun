@@ -1,0 +1,44 @@
+# HEALTH-3 till MAIN V
+
+## Faktiska resultat
+
+- PR61 byggdes om med exakt SHA-256 6db40c950a35cc3ac40c8774664da87b8cf3404d0644936efdc88dfc1189010f. Drive-ZIP verifierad mot arbetsorderns SHA, CRC och samtliga manifestposter. ROM 16 384 byte; PF1-hash c879daa4b5bcc1bb19aa71ee632c48996b0885963bd102dd8e76bd50761354d4.
+- På samma naturliga Stage 1/L1-sekvens med höger och FIRE nådde PR61, color och combined X92, Y88, halo 19 och 262 rasterrader. PF går från 2E i PR61 till C6 med patch, medan P0/M0 behåller 2E. Samma Stella-utsnitt går från 7 280 till 288 guldpixlar och från 0 till 6 992 skogsgröna pixlar. Det omfattar HUD och eventuell BL, så siffrorna anger bildens faktiska färger men ingen exakt halo- eller orbmask.
+- Syntetisk förlust med Lives=0 och BCD $13:$57. Combined höll kvar poängen och förlustläget vid FIRE. Konsolens F2/RESET gav 3 liv, Stage 1, L1 och noll poäng. Svart arena utan färgade pixlar, men återanvänd HUD ritade två kopior av poängen. Single-provet har en separat vänsterpoängsrutin. Single-provet bevarade vänsterkopians 296 pixlar, högerhalvan och arenan hade 0. Se mätbilagan.
+- Motivpatchen flyttar B-motiv och fyra motsvarande AABB ±112 rasterrader på bana 2,4,6,8. Raderna behåller sin ordning. Tidig ±96-variant blockerade orbens tomma färgband och ersattes. Ny PF SHA-256 4c52651d7eca55e8e5c5158d33c90bec6bbd4f85e1732e65cf94321cd2b5334d. Modellen ger 24/24 sammanhängande centerutrymmen från (80,88) och säker tillväxt i 16/16 plockbara fall. Exakt orbcen­trum vid L3 kan ligga i en AABB. Närliggande, uppgraderingsbara kontaktpositioner finns. De fyra ändrade banorna nåddes vid L3 med syntetiska Stella-prov och 262-raders slutvärden. Full naturlig navigering behöver köras.
+- Låsvarianten stannade vid X81 i samma prov där rörlig halo nådde X92. Låset hoppar över MoveX/MoveY under aktiv halo, men PositionP0/P1, NewHaloSetup, HUD och hotloopen kör fortsatt. Wrappern adderar ett JSR-lager till MoveX utanför halo, med möjlig tvåbytes stackkostnad. Ingen mätt tidsvinst. Behåll fri rörelse. Kort startlås behöver specifik förberäkning eller cache för att vara meningsfullt.
+
+## Tre paket för MAIN
+
+| Paket | Teknik | Bedömning |
+|---|---|---|
+| 1. Direkt | Fast miljöfärg, ny motivplacering, svart förlustvy | Bryt ut delpatcharna. Spelaren behåller tempot och RESET-regeln. Världsfärgad BL-orb är en kvarstående avvikelse från 4A. |
+| 2. Rekommenderad helhet | Paket 1 med lokal orbzon som växlar COLUPF och ett oberoende Ranger/pil-prov | Behåll fri rörelse och tre logiska hot. Prioritera riktig pixel- och beamkontroll före ny full renderer. |
+| 3. Reserv | Världsfärgad orb hela tiden och gul rörlig rune/M0, eller M1-orb enbart i verkligt pilfria faser | Första valet billigast, kräver uttryckligt beslut om orbkravet. M1-alternativet konkurrerar med bågskytte och P1-färg. |
+
+## Färgarkitektur
+
+COLUPF delas mellan PF och BL. COLUP0 delas mellan P0/M0 och COLUP1 mellan P1/M1. Färgpatchen har 0 nya synliga skrivningar, 0 nya RAM-byte och behåller fysiska ägare. Under halo blir BL-orben och BL-rim världsfärgade. P0:s kropp/rune förblir gul. Guldfönster med BL kan uppfylla miljökravet om PF-raden är tom och återställs innan nästa miljöpixel. Modellen hittar PF1-index 35–38 som tomma över orbens åtta rasterrader på alla 8 banor inklusive den nya layouten. Två STA COLUPF kostar 6 cykler totalt plus färgladdning, dispatch och latches. Använd särskild tomradsväg som kan hoppa över PF-hämtning efter att ha nollat latch. En LDA/STA i varje vanlig rad är för dyr för flera beräknade vägar.
+
+En BL-orb och BL-rim kan dela färg mellan olika faser. En ensam BL har en aktiv X-position åt gången. P0/M0 är redan gul under halo, men flytt av orb till M0 tar rimslot och en ljusgrå P0 kräver tidsseparation. P1/M1 används av fiende och pil. 2-fas och 3-fas ger nominellt 30 och 20 Hz om objektet syns en gång per period. Maxlucka med dynamiska hot kräver faktisk mätning. Separat attackkernel med orbhändelser är det viktigaste oprövade spåret. Gammal hel-PF-guld är negativ jämförelse.
+
+Bank0 RangerColors och bank2 WorldPFColors har samma bytes C6/C8 skog, 36/38 berg, 56/58 dröm, 06/08 natt. Bakgrund 00/00/02/02/04/04/00/00. Riddarens neutral, varning och hugg är 9E/2E/46. Ranger får 9E vid drag, släpp eller aktiv pil. M1 ärver den faktiskt valda P1-färgen. Exakt kamouflage sparar ingen separat STA på dagens TIA. Nio databyte är möjlig källdeduplicering före kostnad för korsbanksåtkomst. Borttagning av tinttester kan spara blankingcykler men tar blå kontrast för pil och hot. PF-Ranger behöver dynamiska maskuppslag, fyra-klockors X-kvantisering, och en lösning för repeterat/speglat PF. Börja med mätning av neutral och aktiv Ranger/pil i dröm och natt.
+
+## Halo, fiender och spelmotor
+
+- Halons logiska radie är 18/28/38, med strikt innanför enligt max(|dx|,|dy|)+floor(min/2). Sista axiala träffpunkt är 17/27/37. Fria halon har guld-rune och fasad rim. En ljusgrå kropp under halo eller full visuell 360° behöver en faktisk separat gul objektägare eller rasterzon. Förbered ett avgränsat prov med tydliga rimsegment och mät deras avstånd till träffkonturen. Ingen full fysisk kontur uppmätt här.
+- Vid två svärdshot planerar AdaptiveSelect Ranger i fas 0 och riddare via FrameCount-paritet. I sex stabila bildrutor ger detta två val var, med 2/4-intervall för riddare. Vid ett hot får det två av tre och de två andra delar reservfasen. Det är källans val, som kan få skymda pixelmasker. Neutral NUSIZ-dubbel kräver samma Y/pose/facing och tillåtet X-avstånd utan aktiv M1. Nästa fysikprov bör koppla verklig varning och träff till visad mask och testa vertikal återanvändning för separerade Y. N7 S2-close vid X67/83/101 gav 0/12 fullständiga bildrutor i de testade konstruktionerna.
+- Båda skaderutinerna gör DEC Level över L1 och separat livsförlust vid L1. Bank0 kontrollerar Invuln och sätter 60. En fysisk sekvens genom 3→2→1→liv och exakt nästa giltiga träff är öppen. Orb X är fast 96/88/80/80/92/84/88/76 vid intern Y112. För variation välj två nåbara X på samma Y och bevisa faktisk tillväxt och respawn i båda.
+- HudLifeMasks ger identiskt F0 för 4–9 liv. Föreslå siffra snarare än markör när detta ska åtgärdas, samt riktade poäng/extralivsprov. Bank3:s SELECT-leveldebug ingår i den normala vägen. Bank1 har två prioriterade audiokanaler. PCM, mix och spelkänsla för ljud har inte avlyssnats.
+
+## Raster och resurser
+
+VSYNC 3 rader, TIM64T 43 före skalning/HUD/positionering, 5+1 HUD-rader och ordinarie 186 arenarader. Efter VisibleDone programmeras timer 33 och bank2, bank0 och bank1 tickar spel, aktörer och ljud. INTIM-slingorna väntar på exakt noll. Bevara PR61:s avgränsade fix som rensar en kvarhängande pil mellan vågor. LMO:s verkliga INTIM-underflow är ett separat riskprov.
+
+PR61 native listning: Visible F11D, VisibleGate F406, VisibleArrow F419. Efter WSYNC ligger GRP0 omkring cykel 3, PF1 15–16, BL/M1 omkring 23–25, GRP1 omkring 47–50. Gäller de räknade instruktionerna och inte uppmätt beam. Både P0/P1-live ger 74 cykler inklusive nästa STA WSYNC utan sidkorsning, P1-blank/P0-live 75. PF-tabell kan korsa sida i bana 3/6. En vanlig extra LDA+STA på varje rad konkurrerar med WSYNC. Gränser för alla dynamiska TIA-skrivningar behöver faktisk trace.
+
+Fryst tidigare PR61 VisibleGate-sample F406 bank3 har 2753 frame cycles, 180 WSYNC wait, 1008 timer-read-cycles, SP FF. HEALTH-3:s nya endpoints stannar efter VSYNC, då räknarna just nollats. De ger inget peak- eller CPU-vinstbevis. Listing-cover för bankerna 1775/568/1631/3943 byte. Resten innehåller bland annat ORG-hål, vektorer, hotspots och index/guard-restriktioner. Full inventering och bankhashar i paketet. 127 symboliserade RAM-adresser. Exempel på fasskifte i 87 diagonal/ritcentrum, 95 HUD/hotmask, E9/EA HUD/oktangonscratch. Stack high-water och full def-use saknas.
+
+Tidigare PR61-evidens omfattar 120 konsekutiva 262-radersbilder och 150 naturliga checkpoints genom pendeln. Single har därtill 11/11 riktade endpoints, 120 individuellt uppmätta 262-radersbilder och en jämförbar checkpoint för den äldre 263-rutten med rensad pil. Full ny pendelloop, lång soak, all-layout fysisk kollisionsmatris, full halo/fiendefärgs- eller deadlineserie, stack high-water, originalhårdvara och PCM återstår.
+
+De fyra ändrade banornas Stella-utsnitt jämfördes också mot de faktiskt byggda PF-bitmönstren i båda PF1-spannen. Vid arenaoffset 136 matchade 5 568, 5 824, 5 408 respektive 7 296 förväntade förgrundspixlar utan avvikelse eller ocklusion i dessa syntetiska L3-bilder. Det kontrollerar motivens faktiska placering och bitordning. Den tryckta NTSC-paletten är ytterligare en designfråga. Bana 4 visade sten-RGB (209,119,62), alltså varm brunorange, och bana 8 (162,162,161), grå. Ändra dessa först efter jämförelse av Ranger, pil och bakgrund mot en kall sten-/nattpalett.

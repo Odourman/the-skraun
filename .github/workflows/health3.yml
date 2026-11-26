@@ -1,0 +1,36 @@
+name: HEALTH-3 isolated PR61 prototypes
+on:
+  push:
+    paths:
+      - '.github/workflows/health3.yml'
+      - 'scripts/health3_*'
+jobs:
+  prototypes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [single]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dasm stella xvfb xdotool scrot python3-tk
+          python -m pip install pyautogui pillow
+          dpkg-query -W dasm stella xvfb
+      - name: Build variant
+        run: |
+          variant="${{ matrix.variant }}"
+          mkdir -p health3-output/experiments
+          python3 scripts/health3_prototype.py experiments/fullgame1_arrow_halo_20261125 health3-output/experiments/game "$variant"
+          python3 health3-output/experiments/game/build.py
+      - name: Observe state and raster in native Stella
+        run: |
+          python3 scripts/health3_capture.py health3-output "${{ matrix.variant }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: HEALTH3-${{ matrix.variant }}
+          path: health3-output/
