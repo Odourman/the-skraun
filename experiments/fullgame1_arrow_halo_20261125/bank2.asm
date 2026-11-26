@@ -160,7 +160,7 @@ InitializeGame:
         sta HaloFrames
         sta $9F           ; clear old recovery on restart
         lda $86
-        and #$83          ; clear gameover FIRE-release latch
+        and #$C3          ; preserve sampled FIRE through RESET
         sta $86
         lda #0
         sta ArrowCool
@@ -691,7 +691,7 @@ ArrowCooldownDone:
         bne ArrowIsActive
         rts
 ArrowIsActive:
-        lda FrameCount
+        lda $86
         and #3
         bne ArrowMoveThisFrame
         rts
@@ -748,8 +748,8 @@ TestArrowBody:
         clc
         adc #1
 ArrowBodyAbsX:
-        sec
-        sbc HalfW
+        ldy Level
+        cmp ArrowCoreHalfW,y
         bcs TestArrowWalls
         lda ArrowY
         sec
@@ -759,9 +759,9 @@ ArrowBodyAbsX:
         clc
         adc #1
 ArrowBodyAbsY:
-        sec
-        sbc HalfH
+        cmp ArrowCoreHalfH,y
         bcs TestArrowWalls
+AcceptArrowDamage:
         jsr ApplySwordDamage  ; shared level-down / lose-life / i-frames
         jmp ArrowDestroy
 TestArrowWalls:
@@ -799,6 +799,12 @@ ArrowSoundHigherPriority:
         sta ArrowDX
         sta ArrowDY
         rts
+
+        ; Solid central torso, independent of the full movement box.
+ArrowCoreHalfW:
+        dc.b 0,4,7,13
+ArrowCoreHalfH:
+        dc.b 0,6,9,13
 
         ; Exact corresponding shared-address bank trampolines.
         ORG $F680
