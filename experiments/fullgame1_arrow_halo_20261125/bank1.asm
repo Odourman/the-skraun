@@ -29,26 +29,40 @@ AudioEngine:
         ; in a single physical frame. Neither starves the other queue.
         lda SoundReq
         beq NoNewEvent0
-        tax
         lda Voice0
         and #$F0
         cmp SoundReq
-        bcs NoNewEvent0
-        txa
-        ora #$0C
+        bcc AcceptVoice0
+        bne NoNewEvent0
+AcceptVoice0:
+        lda SoundReq
+        lsr
+        lsr
+        lsr
+        lsr
+        tax
+        lda AudioLengths,x
+        ora SoundReq
         sta Voice0
 NoNewEvent0:
         lda #0
         sta SoundReq
         lda SoundReq1
         beq NoNewEvent1
-        tax
         lda Voice1
         and #$F0
         cmp SoundReq1
-        bcs NoNewEvent1
-        txa
-        ora #$0C
+        bcc AcceptVoice1
+        bne NoNewEvent1
+AcceptVoice1:
+        lda SoundReq1
+        lsr
+        lsr
+        lsr
+        lsr
+        tax
+        lda AudioLengths,x
+        ora SoundReq1
         sta Voice1
 NoNewEvent1:
         lda #0
@@ -68,12 +82,18 @@ NoNewEvent:
         tax
         lda AudioTypes,x
         sta AUDC0
+        cpx #6
+        bne Voice0Sweep
+        lda AudioMelody,y   ; three ascending notes at the end of a wave
+        bne Voice0Pitch
+Voice0Sweep:
         tya
         lsr
         lsr
         clc
         adc AudioPitches,x
         and #$1F
+Voice0Pitch:
         sta AUDF0
         lda AudioEnvelope,y
         sta AUDV0
@@ -122,11 +142,15 @@ MuteVoice1:
 AudioReturn:
         jmp AudioBankReturn
 AudioTypes:
-        dc.b 0,4,4,6,8,12,6,1,12,8,12,1,8,12,6,4
+        dc.b 0,4,12,4,8,4,4,1,8,8,8,1,8,4,12,4
 AudioPitches:
-        dc.b 0,24,20,15,18,16,24,29,12,27,10,10,8,5,16,12
+        dc.b 0,26,18,11,14,15,8,26,8,24,13,26,7,5,24,14
+AudioLengths:
+        dc.b 0,9,10,11,7,12,15,6,5,4,6,11,10,14,15,10
 AudioEnvelope:
-        dc.b 0,1,2,3,4,5,6,7,8,8,9,10,10,10,10,10
+        dc.b 0,1,2,2,3,4,5,5,6,7,8,9,10,10,10,10
+AudioMelody:
+        dc.b 12,12,12,12,12,12,15,15,15,15,15,19,19,19,19,19
 
         ORG $F300
         MAC HudCombineRow
@@ -170,16 +194,26 @@ HudPrepare:
 
         ORG $F400
 PrepareHaloColor:
-        ; The graphics pointer, facing and height from UpdateGait/UpdateScale
-        ; remain live during attacks. P0 and the halo missile share COLUP0.
         lda #0
         sta $0B
         lda $9E
         beq PlayerSilver
         lda #$2E
-        bne WritePlayerColor
+        bne SelectPlayerShade
 PlayerSilver:
         lda #$0E
+SelectPlayerShade:
+        ldx $B3
+        beq WritePlayerColor
+        tay
+        lda $8D
+        and #4
+        beq FullPlayerShade
+        tya
+        and #$F8
+        bne WritePlayerColor
+FullPlayerShade:
+        tya
 WritePlayerColor:
         sta $06
         jmp HudExitToGraphics
