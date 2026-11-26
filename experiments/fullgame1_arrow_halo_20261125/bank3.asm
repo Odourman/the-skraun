@@ -54,7 +54,8 @@ PlayerX     = $80   ; CENTRE x in TIA colour clocks, 0..159
 PlayerY     = $81   ; CENTRE y in 176-line arena, 0 at top
 Level       = $82   ; 1,2,3
 JoyState    = $83
-SwitchState = $84
+ScoreTop    = $84
+HudLifePtr  = $95
 Phase       = $86       ; low 2 bits = 0..2 gait phase; bit 7 = SELECT latch
 DiagonalSkip= $87
 SpriteHeight= $88
@@ -76,9 +77,9 @@ HalfH       = $99
 BaseX       = $9B       ; original X for strict diagonal Y-projection
 OrbMask     = $9C       ; 2 = BL visible, 0 = consumed temporarily
 ArrowCool   = $9D       ; 0..180 actual release cooldown, unused GAMEPLAY-3 OrbTimer state
-HaloFrames  = $9E       ; 30 NTSC frames when FIRE pressed
-HaloRecover = $9F       ; 60/36/15 f cooldown AFTER halo ends
-HaloRadius  = $A0       ; logical 360-degree square/Chebyshev radius
+HaloFrames  = $9E       ; 12 NTSC frames when FIRE pressed
+HaloRecover = $9F       ; 84/60/36 f cooldown AFTER halo ends
+HaloRadius  = $A0       ; logical 360-degree octagon radius
 ArrowMajor= $A1     ; bit 7 selects Y as the major axis
 ArrowMinor= $A2     ; magnitude of the minor axis
 ArrowDX     = $A3  ; -1/+1 when flying, 0 inactive
@@ -170,8 +171,6 @@ Frame:
         sta TIM64T
         lda SWCHA
         sta JoyState
-        lda SWCHB
-        sta SwitchState
         inc FrameCount
         inc Phase
         lda Phase
@@ -261,6 +260,11 @@ MissileRowOff:
         lda #$FF
         sta ArrowRowPtr+1
 MissileRowReady:
+        lda Lives
+        beq BlankWait
+        lda $96
+        sta DiagonalSkip    ; movement is complete until next frame
+        jsr PrepareHudLife
 BlankWait:
         bit TIMINT
         bmi BlankWaitDone
@@ -362,9 +366,6 @@ VisibleDone:
         sta TIM64T
         jsr UpdateOrb
         jsr UpdateAttack
-        nop
-        nop
-        nop
         jsr GameBankEnter ; F8 gameplay tick in overscan ONLY
 OrbXPlaced:
         lda OrbMask
@@ -374,7 +375,7 @@ OrbXPlaced:
         adc #1
         and #2
         bne SelectOrbZero
-        lda #$23    ; FD3F seed for BL orb: 16 two-line pairs, same old Y footprint
+        lda #$0D    ; FD0D + pairs 57..60 selects the eight orb scanlines
         sta OrbRowPtr
         lda #$FD
         sta OrbRowPtr+1
@@ -707,13 +708,13 @@ RangerFleeFace:
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
         jsr HudDraw
+        lda DiagonalSkip    ; room/orb color overlaps HUD pointer for five rows
+        sta $96
         lda $8F             ; restore world color before the first arena row
         sta COLUPF
         ldx #186
         lda #0
         jmp Visible
-HudLifeOffsets:
-        dc.b 0,5,10,15,20,25,30,35,40,45
 HudLifeDigits:
         dc.b $70,$50,$50,$50,$70
         dc.b $20,$30,$20,$20,$70
@@ -753,9 +754,16 @@ RestoreOrbIfVisible:
         cmp #8
         bcc OrbRestoreSkip
         lda OrbX
+        clc
+        adc #3               ; convert gameplay center to this RESPBL loop's input
         jsr PositionBall
         sta WSYNC
         sta HMOVE
+        ; Allow the TIA motion clocks to finish before clearing HMBL.
+        ldx #6
+OrbMotionWait:
+        dex
+        bne OrbMotionWait
         lda #0
         sta HMBL
         sta OrbDirty
@@ -775,7 +783,7 @@ OrbCandidate:
         lda Level
         cmp #3
         bcs OrbDone       ; on L3 orb remains if it was already present
-        ; candidate test against actual BL center x96, y112,
+        ; candidate test against actual BL center OrbX, y68,
         ; source-sized full body +2 pixel touch margin.
         lda PlayerX
         sec
@@ -790,7 +798,7 @@ OrbAbsX:
         bcs OrbDone
         lda PlayerY
         sec
-        sbc #112
+        sbc #68
         bcs OrbAbsY
         eor #$FF
         clc
@@ -839,7 +847,7 @@ TryFire:
         bmi AttackColor
         lda HaloFrames
         bne AttackColor
-        lda #30
+        lda #12
         sta HaloFrames
 AttackColor:
 AttackRadius:
@@ -907,9 +915,9 @@ OrbTolX:
 OrbTolY:
         dc.b 0,9,15,21
 RadiusTable:
-        dc.b 0,18,28,38
+        dc.b 0,10,17,23
 RecoverTable:
-        dc.b 0,60,36,15
+        dc.b 0,84,60,36
 HaloMaskTable:
         dc.b 0,$03,$1F,$FF
 HaloBaseLo: dc.b 0,$B0,$C0,$D0
@@ -928,6 +936,23 @@ PlayL1P2:
         dc.b $60,$23,$26,$3C,$3C,$BC,$7F,$3E,$66,$5A,$7E,$24
 PlayL1P3:
         dc.b $06,$C4,$64,$3C,$3C,$7D,$7F,$3E,$66,$5A,$7E,$24
+PrepareHudLife:
+        ldy Lives
+        lda HudLifeOffsets,y
+        clc
+        adc #<HudLifeDigits
+        sec
+        sbc ScoreTop
+        sta HudLifePtr
+        lda #>HudLifeDigits
+        sbc #0
+        sta HudLifePtr+1
+        ldy ScoreTop
+        ldx #0
+        rts
+HudLifeOffsets:
+        dc.b 0,5,10,15,20,25,30,35,40,45
+
         ORG $F600     ; GAMEPLAY-5 A: page-align L2 24-row bank1 P0 table.
                       ; A5 causal trial: old $F5FE crosses page for 22/24 rows.
 PlayL2P0:
@@ -1051,12 +1076,12 @@ WorldPFIndex:
         ds 2,31
         ds 2,32
         ds 2,33
-        dc.b $A2,34
+        ds 2,34
         ds 2,35
         ds 2,36
         ds 2,37
         ds 2,38
-        dc.b $A7,39
+        ds 2,39
         ds 2,40
         ds 2,41
         ds 2,42
@@ -1073,12 +1098,12 @@ WorldPFIndex:
         ds 2,53
         ds 2,54
         ds 2,55
-        ds 2,56
+        dc.b $A2,56
         ds 2,57
         ds 2,58
         ds 2,59
         ds 2,60
-        ds 2,61
+        dc.b $A7,61
         ds 2,62
         ds 2,63
         ds 2,64
@@ -1156,19 +1181,13 @@ M0PositionLoop:
         ORG $F9B2
 HudDraw:
         lda #$0E
-        sta COLUPF           ; neutral high contrast in every world
-        ; Repeat order during the HUD so each PF register has time
-        ; to clear between the left glyphs and the right-half beam.
-        lda #$10
+        sta COLUPF
+        lda #$10            ; repeat order, left half score, right half lives
         sta CTRLPF
-        ldy Lives
-        lda HudLifeOffsets,y
-        tay
-        ldx #0
 HudDrawRow:
+        lda HudLifeDigits,y ; identical font for the high score digit
         sta WSYNC
-        lda HudLifeDigits,y
-        sta PF0           ; left half: actual lives on all five HUD rows
+        sta PF0
         lda $90,x
         sta PF1
         cpx #3
@@ -1179,11 +1198,9 @@ HudPF2Tail:
         lda $97,x
 HudPF2Write:
         sta PF2
-        ; Clear only after the final left-half bit of each register.
-        nop
-        nop
+        lda (HudLifePtr),y
+        sta PF0             ; C34 or earlier, before right PF0 at C49
         lda #0
-        sta PF0
         nop
         nop
         sta PF1
@@ -1196,6 +1213,8 @@ HudPF2Write:
         cpx #5
         bne HudDrawRow
         sta WSYNC
+        lda #0
+        sta PF0
         lda Stage
         and #1
         ora #$10
@@ -1353,9 +1372,12 @@ HaloCapInset:
 HaloCapSizes:
         dc.b 0,$20,$35,$37
 DeadHudDraw:
+        ldy ScoreTop
         ldx #0
 DeadHudRow:
+        lda HudLifeDigits,y
         sta WSYNC
+        sta PF0
         lda $90,x
         sta PF1
         cpx #3
@@ -1367,14 +1389,19 @@ DeadHudTail:
 DeadHudPF2:
         sta PF2
         lda #0
-        ldy #4
-DeadHudDelay:
-        dey
-        bne DeadHudDelay
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        sta PF0
+        nop
         sta PF1
         nop
         nop
         sta PF2
+        iny
         inx
         cpx #5
         bne DeadHudRow

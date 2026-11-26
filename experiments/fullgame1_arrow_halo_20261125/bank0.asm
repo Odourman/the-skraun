@@ -24,6 +24,7 @@ Stage     = $AA
 Lives     = $AC
 ScoreLo   = $AD
 ScoreHi   = $AE
+ScoreTop  = $84      ; high decimal digit as five-row glyph offset
 KnightX   = $AF
 SwordWarn = $B0
 SwordStrike=$B1
@@ -168,7 +169,7 @@ KnightTryStrike:
 NoKnightHit:
         lda K1Strike,x
         bne KnightReturn
-        lda #60
+        lda #36
         sta K1Rest,x
         rts
 KnightTryRest:
@@ -179,7 +180,7 @@ KnightTryRest:
 KnightReady:
         jsr KnightInRange
         beq KnightChase
-        lda #24
+        lda #20
         sta K1Warn,x
         ; Short telegraph cue: never interrupt an existing sound event.
         lda #$B0
@@ -197,9 +198,10 @@ FaceRight:
 KnightChase:
         ; Keep actual K1/K2 collision rectangles consistent with the world.
         ; All three trials run offscreen in F6 bank0, not in the 76c kernel.
-        lda FrameCount
+        txa
+        eor FrameCount
         and #3
-        bne KnightReturn
+        beq KnightReturn
         lda K1X,x
         sta ScratchMin
         lda K1Y,x
@@ -235,10 +237,15 @@ KnightMovementCheck:
         jsr KnightBlocked
         beq KnightMovementDone
         lda K1Y,x
+        cmp ScratchMax
+        beq KnightRejectX
         sta ScratchY
         lda ScratchMax
         sta K1Y,x
         jsr KnightBlocked
+        beq KnightMovementDone
+        lda K1X,x
+        cmp ScratchMin
         beq KnightMovementDone
         lda ScratchMin
         sta K1X,x
@@ -250,11 +257,28 @@ KnightMovementCheck:
         sta K1Y,x
 KnightMovementDone:
         rts
+KnightRejectX:
+        lda ScratchMin
+        sta K1X,x
+        rts
 
 KnightBlocked:
         ; Test a conservatively bounded 8x16 real P1 sprite against the
         ; current four *unexpanded* world rectangles C0..CF. X is actor
         ; record offset (0 for K1, 7 for K2); Y scans obstacle records.
+        ; The two top rectangles share $C3 and the two bottom
+        ; rectangles share $CA. The open cross-lane needs no X tests.
+        lda K1Y,x
+        sec
+        sbc #8
+        cmp $C3
+        bcc KnightCheckRects
+        adc #15
+        cmp $CA
+        bcs KnightCheckRects
+        lda #0
+        rts
+KnightCheckRects:
         ldy #0
 KnightBlockRect:
         lda K1X,x
@@ -298,7 +322,7 @@ KnightInRange:
         clc
         adc #1
 KnightAbsX:
-        cmp #15
+        cmp #12
         bcs KnightOut
         lda PlayerY
         sec
@@ -308,7 +332,7 @@ KnightAbsX:
         clc
         adc #1
 KnightAbsY:
-        cmp #21
+        cmp #12
         bcs KnightOut
         lda #1
         rts
@@ -576,15 +600,16 @@ RangerReady:
         bne RangerFlee
         jsr RangerHasClearLane
         beq RangerFlee
-        lda #24
+        lda #20
         sta RDraw
         lda #$70
         jsr QueueSound
         rts
 RangerFlee:
         lda FrameCount
-        and #7
-        bne RangerDone
+        and #3
+        cmp #1
+        beq RangerDone
         lda RX
         sta ScratchMin
         lda RY
@@ -619,10 +644,15 @@ RangerMovementCheck:
         jsr KnightBlocked
         beq RangerMovementDone
         lda RY
+        cmp ScratchMax
+        beq RangerRejectX
         sta ScratchY
         lda ScratchMax
         sta RY
         jsr KnightBlocked
+        beq RangerMovementDone
+        lda RX
+        cmp ScratchMin
         beq RangerMovementDone
         lda ScratchMin
         sta RX
@@ -633,6 +663,10 @@ RangerMovementCheck:
         lda ScratchMax
         sta RY
 RangerMovementDone:
+        rts
+RangerRejectX:
+        lda ScratchMin
+        sta RX
         rts
 
 SpawnArrow:
@@ -657,7 +691,7 @@ SpawnDone:
 ReserveTick:
         lda Reserves
         beq ReserveDone
-        ; Reserve appears ~120 NTSC frames *after* a knight slot
+        ; Reserve appears ~72 NTSC frames *after* a knight slot
         ; becomes vacant. A full wave never respawns already killed
         ; knights: Reserves is the exact remaining unseen quota.
         lda K1Alive
@@ -667,37 +701,32 @@ ReserveTick:
 ReserveSlotOpen:
         lda ResWait
         bne ReserveCountdown
-        lda #120
+        lda #72
         sta ResWait
         rts
 ReserveCountdown:
         dec ResWait
         bne ReserveDone
+        ldx #0
         lda K1Alive
-        beq Respawn1
-        lda #1
-        sta K2Alive
-        lda #145
-        sta K2X
-        lda #86
-        sta K2Y
+        beq ReservePoint
+        ldx #7
+ReservePoint:
+        lda #24
+        ldy PlayerX
+        cpy #80
+        bcs ReserveFarSide
+        lda #136
+ReserveFarSide:
+        sta K1X,x
+        lda #88
+        sta K1Y,x
         lda #0
-        sta K2Warn
-        sta K2Strike
-        sta K2Rest
-        jmp ReserveCreated
-Respawn1:
+        sta K1Warn,x
+        sta K1Strike,x
+        sta K1Rest,x
         lda #1
-        sta K1Alive
-        lda #20
-        sta K1X
-        lda #108
-        sta K1Y
-        lda #0
-        sta K1Warn
-        sta K1Strike
-        sta K1Rest
-ReserveCreated:
+        sta K1Alive,x
         dec Reserves
         lda #0
         sta ResWait
@@ -814,7 +843,7 @@ AwardRanger:
         jsr QueueSound
 AwardAny:
         stx ScratchIX
-        ; Packed BCD scoreboard 0000..9999; knight +100, Ranger +250.
+        ; Two packed BCD bytes plus the high digit; +100 or +250.
         cpx #100
         bne ScoreAdd250
         sed
@@ -835,7 +864,14 @@ ScoreAdd250:
 ScoreCarry:
         cld
         bcc ScoreIncreaseDone
-        lda #$99          ; saturate the four-digit display at 9999
+        lda ScoreTop
+        cmp #45
+        bcs ScoreSaturated
+        adc #5             ; CMP cleared carry for a nonterminal glyph
+        sta ScoreTop
+        bcc ScoreIncreaseDone
+ScoreSaturated:
+        lda #$99          ; terminal five-digit display is 99999
         sta ScoreHi
         sta ScoreLo
 ScoreIncreaseDone:
@@ -847,19 +883,19 @@ ScoreIncreaseDone:
         adc #0
         sta BonusHi
         lda BonusHi
-        cmp #$07
+        cmp #$13
         bcc NoExtraLife
         bne ExtraLife
         lda BonusLo
-        cmp #$D0
+        cmp #$88
         bcc NoExtraLife
 ExtraLife:
         sec
         lda BonusLo
-        sbc #$D0
+        sbc #$88
         sta BonusLo
         lda BonusHi
-        sbc #$07
+        sbc #$13
         sta BonusHi
         lda Lives
         cmp #9
@@ -898,7 +934,7 @@ QueuePriorityVoice1:
 RangerColors:
         dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
 RangerCooldowns:
-        dc.b 0,180,180,150,150,120,120,90,90
+        dc.b 0,90,90,72,72,60,60,48,48
 
 ; Eight physically different map layouts: 4 vertical shifts x mirror/repeat
 ; of the established collision/visual source. No claim of final world art.
