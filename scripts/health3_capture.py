@@ -18,6 +18,17 @@ gui = """import sys, time, pyautogui as g
 g.PAUSE=.008
 g.click(155,650)
 for cmd in sys.argv[1:]:
+    if cmd == '__console_reset__':
+        g.press(chr(96))
+        time.sleep(.45)
+        g.keyDown('f2')
+        time.sleep(.16)
+        g.keyUp('f2')
+        time.sleep(.25)
+        g.press(chr(96))
+        time.sleep(.45)
+        g.click(155,650)
+        continue
     g.write(cmd, interval=.0005)
     g.press('enter')
     time.sleep(.05)
@@ -34,7 +45,9 @@ def run(name, startup, cmds):
         shutil.copyfile(built / f"bank3.{ext}", local.with_suffix("." + ext))
     (config / "autoexec.script").write_text("\n".join(startup) + "\n")
     (out / "INPUT.txt").write_text("\n".join(startup + cmds) + "\n")
-    env = dict(os.environ, DISPLAY=":170", XDG_CONFIG_HOME=str(out / "config"),
+    auth = out / "xauth"
+    auth.touch()
+    env = dict(os.environ, XAUTHORITY=str(auth), DISPLAY=":170", XDG_CONFIG_HOME=str(out / "config"),
                SDL_AUDIODRIVER="dummy", SDL_VIDEODRIVER="x11", SDL_RENDER_DRIVER="software")
     with (out / "xvfb.log").open("w") as xvlog, (out / "stella.log").open("w") as stlog:
         xv = subprocess.Popen(["Xvfb", ":170", "-screen", "0", "1400x1000x24", "-ac"], stdout=xvlog, stderr=xvlog)
@@ -46,7 +59,7 @@ def run(name, startup, cmds):
                 try:
                     time.sleep(2)
                     session = out / "SESSION.txt"
-                    args = cmds + ["ram", "tia", "print _scanEnd", "saveSes " + str(session)]
+                    args = cmds + ["ram", "tia", "print _scanEnd", "print _scan", "print _sCycles", "print _fCycles", "print _fWsyncCycles", "print _fTimReadCycles", "saveSes " + str(session)]
                     subprocess.run([sys.executable, "-c", gui, *args], env=env, cwd=out, check=True, timeout=60)
                     subprocess.run(["scrot", "-o", str(out / "desktop.png")], env=env, check=True)
                     raw = session.read_text()
@@ -69,11 +82,15 @@ def run(name, startup, cmds):
 boot = ["base hex", "frame #12"]
 scenes = {
     "natural_idle": (boot, ["frame #10"]),
-    "natural_move_halo": (boot, ["joy0fire #0", "joy0right #0", "frame #12", "joy0right #1"]),
-    "fixture_death_idle": (boot, ["ram ac 00", "frame #4"]),
-    "fixture_death_fire": (boot, ["ram ac 00", "frame #4", "joy0fire #1", "frame #2", "joy0fire #0", "frame #4"]),
-    "fixture_death_reset": (boot, ["ram ac 00", "frame #4", "reset", "frame #4"]),
+    "natural_move_halo": (boot, ["joy0Fire #0", "joy0Right #0", "frame #12", "joy0Right #1"]),
+    "fixture_death_idle": (boot, ["ram ac 00 57 13", "frame #4"]),
+    "fixture_death_fire": (boot, ["ram ac 00 57 13", "frame #4", "joy0Fire #1", "frame #2", "joy0Fire #0", "frame #4"]),
+    "fixture_death_reset": (boot, ["ram ac 00 57 13", "frame #4", "__console_reset__", "frame #4"]),
 }
+for stage in (2, 4, 6, 8):
+    scenes[f"fixture_stage_{stage}"] = (boot, [
+        f"ram aa {stage-1:02x} 01", "ram be 01", "frame #4",
+        "ram 80 50 58 03", "ram b3 60", "frame #4"])
 result = {}
 for name, (start, cmds) in scenes.items():
     try:
@@ -83,3 +100,12 @@ for name, (start, cmds) in scenes.items():
 (root / "RESULTS.json").write_text(json.dumps(result, indent=2) + "\n")
 print(json.dumps(result, indent=2))
 assert all(row.get("scanEnd") == 262 for row in result.values()), result
+
+assert result["natural_move_halo"]["halo"] > 0, result
+if variant in ("combined", "locked"):
+    assert result["fixture_death_fire"]["lives"] == 0, result
+    assert result["fixture_death_fire"]["score"] == [0x57, 0x13], result
+    assert result["fixture_death_reset"]["lives"] == 3, result
+for stage in (2, 4, 6, 8):
+    row = result[f"fixture_stage_{stage}"]
+    assert (row["stage"], row["level"]) == (stage, 3), row

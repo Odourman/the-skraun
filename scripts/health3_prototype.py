@@ -28,7 +28,7 @@ if args.variant != "baseline":
     b[3] = b[3][:left] + "AttackColor:\n" + b[3][right:]
 
 if args.variant in ("combined", "locked"):
-    # PF table runs backwards on screen. Swap two 48-entry bands unchanged.
+    # PF table runs backwards on screen. Move each motif by 56 pairs without reversing its rows.
     start = b[3].index("PlayPF1:\n")
     end = b[3].index("; End at $FD00", start)
     area = b[3][start:end]
@@ -36,7 +36,15 @@ if args.variant in ("combined", "locked"):
     assert len(values) == 768
     for stage in (2, 4, 6, 8):
         n = (stage - 1) * 96
-        values[n:n+96] = values[n+48:n+96] + values[n:n+48]
+        tile = values[n:n+96]
+        swapped = [0] * 96
+        for i, value in enumerate(tile):
+            if not value:
+                continue
+            dest = i + 56 if i < 48 else i - 56
+            assert 0 <= dest < 96 and not swapped[dest], (stage, i, dest)
+            swapped[dest] = value
+        values[n:n+96] = swapped
     b[3] = b[3][:start] + "PlayPF1:\n" + "".join(
         "        dc.b " + ",".join(f"${v:02X}" for v in values[n:n+16]) + "\n"
         for n in range(0, len(values), 16)
@@ -48,9 +56,9 @@ if args.variant in ("combined", "locked"):
         rect = [int(v, 16) for v in re.findall(r"\$([0-9A-F]{2})", old)]
         assert len(rect) == 16
         for y in (2, 3, 6, 7):
-            rect[y] += 96
+            rect[y] += 112
         for y in (10, 11, 14, 15):
-            rect[y] -= 96
+            rect[y] -= 112
         rect = rect[8:] + rect[:8]
         assert all(0 <= v < 256 for v in rect)
         change(0, old, "        dc.b " + ",".join(f"${v:02X}" for v in rect)
