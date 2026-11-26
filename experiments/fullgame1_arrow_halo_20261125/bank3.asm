@@ -979,42 +979,6 @@ HudBankEnter:
 HudBankReturn:
         rts
         ORG $F6C4
-HudDraw:
-        ldy Lives
-        lda HudLifeOffsets,y
-        tay
-        ldx #0
-HudDrawRow:
-        sta WSYNC
-        lda HudLifeDigits,y
-        sta PF0           ; left half: actual lives on all five HUD rows
-        lda $90,x
-        sta PF1
-        cpx #3
-        bcs HudPF2Tail
-        lda $E9,x
-        jmp HudPF2Write
-HudPF2Tail:
-        lda $97,x
-HudPF2Write:
-        sta PF2
-        ; Second PF0 write only after the left-half beam passed PF0.
-        ; Right-half PF0 becomes the three independent actor indicators.
-        nop
-        nop
-        lda #0
-        sta PF0
-        iny
-        inx
-        cpx #5
-        bne HudDrawRow
-        sta WSYNC
-        lda #0
-        sta PF0
-        sta PF1
-        sta PF2
-        rts
-
         ORG $F700    ; all four x36 L3 bitmaps fit one ROM page
 PlayL3P0:
         dc.b $06,$06,$06,$C4,$C4,$C4,$64,$64,$64,$3C,$3C,$3C
@@ -1196,14 +1160,52 @@ M0PositionLoop:
         sta RESM0
         rts
         ORG $F9B2
-HaloL3Rune:
-        dc.b $18,$3C,$7E,$24,$24,$24,$42,$42,$42,$42,$42,$5A
-        dc.b $7E,$42,$42,$42,$42,$81,$81,$81,$87,$87,$87,$C5
-        dc.b $C5,$C5,$E5,$E5,$E5,$BD,$BD,$BD,$BD,$BD,$BD,$BD
-        dc.b $BD,$BD,$FF,$FF,$FF,$FD,$FD,$FD,$E7,$E7,$E7,$DB
-        dc.b $DB,$DB,$FF,$FF,$FF,$A5,$A5,$A5,$81,$81,$81,$81
-        dc.b $42,$42,$42,$42,$7E,$5A,$42,$42,$42,$42,$42,$24
-        dc.b $24,$24,$7E,$3C,$18
+HudDraw:
+        ; Repeat order during the HUD so each PF register has time
+        ; to clear between the left glyphs and the right-half beam.
+        lda #$10
+        sta CTRLPF
+        ldy Lives
+        lda HudLifeOffsets,y
+        tay
+        ldx #0
+HudDrawRow:
+        sta WSYNC
+        lda HudLifeDigits,y
+        sta PF0           ; left half: actual lives on all five HUD rows
+        lda $90,x
+        sta PF1
+        cpx #3
+        bcs HudPF2Tail
+        lda $E9,x
+        jmp HudPF2Write
+HudPF2Tail:
+        lda $97,x
+HudPF2Write:
+        sta PF2
+        ; Clear only after the final left-half bit of each register.
+        nop
+        nop
+        lda #0
+        sta PF0
+        nop
+        nop
+        sta PF1
+        nop
+        nop
+        nop
+        sta PF2
+        iny
+        inx
+        cpx #5
+        bne HudDrawRow
+        sta WSYNC
+        lda Stage
+        and #1
+        ora #$10
+        sta CTRLPF
+        rts
+
         ORG $FA00
 PlayPF1:
         dc.b $00,$00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$18,$18,$18,$18,$3C
