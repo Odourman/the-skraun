@@ -19,7 +19,8 @@ PlayerX     = $80
 PlayerY     = $81
 Level       = $82
 FrameCount  = $8D
-SwitchState = $84
+ScoreTop    = $84
+SWCHB       = $0282
 OrbMask     = $9C
 ArrowCool   = $9D      ; legitimate reuse: consumed OrbTimer never read GAMEPLAY-3
 HaloFrames  = $9E
@@ -99,10 +100,10 @@ InvulnDone:
         sta ScratchY
         jsr ActorBankEnter ; true F6 bank0 independent actor AI
         jsr UpdateArrow
-        ; New halo starts at frame=30 in bank3 overscan; one cue per
+        ; New halo starts at frame=12 in bank3 overscan; one cue per
         ; activation, 3 levels with separate TIA distortion/pitch.
         lda HaloFrames
-        cmp #30
+        cmp #12
         bne HaloSoundAlreadyPlayed
         lda Level
         asl
@@ -143,6 +144,7 @@ InitializeGame:
         lda #0
         sta ScoreLo
         sta ScoreHi
+        sta ScoreTop
         sta StageKills
         sta EnemyRowPtr
         sta EnemyRowPtr+1
@@ -496,8 +498,16 @@ ExtraLifeStillHere:
 ; we switch geometry together with its exact collision tables.
 PlaceStageOrb:
         ldx Stage
+        ; Fold visit time and score so regular pendulum play is not
+        ; tied to one low-order frame-clock bit.
         lda FrameCount
-        and #2
+        lsr
+        lsr
+        eor FrameCount
+        eor ScoreHi
+        eor ScoreLo
+        eor StageDir
+        and #1
         beq OrbPlaceLeft
         lda StageOrbRightX,x
         bne OrbPlaceChosen
@@ -566,9 +576,9 @@ HaloBLWidths:
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
 StageOrbX:
-        dc.b 0,64,64,64,64,64,64,64,64
+        dc.b 0,22,22,22,22,22,22,22,22
 StageOrbRightX:
-        dc.b 0,96,90,96,90,96,90,96,90
+        dc.b 0,138,138,138,138,138,138,138,138
 
 MirrorRects:
         dc.b 9,32,21,52,129,152,21,52,21,48,133,156,113,140,133,156
@@ -682,8 +692,8 @@ ArrowCooldownDone:
         rts
 ArrowIsActive:
         lda FrameCount
-        and #1
-        beq ArrowMoveThisFrame
+        and #3
+        bne ArrowMoveThisFrame
         rts
 ArrowMoveThisFrame:
         jsr StepArrow
@@ -908,7 +918,7 @@ GameOverImpl:
         lda #0
         sta COLUBK
         jsr UpdateSound
-        lda SwitchState
+        lda SWCHB
         and #1
         beq RestartGame
         jmp GameOverStay
