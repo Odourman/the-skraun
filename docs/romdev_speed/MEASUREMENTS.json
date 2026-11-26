@@ -1,0 +1,69 @@
+{
+  "C7": {
+    "combat_frames": 33223,
+    "sword": 18,
+    "arrow": 34,
+    "shots": 86,
+    "escape_starts": 28,
+    "empty_away_frames": 6760,
+    "stage_transitions": 130,
+    "l3_frames": 40447,
+    "life_losses": 0,
+    "runs": 5,
+    "damage_per_combat_min": 5.635
+  },
+  "A": {
+    "combat_frames": 44050,
+    "sword": null,
+    "arrow": null,
+    "shots": 5,
+    "escape_starts": 0,
+    "empty_away_frames": 0,
+    "stage_transitions": 10,
+    "l3_frames": 43353,
+    "life_losses": 0,
+    "runs": 5
+  },
+  "B": {
+    "combat_frames": 33700,
+    "sword": 17,
+    "arrow": 0,
+    "shots": 5,
+    "escape_starts": 51,
+    "empty_away_frames": 11721,
+    "stage_transitions": 125,
+    "l3_frames": 42445,
+    "life_losses": 0,
+    "runs": 5,
+    "damage_per_combat_min": 1.816
+  },
+  "C": {
+    "combat_frames": 33964,
+    "sword": 22,
+    "arrow": 15,
+    "shots": 110,
+    "escape_starts": 28,
+    "empty_away_frames": 5751,
+    "stage_transitions": 121,
+    "l3_frames": 41056,
+    "life_losses": 0,
+    "runs": 5,
+    "damage_per_combat_min": 3.922
+  },
+  "D": {
+    "combat_frames": 33790,
+    "sword": 13,
+    "arrow": 14,
+    "shots": 118,
+    "escape_starts": 27,
+    "empty_away_frames": 5763,
+    "stage_transitions": 124,
+    "l3_frames": 40893,
+    "life_losses": 0,
+    "runs": 5,
+    "damage_per_combat_min": 2.877,
+    "native_total": 57360,
+    "native_fail": 0,
+    "native_ci_scans": 633
+  }
+}
