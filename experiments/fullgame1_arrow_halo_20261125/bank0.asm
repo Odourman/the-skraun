@@ -296,7 +296,7 @@ AcceptKnightDamage:
 NoKnightHit:
         lda K1Strike,x
         bne KnightReturn
-        lda #30
+        lda #24
         sta K1Rest,x
         rts
 KnightTryRest:
@@ -307,7 +307,7 @@ KnightTryRest:
 KnightReady:
         jsr KnightInRange
         beq KnightChase
-        lda #18
+        lda #16
         sta K1Warn,x
         ; Short telegraph cue: never interrupt an existing sound event.
         lda #$B0
@@ -1425,7 +1425,7 @@ RangerNormal:
         jsr RangerDistance
         cmp #30
         bcc RangerAbort
-        cmp #51
+        cmp #45
         bcs RangerAbort
         lda ArrowDX
         bne RangerAbort
@@ -1477,7 +1477,7 @@ RangerBand:
         cmp RetreatThreshold,x
         bcs RangerRetreat
         tya
-        cmp #51
+        cmp #45
         bcs RangerApproach
         lda RCool
         bne RangerDoneNear
@@ -1597,6 +1597,16 @@ ExitTarget:
         sta ScratchY
         jmp RangerMoveTarget
 RangerDepart:
+        ; Abort only before crossing the edge if already the last enemy.
+        lda StageKills
+        clc
+        adc #1
+        cmp KillsNeed
+        bcc RangerDepartAllowed
+        lda #1
+        sta RAlive
+        rts
+RangerDepartAllowed:
         sty RRelease
         lda #150
         sta RCool
