@@ -129,88 +129,44 @@ AudioEnvelope:
         dc.b 0,1,2,3,4,5,6,7,8,8,9,10,10,10,10,10
 
         ORG $F300
+        MAC HudCombineRow
+        lda {1} + {3} * 10,x
+        ora {2} + {3} * 10,y
+        sta {4}
+        ENDM
+
 HudPrepare:
-        ldy #0
-HudPrepareRow:
+        ; Split each packed BCD score byte once. Row tables already have
+        ; the glyph bits in PF1/PF2 order, so rendering needs no bit shifts.
+        lda ScoreHi
+        and #$0F
+        tay
         lda ScoreHi
         lsr
         lsr
         lsr
         lsr
         tax
-        tya
-        clc
-        adc HudBase,x
-        tax
-        lda HudFont,x
-        and #$70
-        asl
-        sta $0090,y
-        lda ScoreHi
-        and #$0F
-        tax
-        tya
-        clc
-        adc HudBase,x
-        tax
-        lda HudFont,x
-        and #$70
-        lsr
-        lsr
-        lsr
-        ora $0090,y
-        sta $0090,y
+        HudCombineRow HudPF1High,HudPF1Low,0,$90
+        HudCombineRow HudPF1High,HudPF1Low,1,$91
+        HudCombineRow HudPF1High,HudPF1Low,2,$92
+        HudCombineRow HudPF1High,HudPF1Low,3,$93
+        HudCombineRow HudPF1High,HudPF1Low,4,$94
         lda ScoreLo
         and #$0F
-        tax
-        tya
-        clc
-        adc HudBase,x
-        tax
-        lda HudFont,x
-        and #$07
-        asl
-        asl
-        asl
-        asl
-        sta $95
+        tay
         lda ScoreLo
         lsr
         lsr
         lsr
         lsr
         tax
-        tya
-        clc
-        adc HudBase,x
-        tax
-        lda HudFont,x
-        and #$07
-        ora $95
-        cpy #3
-        bcs HudStorePF2Tail
-        sta $00E9,y
-        jmp HudNextRow
-HudStorePF2Tail:
-        sta $0097,y
-HudNextRow:
-        iny
-        cpy #5
-        bcc HudPrepareRow
+        HudCombineRow HudPF2High,HudPF2Low,0,$E9
+        HudCombineRow HudPF2High,HudPF2Low,1,$EA
+        HudCombineRow HudPF2High,HudPF2Low,2,$EB
+        HudCombineRow HudPF2High,HudPF2Low,3,$9A
+        HudCombineRow HudPF2High,HudPF2Low,4,$9B
         jmp HaloVisualSelect
-HudFont:
-        dc.b $77,$55,$55,$55,$77 ; 0
-        dc.b $22,$63,$22,$22,$77 ; 1
-        dc.b $77,$14,$77,$41,$77 ; 2
-        dc.b $77,$14,$77,$14,$77 ; 3
-        dc.b $55,$55,$77,$14,$14 ; 4
-        dc.b $77,$41,$77,$14,$77 ; 5
-        dc.b $77,$41,$77,$55,$77 ; 6
-        dc.b $77,$14,$14,$14,$14 ; 7
-        dc.b $77,$55,$77,$55,$77 ; 8
-        dc.b $77,$55,$77,$14,$77 ; 9
-HudBase:
-        dc.b $00,$05,$0A,$0F,$14,$19,$1E,$23,$28,$2D
 
         ORG $F400
 ; P0 stays exact U1-LEG1 in normal play. Active halo expands visual
@@ -273,6 +229,34 @@ HaloRuneHi:
         dc.b 0,$FD,$FD,$F9
 HaloRuneHeight:
         dc.b 0,37,57,77
+        ORG $F500
+; Five rows per table. Each row is indexed by BCD digit 0 through 9.
+; Preserve the original score font and the TIA's opposite PF bit orders.
+HudPF1High:
+        dc.b $E0,$40,$E0,$E0,$A0,$E0,$E0,$E0,$E0,$E0
+        dc.b $A0,$C0,$20,$20,$A0,$80,$80,$20,$A0,$A0
+        dc.b $A0,$40,$E0,$E0,$E0,$E0,$E0,$20,$E0,$E0
+        dc.b $A0,$40,$80,$20,$20,$20,$A0,$20,$A0,$20
+        dc.b $E0,$E0,$E0,$E0,$20,$E0,$E0,$20,$E0,$E0
+HudPF1Low:
+        dc.b $0E,$04,$0E,$0E,$0A,$0E,$0E,$0E,$0E,$0E
+        dc.b $0A,$0C,$02,$02,$0A,$08,$08,$02,$0A,$0A
+        dc.b $0A,$04,$0E,$0E,$0E,$0E,$0E,$02,$0E,$0E
+        dc.b $0A,$04,$08,$02,$02,$02,$0A,$02,$0A,$02
+        dc.b $0E,$0E,$0E,$0E,$02,$0E,$0E,$02,$0E,$0E
+HudPF2High:
+        dc.b $07,$02,$07,$07,$05,$07,$07,$07,$07,$07
+        dc.b $05,$03,$04,$04,$05,$01,$01,$04,$05,$05
+        dc.b $05,$02,$07,$07,$07,$07,$07,$04,$07,$07
+        dc.b $05,$02,$01,$04,$04,$04,$05,$04,$05,$04
+        dc.b $07,$07,$07,$07,$04,$07,$07,$04,$07,$07
+HudPF2Low:
+        dc.b $70,$20,$70,$70,$50,$70,$70,$70,$70,$70
+        dc.b $50,$30,$40,$40,$50,$10,$10,$40,$50,$50
+        dc.b $50,$20,$70,$70,$70,$70,$70,$40,$70,$70
+        dc.b $50,$20,$10,$40,$40,$40,$50,$40,$50,$40
+        dc.b $70,$70,$70,$70,$40,$70,$70,$40,$70,$70
+
         ORG $F6BB
 HudEntryFromGraphics:
         jmp HudPrepare
