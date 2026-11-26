@@ -18,6 +18,14 @@ gui = """import sys, time, pyautogui as g
 g.PAUSE=.008
 g.click(155,650)
 for cmd in sys.argv[1:]:
+    if cmd.startswith('__measure__'):
+        prefix = cmd.split(' ',1)[1]
+        for block in range(12):
+            for sub in ['cls'] + ['frame #1', 'print _scanEnd'] * 10 + ['saveSes '+prefix+str(block)+'.txt']:
+                g.write(sub, interval=.0003)
+                g.press('enter')
+                time.sleep(.06)
+        continue
     if cmd == '__console_reset__':
         g.press(chr(96))
         time.sleep(.45)
@@ -57,9 +65,12 @@ def run(name, startup, cmds, display):
                 "-audio.enabled", "0", "-threads", "0", "-vsync", "0", "-video", "software",
                 "-fullscreen", "0", str(local)], env=env, stdout=stlog, stderr=stlog) as stella:
                 try:
-                    time.sleep(3)
+                    subprocess.run(["xdotool","search","--sync","--onlyvisible","--pid",str(stella.pid)], 
+                                   env=env, stdout=subprocess.DEVNULL, check=True, timeout=20)
+                    time.sleep(1)
                     session = out / "SESSION.txt"
-                    args = cmds + ["ram", "tia", "print _scanEnd", "print _scan", "print _sCycles", "print _fCycles", "print _fWsyncCycles", "print _fTimReadCycles", "saveSes " + str(session)]
+                    controls = [cmd.replace("__measure__", "__measure__ " + str(out / "FRAME_BLOCK_")) for cmd in cmds]
+                    args = controls + ["ram", "tia", "print _scanEnd", "print _scan", "print _sCycles", "print _fCycles", "print _fWsyncCycles", "print _fTimReadCycles", "saveSes " + str(session)]
                     subprocess.run([sys.executable, "-c", gui, *args], env=env, cwd=out, check=True, timeout=60)
                     subprocess.run(["scrot", "-o", str(out / "desktop.png")], env=env, check=True)
                     raw = session.read_text()
@@ -75,6 +86,15 @@ def run(name, startup, cmds, display):
     for m in re.finditer(r"^([89a-f][0-9a-f]):\s+((?:[0-9a-f]{2}\s*){16})$", raw, re.M | re.I):
         ram.update({int(m[1],16)+i:int(v,16) for i,v in enumerate(m[2].split())})
     assert len(ram) == 128, (name, len(ram))
+    if "__measure__" in cmds:
+        endpoints = []
+        for i in range(12):
+            log = (out / ("FRAME_BLOCK_" + str(i) + ".txt")).read_text()
+            points = re.findall(r"> print _scanEnd\s*\n[^\n]*?#(\d+)",log)
+            assert len(points) == 10, (i, len(points))
+            endpoints.extend(int(x) for x in points)
+        (out/"MEASURED_ENDPOINTS.json").write_text(json.dumps(endpoints))
+        assert endpoints == [262]*120, endpoints
     return dict(scanEnd=int(scan[-1]), x=ram[0x80], y=ram[0x81], level=ram[0x82],
                 stage=ram[0xaa], lives=ram[0xac], halo=ram[0x9e],
                 score=[ram[a] for a in (0xad,0xae)], tia=[s for s in raw.splitlines() if "COLU" in s])
@@ -91,6 +111,14 @@ for stage in (2, 4, 6, 8):
     scenes[f"fixture_stage_{stage}"] = (boot, [
         f"ram aa {stage-1:02x} 01", "ram be 01", "frame #4",
         "ram 80 50 58 03", "ram b3 60", "frame #4"])
+if variant == "single":
+    scenes["natural_120"] = (boot, ["joy0Fire #0", "joy0Right #0", "__measure__"])
+    scenes["natural_legacy_stage_route"] = (boot, ["joy0Right #0","frame #16","joy0Right #1",
+        "joy0Down #0","frame #24","joy0Down #1","joy0Fire #0","joy0Up #0","frame #40",
+        "joy0Up #1","joy0Right #0","frame #14","joy0Right #1","frame #420","joy0Fire #1",
+        "joy0Right #0","frame #8","joy0Right #1","joy0Down #0","frame #24","joy0Down #1",
+        "frame #65","joy0Fire #0","frame #2","joy0Right #0","joy0Up #0","frame #12",
+        "joy0Right #1","joy0Up #1","joy0Fire #1"])
 result = {}
 for idx, (name, (start, cmds)) in enumerate(scenes.items()):
     try:
