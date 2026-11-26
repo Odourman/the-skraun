@@ -15,7 +15,8 @@ HalfW     = $98
 HalfH     = $99
 HaloFrames= $9E
 HaloRadius= $A0
-TargetAlive=$A1
+ArrowMajor= $A1     ; bit 7 selects Y as the major axis
+ArrowMinor= $A2
 ArrowDX   = $A3
 ArrowDY   = $A4
 KnightDir = $A5
@@ -26,7 +27,7 @@ ScoreHi   = $AE
 KnightX   = $AF
 SwordWarn = $B0
 SwordStrike=$B1
-SwordRest = $B2
+ArrowError= $B2     ; projectile error accumulator
 Invuln    = $B3
 StageKills= $B4
 KillsNeed = $B5
@@ -77,7 +78,13 @@ ColdBoot:
 ActorEntry:
         lda ScratchY
         beq ActorsRunning
+        cmp #2
+        beq ActorsRespawning
         jsr ActorInitialize
+        jmp AuxiliaryReturn
+ActorsRespawning:
+        jsr RepositionSurvivors
+        jsr ChooseP1
         jmp AuxiliaryReturn
 ActorsRunning:
         jsr Knight1Tick
@@ -427,6 +434,8 @@ DamageLife:
         lda #$E0
         jsr QueueSound
 LifeRemains:
+        lda #$BC          ; respawn flag plus 60 frame protection
+        sta Invuln
         lda #80
         sta PlayerX
         lda #88
@@ -545,6 +554,8 @@ RangerTimers:
         beq RangerTryRelease
         dec RDraw
         bne RangerDone
+        jsr RangerHasClearLane
+        beq RangerFlee
         jsr SpawnArrow
         lda #8
         sta RRelease
@@ -563,6 +574,8 @@ RangerTryCool:
 RangerReady:
         lda ArrowDX
         bne RangerFlee
+        jsr RangerHasClearLane
+        beq RangerFlee
         lda #24
         sta RDraw
         lda #$70
@@ -629,28 +642,7 @@ SpawnArrow:
         sta ArrowX
         lda RY
         sta ArrowY
-        lda PlayerX
-        cmp RX
-        bcc ArrowLeft
-        lda #1
-        sta ArrowDX
-        jmp ArrowYVector
-ArrowLeft:
-        lda #$FF
-        sta ArrowDX
-ArrowYVector:
-        lda #0
-        sta ArrowDY
-        lda PlayerY
-        cmp RY
-        beq ArrowCooldownSet
-        bcc ArrowUp
-        lda #1
-        sta ArrowDY
-        jmp ArrowCooldownSet
-ArrowUp:
-        lda #$FF
-        sta ArrowDY
+        jsr InitializeAim
 ArrowCooldownSet:
         lda #2
         sta $9D
@@ -723,7 +715,6 @@ ChooseP1:
         ora RAlive
         bne ChooseLiveP1
         ; No phantom knight during stage-clear pause.
-        sta TargetAlive
         lda #200          ; x=1..186 minus 200 never selects 0..15
         sta EnemyBottom
         lda #$10
@@ -741,13 +732,10 @@ ChooseK1:
         lda K1X
         sta KnightX
         lda K1Alive
-        sta TargetAlive
         lda K1Warn
         sta SwordWarn
         lda K1Strike
         sta SwordStrike
-        lda K1Rest
-        sta SwordRest
         lda K1Facing
         sta KnightDir
         lda K1Strike
@@ -772,13 +760,10 @@ ChooseK2:
         lda K2X
         sta KnightX
         lda K2Alive
-        sta TargetAlive
         lda K2Warn
         sta SwordWarn
         lda K2Strike
         sta SwordStrike
-        lda K2Rest
-        sta SwordRest
         lda K2Facing
         sta KnightDir
         lda K2Strike
@@ -803,13 +788,10 @@ ChooseRanger:
         lda RX
         sta KnightX
         lda RAlive
-        sta TargetAlive
         lda RDraw
         sta SwordWarn
         lda RRelease
         sta SwordStrike
-        lda RCool
-        sta SwordRest
         lda #0
         sta KnightDir
         ldx Stage
@@ -840,8 +822,7 @@ AwardAny:
         lda ScoreHi
         adc #$01
         sta ScoreHi
-        cld
-        jmp ScoreIncreaseDone
+        jmp ScoreCarry
 ScoreAdd250:
         sed
         clc
@@ -851,7 +832,12 @@ ScoreAdd250:
         lda ScoreHi
         adc #$02
         sta ScoreHi
+ScoreCarry:
         cld
+        bcc ScoreIncreaseDone
+        lda #$99          ; saturate the four-digit display at 9999
+        sta ScoreHi
+        sta ScoreLo
 ScoreIncreaseDone:
         lda ScratchIX
         clc
@@ -957,13 +943,9 @@ WorldRects:
         dc.b $14,$30,$0A,$30,$64,$80,$0A,$30,$14,$30,$78,$A0,$64,$80,$78,$A0 ; HEALTH-3 swapped stage 8 motif rectangles
 
         ORG $FA80
-; Adaptive display-only scheduler. Runs once per game frame in blanking.
-; Priority: active sword > 24f telegraph > Ranger bow pose > live actors.
-; Fast 3/4-frame lock for a single threat, 1/4 fair other actors.
-; Dual sword priorities alternate K1/K2; every fourth frame selects a
-; live Ranger, avoiding complete bow starvation during 24-frame warnings. The attack hit guard checks the previously
-; displayed DrawSlot; invisible sword hits remain blocked.
-; No extra per-line TIA work, no three-physical-P1-sprite claim.
+; Display only. Single urgent threat gets two frames in each three.
+; Equal threats use the same cyclic live-actor cursor as peaceful frames.
+; Damage still checks the previously displayed active strike.
 AdaptiveSelect:
         lda K1Alive
         beq ASCheckK2Strike
@@ -1010,17 +992,7 @@ ASPickK2:
         ldx #1
         jmp ASMajority
 ASBoth:
-        lda $86           ; 3-phase gait counter, also used for display fairness
-        and #3
-        bne ASBothKnight
-        lda RAlive
-        beq ASBothKnight
-        lda #2            ; direct Ranger turn, do not feed back into majority scheduler
-        rts
-ASBothKnight:
-        lda FrameCount
-        and #1
-        rts
+        jmp ASRoundRobin
 ASMajority:
         lda $86           ; two of three frames prioritize the active attack
         and #3
@@ -1098,6 +1070,141 @@ OctagonXMax:
         clc
         adc $E9
         cmp HaloRadius
+        rts
+
+        ORG $FC00
+RepositionSurvivors:
+        ; Preserve alive flags, reserves, kills, score and the current orb.
+        lda #0
+        sta K1Warn
+        sta K1Strike
+        sta K1Rest
+        sta K2Warn
+        sta K2Strike
+        sta K2Rest
+        sta RDraw
+        sta RRelease
+        lda #90
+        sta RCool
+        lda K1Alive
+        beq RespawnCheckK2
+        lda #122
+        sta K1X
+        lda #96
+        sta K1Y
+RespawnCheckK2:
+        lda K2Alive
+        beq RespawnCheckRanger
+        lda #43
+        sta K2X
+        lda #96
+        sta K2Y
+RespawnCheckRanger:
+        lda RAlive
+        beq RespawnActorsDone
+        lda #140
+        sta RX
+        lda #88
+        sta RY
+RespawnActorsDone:
+        rts
+
+InitializeAim:
+        ; Bresenham ratio measured at release, never read the target again.
+        ldy #1
+        lda PlayerX
+        sec
+        sbc RX
+        bcs ArrowAimX
+        eor #$FF
+        adc #1
+        ldy #$FF
+ArrowAimX:
+        sty ArrowDX
+        sta ArrowMajor
+        ldy #1
+        lda PlayerY
+        sec
+        sbc RY
+        bcs ArrowAimY
+        eor #$FF
+        adc #1
+        ldy #$FF
+ArrowAimY:
+        sty ArrowDY
+        ; A = |dy|, ArrowMajor currently |dx|. Normalize only long rays
+        ; to make the major magnitude fit a byte with a free axis bit.
+        ldy #0
+        cmp ArrowMajor
+        bcc AimXMajor
+        ldx ArrowMajor
+        stx ArrowMinor
+        ldy #$80
+        bne NormalizeAim
+AimXMajor:
+        sta ArrowMinor
+        lda ArrowMajor
+NormalizeAim:
+        cmp #0
+        bne NonZeroAim
+        lda #1
+NonZeroAim:
+        bpl SaveAim
+        lsr
+        lsr ArrowMinor
+SaveAim:
+        sta ArrowMajor
+        lsr
+        sta ArrowError
+        tya
+        ora ArrowMajor
+        sta ArrowMajor
+        rts
+
+RangerHasClearLane:
+        ; Reject any solid intersecting the bounding rectangle of the shot.
+        ; This is conservative on diagonals, where the ray can miss a box
+        ; that the rectangle meets. The Ranger then keeps moving.
+        ldx #0
+CheckLaneRectangle:
+        lda RX
+        cmp $C0,x
+        bcs CheckLaneRight
+        lda PlayerX
+        cmp $C0,x
+        bcc NextLaneRectangle
+CheckLaneRight:
+        lda RX
+        cmp $C1,x
+        bcc CheckLaneTop
+        lda PlayerX
+        cmp $C1,x
+        bcs NextLaneRectangle
+CheckLaneTop:
+        lda RY
+        cmp $C2,x
+        bcs CheckLaneBottom
+        lda PlayerY
+        cmp $C2,x
+        bcc NextLaneRectangle
+CheckLaneBottom:
+        lda RY
+        cmp $C3,x
+        bcc LaneBlocked
+        lda PlayerY
+        cmp $C3,x
+        bcc LaneBlocked
+NextLaneRectangle:
+        inx
+        inx
+        inx
+        inx
+        cpx #16
+        bcc CheckLaneRectangle
+        lda #1
+        rts
+LaneBlocked:
+        lda #0
         rts
 
         ORG $FFFC
