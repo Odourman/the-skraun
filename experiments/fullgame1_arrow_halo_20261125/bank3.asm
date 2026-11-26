@@ -56,7 +56,7 @@ Level       = $82   ; 1,2,3
 JoyState    = $83
 ScoreTop    = $84
 HudLifePtr  = $95
-Phase       = $86       ; low 2 bits = 0..2 gait phase; bit 7 = SELECT latch
+Phase       = $86       ; gait bits 0..1, held FIRE bit 6, SELECT bit 7
 DiagonalSkip= $87
 SpriteHeight= $88
 ArrowRowPtr = $89
@@ -260,8 +260,6 @@ MissileRowOff:
         lda #$FF
         sta ArrowRowPtr+1
 MissileRowReady:
-        lda Lives
-        beq BlankWait
         lda $96
         sta DiagonalSkip    ; movement is complete until next frame
         jsr PrepareHudLife
@@ -708,11 +706,14 @@ RangerFleeFace:
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
 VisibleGate:
         jsr HudDraw
-        lda DiagonalSkip    ; room/orb color overlaps HUD pointer for five rows
+        lda DiagonalSkip    ; room/orb color overlaps HUD pointer for seven rows
         sta $96
         lda $8F             ; restore world color before the first arena row
         sta COLUPF
-        ldx #186
+        ldx Stage
+        lda ArenaBackground,x
+        sta COLUBK
+        ldx #184          ; seven HUD rows use two blank top-margin lines
         lda #0
         jmp Visible
 HudLifeDigits:
@@ -825,37 +826,6 @@ OrbAbsY:
 OrbDone:
         rts
 
-UpdateAttack:
-        lda Lives
-        bne AttackLive
-        rts
-AttackLive:
-        lda HaloFrames
-        beq AttackInactive
-        dec HaloFrames
-        bne AttackColor
-        ldx Level
-        lda RecoverTable,x
-        sta HaloRecover
-AttackInactive:
-        lda HaloRecover
-        beq TryFire
-        dec HaloRecover
-        bne AttackColor
-TryFire:
-        lda INPT4          ; Fire active-low, bit7
-        bmi AttackColor
-        lda HaloFrames
-        bne AttackColor
-        lda #12
-        sta HaloFrames
-AttackColor:
-AttackRadius:
-        ldx Level
-        lda RadiusTable,x
-        sta HaloRadius
-        rts
-
 GateDispatch:
         lda Lives
         bne GateAlive
@@ -870,8 +840,8 @@ GateDispatch:
         sta ENABL
         lda #$0E
         sta COLUPF
-        jsr DeadHudDraw
-        ldx #187
+        jsr HudDraw
+        ldx #185
 DeadScreenLine:
         sta WSYNC
         dex
@@ -917,7 +887,7 @@ OrbTolY:
 RadiusTable:
         dc.b 0,10,17,23
 RecoverTable:
-        dc.b 0,84,60,36
+        dc.b 0,70,46,29
 HaloMaskTable:
         dc.b 0,$03,$1F,$FF
 HaloBaseLo: dc.b 0,$B0,$C0,$D0
@@ -937,7 +907,17 @@ PlayL1P2:
 PlayL1P3:
         dc.b $06,$C4,$64,$3C,$3C,$7D,$7F,$3E,$66,$5A,$7E,$24
 PrepareHudLife:
+        lda #0
+        sta JoyState       ; HUD repeat flag after gameplay motion is complete
+        sta COLUBK         ; the HUD is black even in the dark blue arenas
         ldy Lives
+        bne HudLivePointer
+        lda #1
+        sta HudLifePtr
+        lda #$FF
+        sta HudLifePtr+1
+        bne HudIndices
+HudLivePointer:
         lda HudLifeOffsets,y
         clc
         adc #<HudLifeDigits
@@ -947,11 +927,30 @@ PrepareHudLife:
         lda #>HudLifeDigits
         sbc #0
         sta HudLifePtr+1
+HudIndices:
         ldy ScoreTop
         ldx #0
         rts
 HudLifeOffsets:
         dc.b 0,5,10,15,20,25,30,35,40,45
+ArenaBackground:
+        dc.b 0,0,0,2,2,0,0,0,0
+
+PositionMissile1:
+        sta WSYNC
+        sec
+MissilePosLoop:
+        sbc #15
+        bcs MissilePosLoop
+        eor #7
+        asl
+        asl
+        asl
+        asl
+        sta HMM1
+        sta RESM1
+        rts
+
 
         ORG $F600     ; GAMEPLAY-5 A: page-align L2 24-row bank1 P0 table.
                       ; A5 causal trial: old $F5FE crosses page for 22/24 rows.
@@ -1179,46 +1178,52 @@ M0PositionLoop:
         sta RESM0
         rts
         ORG $F9B2
-HudDraw:
-        lda #$0E
-        sta COLUPF
-        lda #$10            ; repeat order, left half score, right half lives
-        sta CTRLPF
-HudDrawRow:
-        lda HudLifeDigits,y ; identical font for the high score digit
-        sta WSYNC
-        sta PF0
-        lda $90,x
-        sta PF1
-        cpx #3
-        bcs HudPF2Tail
-        lda $E9,x
-        jmp HudPF2Write
-HudPF2Tail:
-        lda $97,x
-HudPF2Write:
-        sta PF2
-        lda (HudLifePtr),y
-        sta PF0             ; C34 or earlier, before right PF0 at C49
-        lda #0
-        nop
-        nop
-        sta PF1
-        nop
-        nop
-        nop
-        sta PF2
+UpdateAttack:
+        ; Update the physical latch even when no attack is allowed.
+        ldy #0
+        lda INPT4
+        bpl FirePressed
+        lda Phase
+        and #$BF
+        sta Phase
+        jmp AttackTimers
+FirePressed:
+        bit Phase
+        bvs AttackTimers
+        lda Phase
+        ora #$40
+        sta Phase
         iny
-        inx
-        cpx #5
-        bne HudDrawRow
-        sta WSYNC
-        lda #0
-        sta PF0
-        lda Stage
-        and #1
-        ora #$10
-        sta CTRLPF
+AttackTimers:
+        lda Lives
+        beq AttackColor
+        lda HaloFrames
+        beq AttackInactive
+        dec HaloFrames
+        bne AttackColor
+        ldx Level
+        lda RecoverTable,x
+        sta HaloRecover
+        bne AttackColor
+AttackInactive:
+        lda HaloRecover
+        beq TryFire
+        dec HaloRecover
+        bne AttackColor
+TryFire:
+        tya
+        beq AttackColor
+        lda $BE             ; a press during the stage transition is consumed
+        bne AttackColor
+        lda Invulnerable
+        bmi AttackColor     ; no trigger on the respawn frame
+        lda #12
+        sta HaloFrames
+AttackColor:
+AttackRadius:
+        ldx Level
+        lda RadiusTable,x
+        sta HaloRadius
         rts
 
         ORG $FA00
@@ -1371,57 +1376,53 @@ HaloCapInset:
         dc.b 0,4,6,6
 HaloCapSizes:
         dc.b 0,$20,$35,$37
-DeadHudDraw:
-        ldy ScoreTop
-        ldx #0
-DeadHudRow:
-        lda HudLifeDigits,y
+HudDraw:
+        lda #$0E
+        sta COLUPF
+        lda #$10            ; repeat order, left half score, right half lives
+        sta CTRLPF
+HudDrawRow:
         sta WSYNC
+        lda HudLifeDigits,y
         sta PF0
         lda $90,x
         sta PF1
         cpx #3
-        bcs DeadHudTail
+        bcs HudPF2Tail
         lda $E9,x
-        jmp DeadHudPF2
-DeadHudTail:
+        jmp HudPF2Write
+HudPF2Tail:
         lda $97,x
-DeadHudPF2:
+HudPF2Write:
         sta PF2
         lda #0
-        nop
-        nop
-        nop
-        nop
-        nop
-        nop
         sta PF0
         nop
         sta PF1
+        lda (HudLifePtr),y
         nop
-        nop
-        sta PF2
+        sta PF2             ; right PF2 bits 4..6 at X144..155
+        txa
+        and #3
+        bne HudAdvance
+        lsr JoyState
+        bcs HudAdvance
+        inc JoyState
+        bne HudDrawRow      ; top and base of the five-row glyph double
+HudAdvance:
         iny
         inx
         cpx #5
-        bne DeadHudRow
+        bne HudDrawRow
         sta WSYNC
+        lda #0
+        sta PF0
+        sta PF2
+        lda Stage
+        and #1
+        ora #$10
+        sta CTRLPF
         rts
-PositionMissile1:
-        sta WSYNC
-        sec
-MissilePosLoop:
-        sbc #15
-        bcs MissilePosLoop
-        eor #7
-        asl
-        asl
-        asl
-        asl
-        sta HMM1
-        sta RESM1
-        rts
-
 
         ORG $FF01
         ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
