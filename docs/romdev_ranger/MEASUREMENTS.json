@@ -1,0 +1,134 @@
+{
+  "rom_sha256": "d9b6bf3051921eb15fc8c0ba1d48d4c4ff10b8fb2c464170d28de2c1becbd2fa",
+  "pf1_sha256": "4c52651d7eca55e8e5c5158d33c90bec6bbd4f85e1732e65cf94321cd2b5334d",
+  "aggregate": {
+    "PR68": {
+      "frames": 45000,
+      "combat_frames": 24852,
+      "ranger_exposure_frames": 19240,
+      "away_frames": 0,
+      "empty_away_frames": 0,
+      "escapes": 0,
+      "k1": 7,
+      "k2": 13,
+      "sword": 20,
+      "arrow": 30,
+      "total": 50,
+      "draws": 195,
+      "shots": 186,
+      "life_losses": 0,
+      "downgrades": 50,
+      "stage_transitions": 167,
+      "native_scans": 44990,
+      "scan_fail": 0,
+      "all_native_scans": 57173,
+      "damage_per_combat_min": 7.242877836793819,
+      "arrow_per_exposure_min": 5.613305613305613
+    },
+    "PR69": {
+      "frames": 45000,
+      "combat_frames": 26463,
+      "ranger_exposure_frames": 23238,
+      "away_frames": 7987,
+      "empty_away_frames": 6760,
+      "escapes": 28,
+      "k1": 18,
+      "k2": 0,
+      "sword": 18,
+      "arrow": 34,
+      "total": 52,
+      "draws": 173,
+      "shots": 86,
+      "life_losses": 0,
+      "downgrades": 52,
+      "stage_transitions": 130,
+      "native_scans": 44990,
+      "scan_fail": 0,
+      "all_native_scans": 57073,
+      "damage_per_combat_min": 7.074027887994559,
+      "arrow_per_exposure_min": 5.267234701781565
+    }
+  },
+  "ci": {
+    "scans": 633,
+    "histogram": {
+      "262": 633
+    },
+    "source_and_rom_match": true
+  },
+  "video": {
+    "C7_gameplay": {
+      "frames": 9000,
+      "pcm_samples": 4715476,
+      "peak": 26213,
+      "clipped_samples": 0,
+      "sha": "714973c93d3fb435aa8f295eba28ef036bcc2cff34b65a90771f292fdc009f98",
+      "stages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "lives": 5
+    },
+    "C7_loss": {
+      "frames": 509,
+      "pcm_samples": 266192,
+      "peak": 19812,
+      "clipped_samples": 0,
+      "sha": "edd97ac781aeb1c3ddde5e3ac9eb50a2001a4f6b4af12e9081eddc14a111e18b",
+      "stages": [
+        1
+      ],
+      "lives": 3
+    },
+    "edge0": {
+      "frames": 380,
+      "pcm_samples": 198596,
+      "peak": 15123,
+      "clipped_samples": 0,
+      "sha": "b27359d64cca07e934aa51b48fc3aad2f15945e46fa51deeaf8091858422a304",
+      "stages": [
+        1
+      ],
+      "lives": 9
+    },
+    "edge1": {
+      "frames": 380,
+      "pcm_samples": 198596,
+      "peak": 15123,
+      "clipped_samples": 0,
+      "sha": "302101adcf922fde4c269254df0f3dde804dbc0046f8539ddb7fbd1027eab008",
+      "stages": [
+        1
+      ],
+      "lives": 9
+    },
+    "edge2": {
+      "frames": 380,
+      "pcm_samples": 198596,
+      "peak": 15123,
+      "clipped_samples": 0,
+      "sha": "5f9c4291ecf6fd06f540d5a04491df468ffc1240c53bcc8df41979e12e2c7c99",
+      "stages": [
+        1
+      ],
+      "lives": 9
+    },
+    "edge3": {
+      "frames": 380,
+      "pcm_samples": 198596,
+      "peak": 15123,
+      "clipped_samples": 0,
+      "sha": "fc5074b239b494678137816b42a8909795adba0c610c9167024ec92b2c43be5f",
+      "stages": [
+        1
+      ],
+      "lives": 9
+    }
+  }
+}

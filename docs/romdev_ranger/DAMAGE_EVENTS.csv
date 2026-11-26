@@ -1,0 +1,136 @@
+version,run,frame,stage_by_riot_replay,source,pc,line
+PR68,PR68-hold-0,108,1,K1,0/f37a,"WTrap[00]:  108 236 23   1 | nv-BdIzC 02 00 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-0,168,1,K1,0/f381,"WTrap[01]:  168 236 33  31 | nv-BdIzC 03 00 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-0,329,1,K2,0/f381,"WTrap[01]:  329 237 16 -20 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-0,491,1,K2,0/f381,"WTrap[01]:  491 237 16 -20 | nv-BdIZC 01 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-1,114,1,K2,0/f37a,"WTrap[00]:  114 236 73 151 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-1,174,1,K2,0/f381,"WTrap[01]:  174 237 07 -47 | nv-BdIzC 03 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-1,278,1,K2,0/f381,"WTrap[01]:  278 237 09 -41 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-1,383,1,K2,0/f381,"WTrap[01]:  383 237 09 -41 | nv-BdIZC 01 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-2,111,1,K1,0/f37a,"WTrap[00]:  111 236 23   1 | nv-BdIzC 02 00 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-2,171,1,K1,0/f381,"WTrap[01]:  171 236 33  31 | nv-BdIzC 03 00 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-2,273,1,K2,0/f381,"WTrap[01]:  273 237 43  61 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-hold-2,518,1,arrow,2/f3be,WTrap[01]:  518 240 73 151 | nv-BdIZC 01 01 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR68,PR68-naive-0,49,1,arrow,2/f3be,WTrap[01]:   49 243 15 -23 | nv-BdIzC 01 00 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR68,PR68-naive-0,161,1,K2,0/f381,"WTrap[01]:  161 237 36  40 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-naive-1,50,1,arrow,2/f3be,WTrap[01]:   50 243 15 -23 | nv-BdIzC 01 00 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR68,PR68-naive-1,3444,1,arrow,2/f3bb,WTrap[00]: 3444 240 67 133 | nv-BdIzC 02 01 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-naive-2,50,1,arrow,2/f3be,WTrap[01]:   50 243 62 118 | nv-BdIzC 01 00 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR68,PR68-naive-2,1321,1,arrow,2/f3bb,WTrap[00]: 1321 240 63 121 | nv-BdIzC 02 01 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-naive-2,3254,1,arrow,2/f3be,WTrap[01]: 3254 241 35  37 | nv-BdIzC 01 01 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR68,PR68-tactical-0,412,2,arrow,2/f3bb,WTrap[00]:  412 240 63 121 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-0,696,3,K2,0/f37a,"WTrap[00]:  696 236 57 103 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-0,877,4,arrow,2/f3bb,WTrap[00]:  877 242 32  28 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-0,1973,8,K1,0/f37a,"WTrap[00]: 1973 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-0,5948,8,K1,0/f37a,"WTrap[00]: 5948 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-0,6266,8,K1,0/f37a,"WTrap[00]: 6266 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-1,412,2,arrow,2/f3bb,WTrap[00]:  412 240 63 121 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,686,3,arrow,2/f3bb,WTrap[00]:  686 240 63 121 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,961,4,arrow,2/f3bb,WTrap[00]:  961 240 63 121 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,1240,5,arrow,2/f3bb,WTrap[00]: 1240 241 28  16 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,1300,5,arrow,2/f3bb,WTrap[00]: 1300 240 67 133 | nv-BdIzC 02 05 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,1822,7,arrow,2/f3bb,WTrap[00]: 1822 243 30  22 | nv-BdIzC 03 07 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,1882,7,arrow,2/f3bb,WTrap[00]: 1882 242 73 151 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-1,6185,8,K1,0/f37a,"WTrap[00]: 6185 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-1,6305,8,K2,0/f37a,"WTrap[00]: 6305 236 61 115 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-1,6653,8,K2,0/f37a,"WTrap[00]: 6653 239 05 -53 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-1,7070,7,K2,0/f37a,"WTrap[00]: 7070 239 05 -53 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-2,412,2,arrow,2/f3bb,WTrap[00]:  412 240 63 121 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,686,3,arrow,2/f3bb,WTrap[00]:  686 240 63 121 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,961,4,arrow,2/f3bb,WTrap[00]:  961 240 63 121 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,1240,5,arrow,2/f3bb,WTrap[00]: 1240 241 28  16 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,1300,5,arrow,2/f3bb,WTrap[00]: 1300 240 67 133 | nv-BdIzC 02 05 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,1822,7,arrow,2/f3bb,WTrap[00]: 1822 243 30  22 | nv-BdIzC 03 07 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,1882,7,arrow,2/f3bb,WTrap[00]: 1882 242 73 151 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,6185,8,K1,0/f37a,"WTrap[00]: 6185 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-2,6305,8,K2,0/f37a,"WTrap[00]: 6305 236 61 115 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-2,6646,8,arrow,2/f3bb,WTrap[00]: 6646 243 17 -17 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-2,7006,7,arrow,2/f3bb,WTrap[00]: 7006 243 17 -17 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,418,2,arrow,2/f3bb,WTrap[00]:  418 240 63 121 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,694,3,arrow,2/f3bb,WTrap[00]:  694 240 63 121 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,974,4,K2,0/f37a,"WTrap[00]:  974 236 57 103 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-3,1154,5,arrow,2/f3bb,WTrap[00]: 1154 244 04 -56 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,1217,5,K2,0/f37a,"WTrap[00]: 1217 238 08 -44 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-3,1822,7,arrow,2/f3bb,WTrap[00]: 1822 243 30  22 | nv-BdIzC 03 07 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,1882,7,arrow,2/f3bb,WTrap[00]: 1882 242 73 151 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,6185,8,K1,0/f37a,"WTrap[00]: 6185 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-3,6305,8,K2,0/f37a,"WTrap[00]: 6305 236 61 115 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-3,6646,8,arrow,2/f3bb,WTrap[00]: 6646 243 17 -17 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-3,7006,7,arrow,2/f3bb,WTrap[00]: 7006 243 17 -17 | nv-BdIzC 03 0e 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,418,2,arrow,2/f3bb,WTrap[00]:  418 240 63 121 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,694,3,arrow,2/f3bb,WTrap[00]:  694 240 63 121 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,974,4,K2,0/f37a,"WTrap[00]:  974 236 57 103 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-4,1154,5,arrow,2/f3bb,WTrap[00]: 1154 244 04 -56 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,1217,5,K2,0/f37a,"WTrap[00]: 1217 238 08 -44 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-4,1822,7,arrow,2/f3bb,WTrap[00]: 1822 243 30  22 | nv-BdIzC 03 07 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,1882,7,arrow,2/f3bb,WTrap[00]: 1882 242 73 151 | nv-BdIzC 02 0e 02 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR68,PR68-tactical-4,6185,8,K1,0/f37a,"WTrap[00]: 6185 236 36  40 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-4,6305,8,K2,0/f37a,"WTrap[00]: 6305 236 61 115 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-4,6653,8,K2,0/f37a,"WTrap[00]: 6653 239 05 -53 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR68,PR68-tactical-4,7070,7,K2,0/f37a,"WTrap[00]: 7070 239 05 -53 | nv-BdIzC 03 07 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-0,104,1,K2,0/f37a,"WTrap[00]:  104 237 17 -17 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-0,164,1,K1,0/f381,"WTrap[01]:  164 236 53  91 | nv-BdIzC 03 00 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-0,260,1,K2,0/f381,"WTrap[01]:  260 237 29  19 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-0,356,1,K2,0/f381,"WTrap[01]:  356 237 29  19 | nv-BdIZC 01 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-1,111,1,K2,0/f37a,"WTrap[00]:  111 237 17 -17 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-1,217,1,arrow,2/f3be,WTrap[01]:  217 240 03 -59 | nv-BdIzC 01 01 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR69,C7-hold-1,361,1,K2,0/f381,"WTrap[01]:  361 237 65 127 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-1,505,1,K2,0/f381,"WTrap[01]:  505 237 65 127 | nv-BdIZC 01 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-2,102,1,K2,0/f37a,"WTrap[00]:  102 237 17 -17 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-2,263,1,arrow,2/f3be,WTrap[01]:  263 244 48  76 | nv-BdIzC 01 00 01 f9 | 2/f3be f0 05    beq    Lf3c5
+PR69,C7-hold-2,347,1,K2,0/f381,"WTrap[01]:  347 237 23   1 | nv-BdIzC 02 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-hold-2,431,1,K2,0/f381,"WTrap[01]:  431 237 23   1 | nv-BdIZC 01 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-naive-0,722,1,K2,0/f381,"WTrap[01]:  722 237 34  34 | nv-BdIzC 03 07 01 f7 | 0/f381          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-naive-0,1764,1,K2,0/f37a,"WTrap[00]: 1764 237 01 -65 | nv-BdIzC 02 07 02 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-0,544,3,arrow,2/f3bb,WTrap[00]:  544 242 16 -20 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,760,4,arrow,2/f3bb,WTrap[00]:  760 242 16 -20 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,976,5,arrow,2/f3bb,WTrap[00]:  976 242 70 142 | nv-BdIzC 03 05 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,1312,6,arrow,2/f3bb,WTrap[00]: 1312 242 70 142 | nv-BdIzC 03 06 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,2069,8,K1,0/f37a,"WTrap[00]: 2069 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-0,2355,8,K1,0/f37a,"WTrap[00]: 2355 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-0,3304,6,arrow,2/f3bb,WTrap[00]: 3304 242 70 142 | nv-BdIzC 03 06 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,4252,4,arrow,2/f3bb,WTrap[00]: 4252 244 00 -68 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,5956,3,arrow,2/f3bb,WTrap[00]: 5956 244 00 -68 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,6190,4,arrow,2/f3bb,WTrap[00]: 6190 240 30  22 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-0,7541,8,K1,0/f37a,"WTrap[00]: 7541 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-0,7827,8,K1,0/f37a,"WTrap[00]: 7827 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-0,8776,6,arrow,2/f3bb,WTrap[00]: 8776 242 70 142 | nv-BdIzC 03 06 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,862,3,arrow,2/f3bb,WTrap[00]:  862 240 30  22 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,1301,4,arrow,2/f3bb,WTrap[00]: 1301 240 28  16 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,2346,8,K1,0/f37a,"WTrap[00]: 2346 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-1,4360,4,arrow,2/f3bb,WTrap[00]: 4360 242 16 -20 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,6136,4,arrow,2/f3bb,WTrap[00]: 6136 242 16 -20 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,6352,5,arrow,2/f3bb,WTrap[00]: 6352 242 70 142 | nv-BdIzC 03 05 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,6688,6,arrow,2/f3bb,WTrap[00]: 6688 242 70 142 | nv-BdIzC 03 06 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-1,7445,8,K1,0/f37a,"WTrap[00]: 7445 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-1,7731,8,K1,0/f37a,"WTrap[00]: 7731 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-2,2366,8,K1,0/f37a,"WTrap[00]: 2366 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-2,2675,8,K1,0/f37a,"WTrap[00]: 2675 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-2,4207,3,arrow,2/f3bb,WTrap[00]: 4207 244 03 -59 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-2,4567,2,arrow,2/f3bb,WTrap[00]: 4567 244 03 -59 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-2,4924,1,arrow,2/f3bb,WTrap[00]: 4924 244 00 -68 | nv-BdIzC 03 01 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-2,6068,4,arrow,2/f3bb,WTrap[00]: 6068 244 00 -68 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-2,7362,8,K1,0/f37a,"WTrap[00]: 7362 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-2,7649,8,K1,0/f37a,"WTrap[00]: 7649 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-3,989,3,arrow,2/f3bb,WTrap[00]:  989 240 28  16 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,1348,4,arrow,2/f3bb,WTrap[00]: 1348 244 00 -68 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,1582,5,arrow,2/f3bb,WTrap[00]: 1582 240 40  52 | nv-BdIzC 03 00 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,1822,6,arrow,2/f3bb,WTrap[00]: 1822 240 40  52 | nv-BdIzC 03 00 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,2691,8,K1,0/f37a,"WTrap[00]: 2691 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-3,3027,8,K1,0/f37a,"WTrap[00]: 3027 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-3,5074,3,arrow,2/f3bb,WTrap[00]: 5074 240 28  16 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,5494,1,arrow,2/f3bb,WTrap[00]: 5494 240 30  22 | nv-BdIzC 03 01 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,5933,1,arrow,2/f3bb,WTrap[00]: 5933 240 28  16 | nv-BdIzC 03 01 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,6292,2,arrow,2/f3bb,WTrap[00]: 6292 244 00 -68 | nv-BdIzC 03 02 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,7894,7,arrow,2/f3bb,WTrap[00]: 7894 240 40  52 | nv-BdIzC 03 00 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-3,8435,8,K1,0/f37a,"WTrap[00]: 8435 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-4,988,3,arrow,2/f3bb,WTrap[00]:  988 244 00 -68 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,1222,4,arrow,2/f3bb,WTrap[00]: 1222 240 30  22 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,2597,8,K1,0/f37a,"WTrap[00]: 2597 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-4,2883,8,K1,0/f37a,"WTrap[00]: 2883 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-4,3832,6,arrow,2/f3bb,WTrap[00]: 3832 242 70 142 | nv-BdIzC 03 06 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,4780,4,arrow,2/f3bb,WTrap[00]: 4780 244 00 -68 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,6484,3,arrow,2/f3bb,WTrap[00]: 6484 244 00 -68 | nv-BdIzC 03 03 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,6718,4,arrow,2/f3bb,WTrap[00]: 6718 240 30  22 | nv-BdIzC 03 04 03 f9 | 2/f3bb a5 b0    lda    ram_B0
+PR69,C7-tactical-4,8069,8,K1,0/f37a,"WTrap[00]: 8069 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
+PR69,C7-tactical-4,8355,8,K1,0/f37a,"WTrap[00]: 8355 236 56 100 | nv-BdIzC 03 00 03 f7 | 0/f37a          .byte $f,$ff,$ff,$ff,$ff,$ff,$ff,$ff"
