@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [baseline, color, combined, locked]
+        variant: [single]
     steps:
       - uses: actions/checkout@v4
       - name: Install native tools

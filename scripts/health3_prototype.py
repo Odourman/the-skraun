@@ -8,7 +8,7 @@ import shutil
 parser = argparse.ArgumentParser()
 parser.add_argument("source", type=Path)
 parser.add_argument("destination", type=Path)
-parser.add_argument("variant", choices=("baseline", "color", "combined", "locked"))
+parser.add_argument("variant", choices=("baseline", "color", "combined", "locked", "single"))
 args = parser.parse_args()
 shutil.copytree(args.source, args.destination, dirs_exist_ok=True)
 b = [(args.destination / f"bank{n}.asm").read_text() for n in range(4)]
@@ -27,7 +27,7 @@ if args.variant != "baseline":
     right = b[3].index("AttackRadius:\n", left)
     b[3] = b[3][:left] + "AttackColor:\n" + b[3][right:]
 
-if args.variant in ("combined", "locked"):
+if args.variant in ("combined", "locked", "single"):
     # PF table runs backwards on screen. Move each motif by 56 pairs without reversing its rows.
     start = b[3].index("PlayPF1:\n")
     end = b[3].index("; End at $FD00", start)
@@ -94,6 +94,42 @@ DeadScreenLine:
     start = b[3].index("GameOverMap:\n")
     end = b[3].index("HaloTracerPrepare:\n", start)
     b[3] = b[3][:start] + b[3][end:]
+
+if args.variant == "single":
+    start = b[3].index("GateDispatch:\n")
+    end = b[3].index("GateAlive:\n", start)
+    dead = b[3][start:end].replace("sta $95", "sta $0D").replace("jsr HudDraw", "jsr DeadHudDraw")
+    b[3] = b[3][:start] + dead + b[3][end:]
+    change(3, "        ORG $FF01\n", """DeadHudDraw:
+        ldx #0
+DeadHudRow:
+        sta WSYNC
+        lda $90,x
+        sta PF1
+        cpx #3
+        bcs DeadHudTail
+        lda $E9,x
+        jmp DeadHudPF2
+DeadHudTail:
+        lda $97,x
+DeadHudPF2:
+        sta PF2
+        lda #0
+        ldy #4
+DeadHudDelay:
+        dey
+        bne DeadHudDelay
+        sta PF1
+        nop
+        nop
+        sta PF2
+        inx
+        cpx #5
+        bne DeadHudRow
+        sta WSYNC
+        rts
+        ORG $FF01
+""")
 
 if args.variant == "locked":
     change(3, "        jsr MoveX\n        jsr MoveY\n", "        jsr HealthMove\n        nop\n        nop\n        nop\n")

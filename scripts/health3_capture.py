@@ -34,7 +34,7 @@ for cmd in sys.argv[1:]:
     time.sleep(.05)
 """
 
-def run(name, startup, cmds):
+def run(name, startup, cmds, display):
     out = root / "stella" / name
     out.mkdir(parents=True, exist_ok=True)
     config = out / "config" / "stella"
@@ -47,17 +47,17 @@ def run(name, startup, cmds):
     (out / "INPUT.txt").write_text("\n".join(startup + cmds) + "\n")
     auth = out / "xauth"
     auth.touch()
-    env = dict(os.environ, XAUTHORITY=str(auth), DISPLAY=":170", XDG_CONFIG_HOME=str(out / "config"),
+    env = dict(os.environ, XAUTHORITY=str(auth), DISPLAY=display, XDG_CONFIG_HOME=str(out / "config"),
                SDL_AUDIODRIVER="dummy", SDL_VIDEODRIVER="x11", SDL_RENDER_DRIVER="software")
     with (out / "xvfb.log").open("w") as xvlog, (out / "stella.log").open("w") as stlog:
-        xv = subprocess.Popen(["Xvfb", ":170", "-screen", "0", "1400x1000x24", "-ac"], stdout=xvlog, stderr=xvlog)
+        xv = subprocess.Popen(["Xvfb", display, "-screen", "0", "1400x1000x24", "-ac"], stdout=xvlog, stderr=xvlog)
         try:
             time.sleep(.4)
             with subprocess.Popen(["/usr/bin/stella", "-debug", "-logtoconsole", "1",
                 "-audio.enabled", "0", "-threads", "0", "-vsync", "0", "-video", "software",
                 "-fullscreen", "0", str(local)], env=env, stdout=stlog, stderr=stlog) as stella:
                 try:
-                    time.sleep(2)
+                    time.sleep(3)
                     session = out / "SESSION.txt"
                     args = cmds + ["ram", "tia", "print _scanEnd", "print _scan", "print _sCycles", "print _fCycles", "print _fWsyncCycles", "print _fTimReadCycles", "saveSes " + str(session)]
                     subprocess.run([sys.executable, "-c", gui, *args], env=env, cwd=out, check=True, timeout=60)
@@ -92,9 +92,9 @@ for stage in (2, 4, 6, 8):
         f"ram aa {stage-1:02x} 01", "ram be 01", "frame #4",
         "ram 80 50 58 03", "ram b3 60", "frame #4"])
 result = {}
-for name, (start, cmds) in scenes.items():
+for idx, (name, (start, cmds)) in enumerate(scenes.items()):
     try:
-        result[name] = run(name, start, cmds)
+        result[name] = run(name, start, cmds, f":{170+idx}")
     except Exception as exc:
         result[name] = {"error": repr(exc)}
 (root / "RESULTS.json").write_text(json.dumps(result, indent=2) + "\n")
@@ -102,7 +102,7 @@ print(json.dumps(result, indent=2))
 assert all(row.get("scanEnd") == 262 for row in result.values()), result
 
 assert result["natural_move_halo"]["halo"] > 0, result
-if variant in ("combined", "locked"):
+if variant in ("combined", "locked", "single"):
     assert result["fixture_death_fire"]["lives"] == 0, result
     assert result["fixture_death_fire"]["score"] == [0x57, 0x13], result
     assert result["fixture_death_reset"]["lives"] == 3, result
