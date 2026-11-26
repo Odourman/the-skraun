@@ -49,4 +49,10 @@ jobs:
         if: always()
         with:
           name: skraun-renderer-native
-          path: native-renderer-test
+          path: |
+            native-renderer-test
+            build/fullgame1
+            build/arrow_halo_romdev4
+            experiments/fullgame1_arrow_halo_20261125
+            docs/romdev_final/ci
+            docs/romdev_production
