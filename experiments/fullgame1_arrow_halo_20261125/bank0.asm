@@ -814,15 +814,6 @@ ChooseRanger:
         sta KnightDir
         ldx Stage
         lda RangerColors,x
-        ldx ArrowDX
-        bne RangerThreatTint
-        ldx RDraw
-        bne RangerThreatTint
-        ldx RRelease
-        beq RangerSafeTint
-RangerThreatTint:
-        lda #$9E        ; visible arrow/bow overrides camouflaged green
-RangerSafeTint:
         sta COLUP1
         lda #170          ; preload P1 for next physical row via VDELP1
         sec
@@ -919,7 +910,7 @@ QueuePriorityVoice1:
         rts
 
 RangerColors:
-        dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
+        dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
 RangerCooldowns:
         dc.b 0,180,180,150,150,120,120,90,90
 
@@ -957,13 +948,13 @@ WorldPFHi:
         dc.b $FA,$FA,$FA,$FA,$FB,$FB,$FB,$FC,$FC
 WorldRects:
         dc.b $10,$30,$06,$30,$70,$90,$06,$30,$10,$30,$78,$A4,$70,$90,$78,$A4 ; Revision 3 stage 1, internal Y = arena Y - 9
-        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$78,$A4,$64,$80,$78,$A4 ; Revision 3 stage 2, internal Y = arena Y - 9
+        dc.b $14,$30,$08,$34,$64,$80,$08,$34,$14,$30,$76,$A0,$64,$80,$76,$A0 ; HEALTH-3 swapped stage 2 motif rectangles
         dc.b $10,$30,$0A,$2C,$70,$90,$0A,$2C,$10,$30,$7E,$9E,$70,$90,$7E,$9E ; Revision 3 stage 3, internal Y = arena Y - 9
-        dc.b $14,$30,$0A,$2C,$64,$80,$0A,$2C,$14,$30,$7E,$9E,$64,$80,$7E,$9E ; Revision 3 stage 4, internal Y = arena Y - 9
+        dc.b $14,$30,$0E,$2E,$64,$80,$0E,$2E,$14,$30,$7A,$9C,$64,$80,$7A,$9C ; HEALTH-3 swapped stage 4 motif rectangles
         dc.b $10,$2C,$06,$30,$74,$90,$06,$30,$10,$30,$7A,$A2,$70,$90,$7A,$A2 ; Revision 3 stage 5, internal Y = arena Y - 9
-        dc.b $14,$30,$06,$30,$64,$80,$06,$30,$14,$30,$7A,$A2,$64,$80,$7A,$A2 ; Revision 3 stage 6, internal Y = arena Y - 9
+        dc.b $14,$30,$0A,$32,$64,$80,$0A,$32,$14,$30,$76,$A0,$64,$80,$76,$A0 ; HEALTH-3 swapped stage 6 motif rectangles
         dc.b $10,$30,$08,$30,$70,$90,$08,$30,$10,$30,$7A,$A0,$70,$90,$7A,$A0 ; Revision 3 stage 7, internal Y = arena Y - 9
-        dc.b $14,$30,$08,$30,$64,$80,$08,$30,$14,$30,$7A,$A0,$64,$80,$7A,$A0 ; Revision 3 stage 8, internal Y = arena Y - 9
+        dc.b $14,$30,$0A,$30,$64,$80,$0A,$30,$14,$30,$78,$A0,$64,$80,$78,$A0 ; HEALTH-3 swapped stage 8 motif rectangles
 
         ORG $FA80
 ; Adaptive display-only scheduler. Runs once per game frame in blanking.

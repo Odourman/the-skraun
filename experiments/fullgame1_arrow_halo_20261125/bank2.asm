@@ -479,7 +479,14 @@ ExtraLifeStillHere:
 ; we switch geometry together with its exact collision tables.
 PlaceStageOrb:
         ldx Stage
+        lda FrameCount
+        and #2
+        beq OrbPlaceLeft
+        lda StageOrbRightX,x
+        bne OrbPlaceChosen
+OrbPlaceLeft:
         lda StageOrbX,x
+OrbPlaceChosen:
         sta OrbX
         lda #1
         sta OrbDirty     ; ball repositioned once OFFSCREEN by bank1
@@ -512,10 +519,9 @@ CopyRepeat:
 SetWorldColors:
         ; HEALTH-001: persist 1-based Stage REF when updating ball size.
         ; HEALTH-002 CORRECTED: D4/D5 = 00:1, 10:2, 20:4, 30:8 clocks.
-        ldx Level
         lda Stage
         and #1
-        ora HaloBLWidths,x
+        ora #$10
         sta CTRLPF
         ; Animated gold player silhouette follows real P0 X/Y.
         lda HaloFrames
@@ -529,7 +535,8 @@ P0AuraInactive:
 P0AuraReady:
         ldx Stage
         lda HaloFrames
-        bne ColorHaloActive
+        nop
+        nop
         lda WorldPFColors,x
         sta COLUPF
 ColorHaloActive:
@@ -548,16 +555,18 @@ GameOver:
         jmp GameOverImpl
 
 WorldPFColors:
-        dc.b $00,$C6,$C8,$36,$38,$56,$58,$06,$08
+        dc.b $00,$C6,$C8,$86,$88,$66,$68,$82,$84
 WorldBGColors:
-        dc.b $00,$00,$00,$02,$02,$04,$04,$00,$00
+        dc.b $00,$00,$00,$02,$02,$00,$00,$00,$00
 HaloBLWidths:
         dc.b $00,$10,$20,$30 ; index 0 unused, L1=2 L2=4 L3=8 color clocks
 
 ; Full-body collision expanded rectangles. 3 levels, four solids, 4 bytes each.
 ; Mirrored copies are frozen original F01Diag_L1/L2/L3 values.
 StageOrbX:
-        dc.b 0,96,88,80,80,92,84,88,76
+        dc.b 0,64,64,64,64,64,64,64,64
+StageOrbRightX:
+        dc.b 0,96,90,96,90,96,90,96,90
 
 MirrorRects:
         dc.b 9,32,21,52,129,152,21,52,21,48,133,156,113,140,133,156
@@ -900,22 +909,13 @@ GameOverImpl:
         sta CTRLPF       ; no mirror for the END banner
         lda #$0E
         sta COLUPF
-        lda #$42
+        lda #0
         sta COLUBK
         jsr UpdateSound
         lda SwitchState
         and #1
         beq RestartGame
-        lda INPT4
-        bpl GameOverFire
-        lda $86
-        ora #$40          ; arm only after FIRE released
-        sta $86
         jmp GameOverStay
-GameOverFire:
-        lda $86
-        and #$40
-        beq GameOverStay
 RestartGame:
         lda #0
         sta Stage        ; next tick initializes new game
