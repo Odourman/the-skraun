@@ -799,9 +799,13 @@ OrbCandidate:
         lda Level
         cmp #3
         bcs OrbDone       ; on L3 orb remains if it was already present
-        ; candidate test against actual BL center OrbX, y68,
-        ; source-sized full body +2 pixel touch margin.
+        ; Match the displayed P0 body to BL's 2 x 8 pixels. P0 draws
+        ; left of the gameplay X anchor; the ball's visual Y is 59
+        ; in the player's coordinate system (physical rows 86–93).
+        tax
         lda PlayerX
+        sec
+        sbc OrbBodyShift,x
         sec
         sbc OrbX
         bcs OrbAbsX
@@ -809,12 +813,11 @@ OrbCandidate:
         clc
         adc #1
 OrbAbsX:
-        ldx Level
         cmp OrbTolX,x
         bcs OrbDone
         lda PlayerY
         sec
-        sbc #68
+        sbc #59
         bcs OrbAbsY
         eor #$FF
         clc
@@ -895,10 +898,12 @@ BallPosLoop:
         sta RESBL
         rts
 
+OrbBodyShift:
+        dc.b 0,3,2,2
 OrbTolX:
-        dc.b 0,7,11,19
+        dc.b 0,6,10,0
 OrbTolY:
-        dc.b 0,9,15,21
+        dc.b 0,10,14,0
 RadiusTable:
         dc.b 0,8,16,32
 HaloSound:

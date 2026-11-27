@@ -195,6 +195,13 @@ RefineClear:
         lda #1
         rts
 
+AuraMaxXLevel3:
+        dc.b 127,135,135,139,139,143,143,147,147,147,147,151
+        dc.b 151,151,151,151,151,155,155,155,155,155,155,155
+        dc.b 155,155,155,155,155,155,155,155,155,155,155,155
+        dc.b 155,155,155,155,155,155,155,155,155,155,155,151
+        dc.b 151,151,151,151,151,147,147,147,147,143,143,139
+        dc.b 139,135,135
         ORG $F100
 ActorEntry:
         lda ScratchY
@@ -268,7 +275,7 @@ KnightExists:
         bit AttackState
         bne KnightTimer
         jsr KnightWithinHalo
-        beq KnightTimer
+        bcs KnightTimer
         lda KnightAttackBit,x
         ora AttackState
         sta AttackState
@@ -488,29 +495,29 @@ KnightOut:
         lda #0
         rts
 KnightWithinHalo:
-        lda PlayerX
-        sec
-        sbc K1X,x
-        bcs HaloKnightXAbs
-        eor #$FF
+        ; The P1 artwork is offset within its 8 clocks. Decode real
+        ; facing as SelectEnemyArtImpl does, including the locked poses.
+        lda K1Warn,x
+        ora K1Strike,x
+        bne KnightBodyLocked
+        lda K1X,x
+        cmp PlayerX
+        bcc KnightBodyRight
+        bcs KnightBodyLeft
+KnightBodyLocked:
+        lda K1Facing,x
+        beq KnightBodyRight
+KnightBodyLeft:
+        lda #2
+        bne KnightBodyOffset
+KnightBodyRight:
+        lda #$FF
+KnightBodyOffset:
         clc
-        adc #1
-HaloKnightXAbs:
-        sta $E9
-        lda PlayerY
-        sec
-        sbc K1Y,x
-        bcs HaloKnightYAbs
-        eor #$FF
-        clc
-        adc #1
-HaloKnightYAbs:
-        tay
-        lda $E9
-        jsr OctagonOutside
-        bcs KnightOut
-        lda #1
-        rts
+        adc K1X,x
+        ldy K1Y,x
+        jmp BodyWithinAura
+        ds $F314-*,0
 
 KnightCanHit:
         lda $A7            ; render-owned P1 height; 52 means borrowed for aura
@@ -609,6 +616,14 @@ LifeRemains:
         sta PlayerY
         rts
 
+AuraMaxXLevel12:
+        dc.b 129,129,131,131,131,133,133,133,133,133,133,133
+        dc.b 133,133,133,133,133,133,133,133,133,133,133,133
+        dc.b 133,133,131,131,131,129,129,129,133,133,137,137
+        dc.b 137,137,137,141,141,141,141,141,141,141,141,141
+        dc.b 141,141,141,141,141,141,141,141,141,141,141,141
+        dc.b 141,141,141,141,141,141,141,141,137,137,137,137
+        dc.b 137,133,133,129
         ORG $F400
 ; Exact neutral dual-knight copies. Only when Y, facing, neutral art and
 ; spacing match the hardware. Never enable duplicates with an active M1.
@@ -1002,30 +1017,17 @@ RangerExists:
         cmp #159
         bcs RangerTimers
 RangerHaloCheck:
-        lda PlayerX
-        sec
-        sbc RX
-        bcs RangerAbsX
-        eor #$FF
-        clc
-        adc #1
-RangerAbsX:
-        sta $E9
-        lda PlayerY
-        sec
-        sbc RY
-        bcs RangerAbsY
-        eor #$FF
-        clc
-        adc #1
-RangerAbsY:
-        tay
-        lda $E9
-        jsr OctagonOutside
+        ; Ranger's body is centred between native P1 columns 3 and 4
+        ; in its neutral, draw and release poses. Use their shared core.
+        lda RX
+        ldy RY
+        jsr BodyWithinAura
         bcs RangerTimers
         lda #0
         sta RAlive
         jmp AwardRanger
+        ; Keep existing Ranger timing probes and movement entry addresses.
+        ds $F751-*,0
 RangerTimers:
         jmp RangerTactics
 RangerDone:
@@ -1542,31 +1544,55 @@ ASRRNext:
         lda #0
         rts
 
-; Shared octagonal radial metric: maximum of |dx|,|dy| + half minimum.
-; Input A=unsigned |dx| and Y=unsigned |dy|. Output Carry=1 OUTSIDE,
-; Carry=0 INSIDE. X is preserved; scratch E9/EA lives only during call.
-OctagonOutside:
-        sta $E9
+ ; A,Y = body centre on X and gameplay Y; X preserved.
+; Signed rows, 3x11 core from actual Stella masks. No wider aura graphic.
+; E9 is scratch; ADC after CMP uses carry=0 (in range).
+; Signed coordinate difference cannot alias another accepted value: legal
+; actor/player separation is under 160 clocks, accepted |dx| <=31.
+BodyWithinAura:
+        sta ScratchMin
         tya
+        sec
+        sbc PlayerY
         ldy Level
-        cmp AuraHitHalfH,y
-        bcs AuraHitOutside
         clc
-        adc AuraHitOffset,y
+        adc AuraBodyYBias,y
+        cmp AuraBodyYCount,y
+        bcs AuraBodyMiss
+        adc AuraBodyOffset,y
         tay
-        lda $E9
-        cmp AuraHitWidths,y
+        lda ScratchMin
+        sec
+        sbc PlayerX
+        eor #$80
+        cmp AuraMinX,y
+        bcc AuraBodyMiss
+        cpy #76
+        bcs AuraBodyL3
+        cmp AuraMaxXLevel12,y
         rts
-AuraHitOutside:
+AuraBodyL3:
+        cmp AuraMaxXLevel3-76,y
+        rts
+AuraBodyMiss:
         sec
         rts
-AuraHitHalfH: dc.b 0,11,18,26
-AuraHitOffset: dc.b 0,0,11,29
-AuraHitWidths:
-        dc.b $07,$07,$07,$07,$07,$07,$05,$05,$05,$03,$03,$0E,$0E,$0E,$0E,$0E
-        dc.b $0E,$0E,$0E,$0E,$0E,$0A,$0A,$0A,$0A,$0A,$06,$06,$02,$1C,$1C,$1C
-        dc.b $1C,$1C,$1C,$1C,$1C,$1C,$1C,$18,$18,$18,$18,$18,$18,$14,$14,$14
-        dc.b $14,$10,$10,$0C,$0C,$08,$08
+AuraBodyYBias: dc.b 0,15,22,30
+AuraBodyYCount: dc.b 0,31,45,63
+AuraBodyOffset: dc.b 0,0,31,76
+AuraMinX:
+        dc.b 121,121,119,119,119,117,117,117,117,117,117,117
+        dc.b 117,117,117,117,117,117,117,117,117,117,117,117
+        dc.b 117,117,119,119,119,121,121,123,119,119,115,115
+        dc.b 115,115,115,111,111,111,111,111,111,111,111,111
+        dc.b 111,111,111,111,111,111,111,111,111,111,111,111
+        dc.b 111,111,111,111,111,111,111,111,115,115,115,115
+        dc.b 115,119,119,123,117,117,113,113,109,109,105,105
+        dc.b 105,105,101,101,101,101,101,101,97,97,97,97
+        dc.b 97,97,97,97,97,97,97,97,97,97,97,97
+        dc.b 97,97,97,97,97,97,97,97,97,97,97,97
+        dc.b 97,97,101,101,101,101,101,101,105,105,105,105
+        dc.b 109,109,113,113,117,117,125
 
         ORG $FC00
 RepositionSurvivors:
