@@ -268,7 +268,7 @@ KnightExists:
         bit AttackState
         bne KnightTimer
         jsr KnightWithinHalo
-        beq KnightTimer
+        bcs KnightTimer
         lda KnightAttackBit,x
         ora AttackState
         sta AttackState
@@ -509,10 +509,8 @@ KnightBodyOffset:
         clc
         adc K1X,x
         ldy K1Y,x
-        jsr BodyWithinAura
-        bcs KnightOut
-        lda #1
-        rts
+        jmp BodyWithinAura
+        ds $F314-*,0
 
 KnightCanHit:
         lda $A7            ; render-owned P1 height; 52 means borrowed for aura
@@ -1531,10 +1529,11 @@ ASRRNext:
         lda #0
         rts
 
-; Input A,Y = body centre on the rendered horizontal axis and gameplay Y.
-; Compare the nearest point of a conservative 3 x 11 px core to the
-; existing stepped aura profile. No arm, sword, bow or leg tips.
-; Carries out=outside. X stays live for KnightTick. No additional RAM.
+; A,Y = visible body centre on X and gameplay Y. X is preserved.
+; The row tables project a 3 x 11 pixel core onto the existing aura.
+; Separate left and right bounds encode P0's measured X offset without
+; another lookup or carry chain in the overscan hot path.
+; Carry set means outside. No new RIOT bytes.
 BodyWithinAura:
         sta ScratchMin
         tya
@@ -1542,53 +1541,45 @@ BodyWithinAura:
         sbc PlayerY
         bcs AuraBodyPositiveY
         eor #$FF
-        clc
         adc #1
 AuraBodyPositiveY:
-        sec
-        sbc #5
-        bcs AuraBodyNearestY
-        lda #0
-AuraBodyNearestY:
-        sta ScratchMax
         ldy Level
-        lda PlayerX
-        sec
-        sbc AuraCenterShift,y
-        sec
-        sbc ScratchMin
-        bcs AuraBodyPositiveX
-        eor #$FF
-        clc
-        adc #1
-AuraBodyPositiveX:
-        sec
-        sbc #1
-        bcs AuraBodyNearestX
-        lda #0
-AuraBodyNearestX:
-        sta ScratchMin
-        lda ScratchMax
-        ldy Level
-        cmp AuraHitHalfH,y
-        bcs AuraHitOutside
-        clc
-        adc AuraHitOffset,y
+        cmp AuraBodyHalfH,y
+        bcs AuraBodyMiss
+        adc AuraBodyOffset,y
         tay
-        lda $E9
-        cmp AuraHitWidths,y
+        lda ScratchMin
+        sec
+        sbc PlayerX
+        bcs AuraRightCompare
+        eor #$FF
+        adc #1
+        cmp AuraLeftWidths,y
         rts
-AuraHitOutside:
+AuraRightCompare:
+        cmp AuraRightWidths,y
+        rts
+AuraBodyMiss:
         sec
         rts
-AuraCenterShift: dc.b 0,3,2,2
-AuraHitHalfH: dc.b 0,11,18,26
-AuraHitOffset: dc.b 0,0,11,29
-AuraHitWidths:
-        dc.b $07,$07,$07,$07,$07,$07,$05,$05,$05,$03,$03,$0E,$0E,$0E,$0E,$0E
-        dc.b $0E,$0E,$0E,$0E,$0E,$0A,$0A,$0A,$0A,$0A,$06,$06,$02,$1C,$1C,$1C
-        dc.b $1C,$1C,$1C,$1C,$1C,$1C,$1C,$18,$18,$18,$18,$18,$18,$14,$14,$14
-        dc.b $14,$10,$10,$0C,$0C,$08,$08
+AuraBodyHalfH: dc.b 0,16,23,31
+AuraBodyOffset: dc.b 0,0,16,39
+AuraLeftWidths:
+        dc.b 11,11,11,11,11,11,11,11,11,11,11,9
+        dc.b 9,9,7,7
+        dc.b 17,17,17,17,17,17,17,17,17,17,17,17
+        dc.b 17,17,17,13,13,13,13,13,9,9,5
+        dc.b 31,31,31,31,31,31,31,31,31,31,31,31
+        dc.b 31,31,27,27,27,27,27,27,23,23,23,23
+        dc.b 19,19,15,15,11,11,0
+AuraRightWidths:
+        dc.b 5,5,5,5,5,5,5,5,5,5,5,3
+        dc.b 3,3,1,1
+        dc.b 13,13,13,13,13,13,13,13,13,13,13,13
+        dc.b 13,13,13,9,9,9,9,9,5,5,1
+        dc.b 27,27,27,27,27,27,27,27,27,27,27,27
+        dc.b 27,27,23,23,23,23,23,23,19,19,19,19
+        dc.b 15,15,11,11,7,7,0
 
         ORG $FC00
 RepositionSurvivors:
