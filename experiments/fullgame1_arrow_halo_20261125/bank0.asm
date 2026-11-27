@@ -968,9 +968,10 @@ RangerMovementCheck:
         jsr RangerBlocked
         beq RangerMovementDone
         ; When the physical overscan budget is low, defer optional alternate axis.
-        lda $284
-        cmp #7
-        bcc RangerRestorePosition
+RangerBudgetCheck:
+        jmp RangerCheckTimer
+        ds 4,0
+RangerFallbackAllowed:
         lda FrameCount
         and #4
         bne RangerFallbackY
@@ -1324,6 +1325,23 @@ WorldRects:
         dc.b $14,$30,$0A,$32,$64,$80,$0A,$32,$14,$30,$76,$A0,$64,$80,$76,$A0 ; HEALTH-3 swapped stage 6 motif rectangles
         dc.b $10,$30,$08,$30,$70,$90,$08,$30,$10,$30,$7A,$A0,$70,$90,$7A,$A0 ; Revision 3 stage 7, internal Y = arena Y - 9
         dc.b $14,$30,$0A,$30,$64,$80,$0A,$30,$14,$30,$78,$A0,$64,$80,$78,$A0 ; HEALTH-3 swapped stage 8 motif rectangles
+
+        ; INTIM acknowledges timeout. Preserve it for BudgetedSound and
+        ; OverScanWait, even when the timer wraps between BIT and LDA.
+RangerCheckTimer:
+        bit $0285
+        bmi RangerTimerTooLate
+        lda $0284
+        cmp #7
+        bcc RangerTimerTooLate
+        cmp #34
+        bcc RangerTimerHasBudget
+        lda #0
+        sta $0294
+RangerTimerTooLate:
+        jmp RangerRestorePosition
+RangerTimerHasBudget:
+        jmp RangerFallbackAllowed
 
         ORG $FA80
 ; Display only. Single urgent threat gets two frames in each three.

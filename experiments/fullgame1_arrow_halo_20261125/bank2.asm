@@ -93,7 +93,15 @@ BudgetedSound:
         lda $0284
         cmp #6
         bcc DeferSound
+        ; TIM64T starts at 33. A higher value means TIMINT changed
+        ; before the INTIM read, which can acknowledge the timeout.
+        cmp #34
+        bcs RearmExpiredSoundTimer
         jmp SoundBankEnter
+RearmExpiredSoundTimer:
+        ; Restore timeout for OverScanWait on the next timer clock.
+        lda #0
+        sta $0294
 DeferSound:
         rts
 
