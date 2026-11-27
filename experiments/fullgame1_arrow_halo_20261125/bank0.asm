@@ -79,21 +79,17 @@ ColdBoot:
 ; Bounded two-segment refinement of the conservative LOS (old fast path first).
 ; ScratchMin/Max = x bounds; ScratchIX/Y = y bounds. No new RAM.
 RangerLaneRefined:
-        jsr RangerHasClearLane
-        beq LaneRefine
-        rts
-LaneRefine:
+        ; Exact same decision: both rounded half boxes are subsets of the
+        ; whole bounding box, so a clear whole box implies clear halves.
+        ; For axis-aligned shots preserve the original whole-box test.
         lda RX
         cmp PlayerX
-        bne RefineXDiff
-        lda #0
-        rts
-RefineXDiff:
+        beq LaneAxisOnly
         lda RY
         cmp PlayerY
         bne RefineYDiff
-        lda #0
-        rts
+LaneAxisOnly:
+        jmp RangerHasClearLane
 RefineYDiff:
         lda RX
         cmp PlayerX
