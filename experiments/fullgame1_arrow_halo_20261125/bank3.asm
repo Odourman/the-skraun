@@ -1097,8 +1097,8 @@ PlayArtHi:
         ; Halo is a *first visible centered static contour experiment*,
         ; NOT full P0-following sprite or full-scene claim.
         ; L1 source-baked visible profile, with real signed Y shift
-AuraPhysicalHalf: dc.b 0,11,18,34
-AuraRightLimit: dc.b 0,155,146,130
+AuraPhysicalHalf: dc.b 0,10,16,34
+AuraRightLimit: dc.b 0,155,148,130
 AuraLeftMasks: dc.b $7F,$3F,$1F,$0F
         ORG $F7A8
 K1NeutralBytes:
@@ -1355,17 +1355,30 @@ OrbScan:
         ds 4,2      ; compact eight physical lines around the orb collision center
         ds $FD70-*,0
 AuraL1:
-        dc.b $3C,$3C,$7E,$7E,$7E,$7E,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        dc.b $FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C
+        dc.b $38,$38,$7C,$7C,$7C,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE
+        dc.b $7C,$7C,$7C,$38,$38
 AuraL2:
-        dc.b $18,$18,$3C,$3C,$7E,$7E,$7E,$7E,$7E,$7E,$FF,$FF,$FF,$FF,$FF,$FF
-        dc.b $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7E,$7E
-        dc.b $7E,$7E,$7E,$7E,$3C,$3C,$18,$18
+        dc.b $10,$38,$38,$7C,$7C,$7C,$7C,$7C,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE
+        dc.b $FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$FE,$7C,$7C,$7C,$7C,$7C
+        dc.b $38,$38,$10
 AuraL3:
-        dc.b $03,$03,$07,$07,$0F,$0F,$1F,$1F,$3F,$3F,$3F,$3F,$7F,$7F,$7F,$7F
-        dc.b $7F,$7F,$7F,$7F,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        dc.b $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F
-        dc.b $3F,$3F,$3F,$3F,$1F,$1F,$0F,$0F,$07,$07,$03,$03
+        dc.b $03,$03,$07,$07,$0F,$0F,$1F,$1F,$1F,$1F,$3F,$3F,$3F,$3F,$3F,$3F
+        dc.b $7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F
+        dc.b $7F,$7F,$7F,$7F,$3F,$3F,$3F,$3F,$3F,$3F,$1F,$1F,$1F,$1F,$0F,$0F
+        dc.b $07,$07,$03,$03
+SuppressPauseP1:
+        lda $BE              ; StagePause: no actor selection runs during pause
+        beq PauseP1Done
+        lda #200
+        sta EnemyBottom      ; out of visible row range
+        lda #$10
+        sta NUSIZ1
+        lda #0
+        sta REFP1
+        lda #$9E
+        sta COLUP1
+PauseP1Done:
+        rts
         ORG $FE00
 NewHaloSetup:
         lda #16
@@ -1377,6 +1390,7 @@ NewHaloSetup:
         sta HaloRadius         ; P1 mask; UpdateAttack restores radius before logic
         lda #0
         sta ENAM0
+        jsr SuppressPauseP1
         lda HaloFrames
         beq AuraDone
         lda FrameCount
@@ -1427,9 +1441,9 @@ AuraClip:
         jsr ClipAura
 AuraDone:
         rts
-AuraHeights: dc.b 0,24,40,60
+AuraHeights: dc.b 0,21,35,52
 AuraSize: dc.b 0,5,7,7
-AuraInputHalf: dc.b 0,9,16,32
+AuraInputHalf: dc.b 0,8,14,32
 AuraLo: dc.b 0,<AuraL1,<AuraL2,<AuraL3
 HudDraw:
         lda #$0E
