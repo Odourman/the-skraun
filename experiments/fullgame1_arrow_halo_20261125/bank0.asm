@@ -79,21 +79,17 @@ ColdBoot:
 ; Bounded two-segment refinement of the conservative LOS (old fast path first).
 ; ScratchMin/Max = x bounds; ScratchIX/Y = y bounds. No new RAM.
 RangerLaneRefined:
-        jsr RangerHasClearLane
-        beq LaneRefine
-        rts
-LaneRefine:
+        ; Exact same decision: both rounded half boxes are subsets of the
+        ; whole bounding box, so a clear whole box implies clear halves.
+        ; For axis-aligned shots preserve the original whole-box test.
         lda RX
         cmp PlayerX
-        bne RefineXDiff
-        lda #0
-        rts
-RefineXDiff:
+        beq LaneAxisOnly
         lda RY
         cmp PlayerY
         bne RefineYDiff
-        lda #0
-        rts
+LaneAxisOnly:
+        jmp RangerHasClearLane
 RefineYDiff:
         lda RX
         cmp PlayerX
@@ -517,8 +513,8 @@ HaloKnightYAbs:
         rts
 
 KnightCanHit:
-        lda $A7            ; render-owned P1 height; 60 means borrowed for aura
-        cmp #60
+        lda $A7            ; render-owned P1 height; 52 means borrowed for aura
+        cmp #52
         beq KnightIsHidden
         cpx #0
         bne KnightCheck2Visible
@@ -1520,13 +1516,14 @@ OctagonOutside:
 AuraHitOutside:
         sec
         rts
-AuraHitHalfH: dc.b 0,12,20,30
-AuraHitOffset: dc.b 0,0,12,32
+AuraHitHalfH: dc.b 0,11,18,26
+AuraHitOffset: dc.b 0,0,11,29
 AuraHitWidths:
-        dc.b $08,$08,$08,$08,$08,$08,$06,$06,$06,$06,$04,$04,$10,$10,$10,$10
-        dc.b $10,$10,$10,$10,$10,$10,$0C,$0C,$0C,$0C,$0C,$0C,$08,$08,$04,$04
-        dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$1C,$1C,$1C,$1C,$1C,$1C
-        dc.b $1C,$1C,$18,$18,$18,$18,$14,$14,$10,$10,$0C,$0C,$08,$08
+        dc.b $07,$07,$07,$07,$07,$07,$05,$05,$05,$03,$03,$0E,$0E,$0E,$0E,$0E
+        dc.b $0E,$0E,$0E,$0E,$0E,$0A,$0A,$0A,$0A,$0A,$06,$06,$02,$1C,$1C,$1C
+        dc.b $1C,$1C,$1C,$1C,$1C,$1C,$1C,$18,$18,$18,$18,$18,$18,$14,$14,$14
+        dc.b $14,$10,$10,$0C,$0C,$08,$08
+
         ORG $FC00
 RepositionSurvivors:
         ; Preserve alive flags, reserves, kills, score and the current orb.
