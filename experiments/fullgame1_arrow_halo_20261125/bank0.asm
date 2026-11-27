@@ -517,6 +517,9 @@ HaloKnightYAbs:
         rts
 
 KnightCanHit:
+        lda $A7            ; render-owned P1 height; 60 means borrowed for aura
+        cmp #60
+        beq KnightIsHidden
         cpx #0
         bne KnightCheck2Visible
         lda DrawSlot
