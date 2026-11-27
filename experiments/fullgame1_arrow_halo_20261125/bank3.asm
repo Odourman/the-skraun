@@ -78,7 +78,7 @@ BaseX       = $9B       ; original X for strict diagonal Y-projection
 OrbMask     = $9C       ; 2 = BL visible, 0 = consumed temporarily
 ArrowCool   = $9D       ; 0..180 actual release cooldown, unused GAMEPLAY-3 OrbTimer state
 HaloFrames  = $9E       ; 12 NTSC frames when FIRE pressed
-HaloRecover = $9F       ; 84/60/36 f cooldown AFTER halo ends
+AttackState = $9F       ; bit 7 waits for FIRE; bits 0/1 tag the struck knights
 HaloRadius  = $A0       ; logical 360-degree octagon radius
 ArrowMajor= $A1     ; bit 7 selects Y as the major axis
 ArrowMinor= $A2     ; magnitude of the minor axis
@@ -171,7 +171,7 @@ Frame:
         sta TIM64T
         lda SWCHA
         sta JoyState
-        inc FrameCount
+        jsr AdvanceFrame
         inc Phase
         lda Phase
         and #$03
@@ -181,7 +181,7 @@ Frame:
         and #$C0          ; preserve physical RESET and FIRE latches
         sta Phase
 PhaseGood:
-        lda Lives
+        jsr MovementAllowed
         beq MotionSkipDead
         jsr DetectDiagonal
         lda PlayerX
@@ -739,6 +739,7 @@ HudLifeDigits:
         dc.b $70,$40,$40,$40,$40
         dc.b $70,$50,$70,$50,$70
         dc.b $70,$50,$70,$40,$70
+        dc.b 0,0,0,0,0  ; blank leading glyph while FIRE replaces the score
 
         ORG $F459
 PF0Choices:
@@ -790,6 +791,8 @@ OrbRestoreSkip:
         rts
 ; ---- PLAY1 frame-independent gameplay: OVERSCAN, not critical scanlines ----
 UpdateOrb:
+        bit AttackState
+        bmi OrbDone
         lda OrbMask
         beq OrbDone         ; exactly one orb per stage visit, never respawn after pickup
 OrbCandidate:
@@ -897,9 +900,9 @@ OrbTolX:
 OrbTolY:
         dc.b 0,9,15,21
 RadiusTable:
-        dc.b 0,10,17,23
-RecoverTable:
-        dc.b 0,70,46,29
+        dc.b 0,20,36,48
+HaloSound:
+        dc.b 0,$10,$20,$30
 HaloMaskTable:
         dc.b 0,$03,$1F,$FF
 HaloBaseLo: dc.b 0,$B0,$C0,$D0
@@ -991,10 +994,25 @@ EdgeBottomMask:
 GameBankEnter:
         lda $FFF8         ; F8: switch to bank 0 on read
         jmp $F100         ; fetched from bank 0 after hotspot
+AdvanceFrame:
+        bit AttackState
+        bmi FrameHeld
+        inc FrameCount
+FrameHeld:
+        rts
         ORG $F690
 GameBankReturn:
         lda $FFF9         ; F8: switch back to original graphics bank
         rts               ; fetched from bank 1 after hotspot
+MovementAllowed:
+        bit AttackState
+        bmi WaitingMotion
+        lda Lives
+        rts
+WaitingMotion:
+        lda #0
+        sta MotionDid
+        rts
         ORG $F6A0
 GameBankReset:
         lda $FFF9
@@ -1079,6 +1097,23 @@ PlayArtHi:
         ; Halo is a *first visible centered static contour experiment*,
         ; NOT full P0-following sprite or full-scene claim.
         ; L1 source-baked visible profile, with real signed Y shift
+HaloInwardX:
+        ; Alternate the L3 stroke by eight clocks to widen each arc over time.
+        tay
+        lda FrameCount
+        and #4
+        beq HaloKeepX
+        tya
+        cmp PlayerX
+        bcc HaloShiftRight
+        sbc #8
+        rts
+HaloShiftRight:
+        adc #8
+        rts
+HaloKeepX:
+        tya
+        rts
         ORG $F7A8
 K1NeutralBytes:
         dc.b $88,$D8,$A8,$A8,$70,$70,$78,$D8,$F8,$F8,$70,$D8,$D8,$88,$F8,$78,0  ; 17th zero = out-of-16-row lookup
@@ -1202,13 +1237,16 @@ OctagonOutside:
         lsr
         clc
         adc $EA
+        bcs HaloOverflow
         cmp HaloRadius
         rts
 OctagonXMax:
         lsr
         clc
         adc $E9
+        bcs HaloOverflow
         cmp HaloRadius
+HaloOverflow:
         rts
         ORG $F900
 ArrowSeedScan:
@@ -1233,47 +1271,41 @@ M0PositionLoop:
         rts
         ORG $F9B2
 UpdateAttack:
-        ; Update the physical latch even when no attack is allowed.
-        ldy #0
+        ; The release latch follows hardware even during RESET or loss.
+        lda HaloFrames
+        beq ReadFire
+        dec HaloFrames
+ReadFire:
         lda INPT4
         bpl FirePressed
         lda Phase
         and #$BF
         sta Phase
-        jmp AttackTimers
+        jmp AttackRadius
 FirePressed:
         bit Phase
-        bvs AttackTimers
+        bvs AttackRadius
         lda Phase
         ora #$40
         sta Phase
-        iny
-AttackTimers:
         lda Lives
-        beq AttackColor
-        lda HaloFrames
-        beq AttackInactive
-        dec HaloFrames
-        bne AttackColor
-        ldx Level
-        lda RecoverTable,x
-        sta HaloRecover
-        bne AttackColor
-AttackInactive:
-        lda HaloRecover
-        beq TryFire
-        dec HaloRecover
-        bne AttackColor
-TryFire:
-        tya
-        beq AttackColor
-        lda $BE             ; a press during the stage transition is consumed
-        bne AttackColor
-        lda Invulnerable
-        bmi AttackColor     ; no trigger on the respawn frame
+        beq AttackRadius
+        lda AttackState
+        and #$80
+        beq FreshAttack
+        lda #0
+        sta AttackState       ; the start press is consumed by the latch
+        sta ScoreTop
+        beq AttackRadius
+FreshAttack:
+        sta AttackState       ; clear both tags even while the last halo shows
         lda #12
         sta HaloFrames
-AttackColor:
+        ldx Level
+        lda HaloSound,x
+        cmp SoundFrames
+        bcc AttackRadius
+        sta SoundFrames
 AttackRadius:
         ldx Level
         lda RadiusTable,x
@@ -1337,7 +1369,7 @@ OrbScan:
         ds 4,2      ; compact eight physical lines around the orb collision center
         ds 86,0    ; separate cap table at $FDA0
 HaloCapRows:
-        dc.b 2,2
+        ds 6,2
         ds $FE00-*,0      ; all indexed cap reads remain in zero-padded FD
         ORG $FE00
 NewHaloSetup:
@@ -1353,14 +1385,20 @@ NewHaloSetup:
         rts
 HaloCheckBudget:
         bit TIMINT
-        bmi HaloSetupDone
+        bmi HaloNoBudget
         lda INTIM
-        bmi HaloSetupDone
+        bmi HaloNoBudget
         cmp #12
-        bcc HaloSetupDone
+        bcs HaloBudgetReady
+HaloNoBudget:
+        rts
+HaloBudgetReady:
         lda FrameCount
         and #1
         bne HaloCap
+        ldx Level
+        lda HaloSideSizes,x
+        sta NUSIZ0
         lda PlayerY
         lsr
         adc #$28           ; ceil(PlayerY/2) + side-band seed
@@ -1393,7 +1431,8 @@ HaloCap:
         sec
         sbc HaloRadius
         bcc HaloSetupDone
-        bcs HaloCapY
+        adc #9              ; carry from SBC makes the ten-row inset
+        bcc HaloCapY
 HaloCapBottom:
         lda PlayerY
         clc
@@ -1409,12 +1448,16 @@ HaloCapY:
         lda #$FD
         sta HaloRowPtr+1
         ldx Level
-        lda HaloCapSizes,x
+        lda HaloSideSizes,x
         sta NUSIZ0
         lda PlayerX
         sec
         sbc HaloCapInset,x
 HaloPosition:
+        cpx #3
+        bne HaloPositionReady
+        jsr HaloInwardX
+HaloPositionReady:
         ldx #0
         stx RESMP0
         jsr PositionMissile0
@@ -1424,12 +1467,12 @@ HaloPosition:
         sta HMM0
 HaloSetupDone:
         rts
+HaloSideSizes:
+        dc.b 0,$20,$35,$37
 HaloRightInset:
-        dc.b 0,2,4,8
+        dc.b 0,0,5,2
 HaloCapInset:
         dc.b 0,4,6,6
-HaloCapSizes:
-        dc.b 0,$20,$35,$37
 HudDraw:
         lda #$0E
         sta COLUPF
@@ -1477,10 +1520,10 @@ HudAdvance:
         rts
 
         ORG $FF01
-        ds 124,0   ; FF01..FF7C: OFF M1/BL/M0 zero guard
+        ds 118,0   ; FF01..FF76: OFF guard and padding
 HaloSideRim:
-        ds 7,2     ; FF7D..FF83: 14-line cardinal arc
-        ds 120,0   ; FF84..FFFB: zero guard
+        ds 19,2    ; FF77..FF89: 38 physical raster lines
+        ds 114,0   ; FF8A..FFFB: zero guard
         ORG $FFFC
         dc.w Reset
         dc.w Reset

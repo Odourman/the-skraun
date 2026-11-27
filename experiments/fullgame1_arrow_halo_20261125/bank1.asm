@@ -160,6 +160,10 @@ AudioMelody:
         ENDM
 
 HudPrepare:
+        bit $9F
+        bpl HudScore
+        jmp HudFire
+HudScore:
         ; Split each packed BCD score byte once. Row tables already have
         ; the glyph bits in PF1/PF2 order, so rendering needs no bit shifts.
         lda ScoreHi
@@ -217,6 +221,32 @@ FullPlayerShade:
 WritePlayerColor:
         sta $06
         jmp HudExitToGraphics
+
+HudFire:
+        lda #50
+        sta $84
+        ; FIRE uses the existing left HUD glyph positions.
+        lda #$EE
+        sta $90
+        lda #$84
+        sta $91
+        lda #$C4
+        sta $92
+        lda #$84
+        sta $93
+        lda #$8E
+        sta $94
+        lda #$77
+        sta $E9
+        lda #$15
+        sta $EA
+        lda #$73
+        sta $EB
+        lda #$15
+        sta $9A
+        lda #$75
+        sta $9B
+        jmp PrepareHaloColor
 
         ORG $F500
 ; Five rows per table. Each row is indexed by BCD digit 0 through 9.

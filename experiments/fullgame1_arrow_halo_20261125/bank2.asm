@@ -15,6 +15,7 @@ CTRLPF      = $0A
 AUDC0       = $15
 AUDF0       = $17
 AUDV0       = $19
+AUDV1       = $1A
 PlayerX     = $80
 PlayerY     = $81
 Level       = $82
@@ -24,6 +25,7 @@ SWCHB       = $0282
 OrbMask     = $9C
 ArrowCool   = $9D      ; legitimate reuse: consumed OrbTimer never read GAMEPLAY-3
 HaloFrames  = $9E
+AttackState = $9F      ; bit 7 waits at start
 ArrowMajor= $A1     ; bit 7 selects Y as the major axis
 ArrowMinor= $A2     ; magnitude of the minor axis
 Stage       = $AA
@@ -117,6 +119,10 @@ GameStartNew:
         ; inside the same overscan frame.
         jmp GameBankReturn
 GameInitialized:
+        bit AttackState
+        bpl GameStarted
+        jmp GameBankReturn
+GameStarted:
         lda StagePause
         beq StagePauseDone
         dec StagePause
@@ -146,20 +152,6 @@ InvulnDone:
         sta ScratchY
         jsr ActorBankEnter ; true F6 bank0 independent actor AI
         jsr UpdateArrow
-        ; New halo starts at frame=12 in bank3 overscan; one cue per
-        ; activation, 3 levels with separate TIA distortion/pitch.
-        lda HaloFrames
-        cmp #12
-        bne HaloSoundAlreadyPlayed
-        lda Level
-        asl
-        asl
-        asl
-        asl
-        cmp SoundFrames
-        bcc HaloSoundAlreadyPlayed
-        sta SoundFrames
-HaloSoundAlreadyPlayed:
         jsr SetWorldColors
         jsr UpdateSound
         jmp GameBankReturn
@@ -204,7 +196,10 @@ InitializeGame:
         sta $85
         sta StagePause
         sta HaloFrames
-        sta $9F           ; clear old recovery on restart
+        sta AUDV0
+        sta AUDV1
+        lda #$80
+        sta AttackState   ; return to FIRE prompt on cold start and RESET
         lda $86
         and #$C3          ; preserve sampled FIRE through RESET
         sta $86
@@ -944,20 +939,23 @@ OctagonOutside:
         lsr
         clc
         adc $EA
+        bcs HaloOverflow
         cmp HaloRadius
         rts
 OctagonXMax:
         lsr
         clc
         adc $E9
+        bcs HaloOverflow
         cmp HaloRadius
+HaloOverflow:
         rts
 
         ORG $F780
 GameOverImpl:
         lda #0
         sta HaloFrames
-        sta $9F
+        sta AttackState
         sta ArrowDX
         sta OrbMask
         lda #200

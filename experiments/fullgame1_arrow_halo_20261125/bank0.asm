@@ -14,6 +14,7 @@ FrameCount= $8D
 HalfW     = $98
 HalfH     = $99
 HaloFrames= $9E
+AttackState = $9F     ; bit 7 waits for FIRE, bits 0/1 track hit knight slots
 HaloRadius= $A0
 ArrowMajor= $A1     ; bit 7 selects Y as the major axis
 ArrowMinor= $A2
@@ -229,13 +230,13 @@ ClearActorRAM:
         sta K1X
         lda #96
         sta K1Y
-        lda #1
+        lda #3
         sta K1Alive
         lda #43
         sta K2X
         lda #96
         sta K2Y
-        lda #1
+        lda #3
         sta K2Alive
         lda #140       ; Ranger enters away from P0, no point-blank arrow
         sta RX
@@ -267,8 +268,24 @@ KnightTick:
 KnightExists:
         lda HaloFrames
         beq KnightTimer
+        lda KnightAttackBit,x
+        bit AttackState
+        bne KnightTimer
         jsr KnightWithinHalo
         beq KnightTimer
+        lda KnightAttackBit,x
+        ora AttackState
+        sta AttackState
+        lda K1Alive,x
+        sec
+        sbc Level
+        beq KnightDefeated
+        bcc KnightDefeated
+        sta K1Alive,x
+        lda #$90               ; short existing impact envelope
+        jsr QueueSound
+        jmp KnightTimer
+KnightDefeated:
         lda #0
         sta K1Alive,x
         jmp AwardKnight
@@ -330,6 +347,8 @@ KnightChase:
         and #7
         beq KnightReturn
         cmp #4
+        beq KnightReturn
+        cmp #6
         beq KnightReturn
         cmp #1
         bne KnightMoveStart
@@ -443,7 +462,7 @@ KnightNotBlocked:
 KnightBlockedYes:
         lda #1
         rts
-        ds $F2AF-*,0
+        ; Knight damage moves the following local helpers.
 
 KnightInRange:
         lda PlayerX
@@ -606,7 +625,8 @@ ExactNeutralPair:
         lda ArrowDX
         bne PairReject
         lda K1Alive
-        and K2Alive
+        beq PairReject
+        lda K2Alive
         beq PairReject
         lda K1Warn
         ora K1Strike
@@ -1063,7 +1083,11 @@ ReserveFarSide:
         sta K1Warn,x
         sta K1Strike,x
         sta K1Rest,x
-        lda #1
+        lda KnightAttackBit,x
+        eor #$FF
+        and AttackState
+        sta AttackState
+        lda #3
         sta K1Alive,x
         dec Reserves
         lda #0
@@ -1335,13 +1359,32 @@ RangerCheckTimer:
         cmp #7
         bcc RangerTimerTooLate
         cmp #34
-        bcc RangerTimerHasBudget
+        bcc RangerFallbackReserve
         lda #0
         sta $0294
 RangerTimerTooLate:
         jmp RangerRestorePosition
-RangerTimerHasBudget:
+RangerFallbackReserve:
+        ; Keep enough overscan for P1 arbitration after a second collision test.
+        cmp #12
+        bcc RangerTimerTooLate
         jmp RangerFallbackAllowed
+
+KnightAttackBit:
+        dc.b 1,0,0,0,0,0,0,2
+
+RangerLastTargetL1:
+        lda Level
+        cmp #1
+        bne RangerNotLastL1
+        lda StageKills
+        clc
+        adc #1
+        cmp KillsNeed
+        rts
+RangerNotLastL1:
+        clc
+        rts
 
         ORG $FA80
 ; Display only. Single urgent threat gets two frames in each three.
@@ -1469,13 +1512,16 @@ OctagonOutside:
         lsr
         clc
         adc $EA
+        bcs HaloOverflow
         cmp HaloRadius
         rts
 OctagonXMax:
         lsr
         clc
         adc $E9
+        bcs HaloOverflow
         cmp HaloRadius
+HaloOverflow:
         rts
 
         ORG $FC00
@@ -1683,6 +1729,19 @@ RangerInwardClear:
         sta RAlive
 RangerBand:
         tya
+        cmp #40
+        bcs RangerStandardBand
+        cmp #18
+        bcc RangerThreat
+        jsr RangerLastTargetL1
+        bcc RangerStandardBand
+        ; In the last L1 duel, take the shot at mid-range instead of
+        ; continually retreating outside the shortest halo.
+        lda RCool
+        bne RangerDoneNear
+        jmp RangerAimWindow
+RangerStandardBand:
+        tya
         cmp #28
         bcc RangerThreat
         ldx Stage
@@ -1697,6 +1756,7 @@ RangerBand:
         tya
         cmp #40
         bcc RangerRetreat
+RangerAimWindow:
         lda ArrowDX
         bne RangerDoneNear
         jsr RangerLaneRefined
@@ -1829,7 +1889,7 @@ ReturnTry:
         sta RX
         lda EdgeY,y
         sta RY
-        ; A candidate farther than 36 in either axis is safe even for L3.
+        ; Preserve the return distance. Partial edge entry keeps its own hit gate.
         lda PlayerX
         sec
         sbc RX
