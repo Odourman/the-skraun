@@ -517,6 +517,9 @@ HaloKnightYAbs:
         rts
 
 KnightCanHit:
+        lda $A7            ; render-owned P1 height; 60 means borrowed for aura
+        cmp #60
+        beq KnightIsHidden
         cpx #0
         bne KnightCheck2Visible
         lda DrawSlot
@@ -1505,25 +1508,25 @@ ASRRNext:
 OctagonOutside:
         sta $E9
         tya
-        cmp $E9
-        bcc OctagonXMax
-        sta $EA
+        ldy Level
+        cmp AuraHitHalfH,y
+        bcs AuraHitOutside
+        clc
+        adc AuraHitOffset,y
+        tay
         lda $E9
-        lsr
-        clc
-        adc $EA
-        bcs HaloOverflow
-        cmp HaloRadius
+        cmp AuraHitWidths,y
         rts
-OctagonXMax:
-        lsr
-        clc
-        adc $E9
-        bcs HaloOverflow
-        cmp HaloRadius
-HaloOverflow:
+AuraHitOutside:
+        sec
         rts
-
+AuraHitHalfH: dc.b 0,12,20,30
+AuraHitOffset: dc.b 0,0,12,32
+AuraHitWidths:
+        dc.b $08,$08,$08,$08,$08,$08,$06,$06,$06,$06,$04,$04,$10,$10,$10,$10
+        dc.b $10,$10,$10,$10,$10,$10,$0C,$0C,$0C,$0C,$0C,$0C,$08,$08,$04,$04
+        dc.b $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$1C,$1C,$1C,$1C,$1C,$1C
+        dc.b $1C,$1C,$18,$18,$18,$18,$14,$14,$10,$10,$0C,$0C,$08,$08
         ORG $FC00
 RepositionSurvivors:
         ; Preserve alive flags, reserves, kills, score and the current orb.

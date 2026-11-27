@@ -200,10 +200,6 @@ HudScore:
 PrepareHaloColor:
         lda #0
         sta $0B
-        lda $9E
-        beq PlayerSilver
-        lda #$2E
-        bne SelectPlayerShade
 PlayerSilver:
         lda #$0E
 SelectPlayerShade:
