@@ -666,15 +666,13 @@ RangerNoDraw:
         ldx #5
         jmp PoseChosen
 SelectKnightPose:
-        ldx #0
-        lda SwordWarn
-        beq KnightNoWarning
         ldx #1
-        jmp PoseChosen
-KnightNoWarning:
+        lda SwordWarn
+        bne PoseChosen
+        inx
         lda SwordStrike
-        beq PoseChosen
-        ldx #2
+        bne PoseChosen
+        jmp KnightWalkPick
 PoseChosen:
         lda EnemyArtLo,x
         sta EnemyRowPtr
@@ -716,6 +714,7 @@ RangerFleeFace:
         jmp EdgeArt
 ; Additional F6 bank3 visible loop: M1 takes place of PF2 halo for these frames.
 ; Pre-frame arrow/halo disjointness guaranteed by bank2 tick.
+        ds $F409-*,0      ; keep the original visible entry and following data fixed
 VisibleGate:
         jsr HudDraw
         lda DiagonalSkip    ; room/orb color overlaps HUD pointer for seven rows
@@ -1118,7 +1117,8 @@ R1DrawBytes:
         dc.b $CC,$48,$48,$28,$32,$75,$79,$7F,$79,$75,$71,$32,$70,$50,$78,$38,0  ; 17th zero = out-of-16-row lookup
 R1ReleaseBytes:
         dc.b $CC,$48,$48,$28,$32,$71,$71,$7F,$71,$71,$71,$32,$70,$50,$78,$38,0  ; 17th zero = out-of-16-row lookup
-        ds 9,0  ; 111B original padding preserved in size
+K1WalkBBytes:
+        dc.b $68,$2C,$25,$35,$5D,$DF,$DE,$DE,$DE,$FC,$7C,$38,$7C,$44,$7C,$38,$00
         ORG $F820
 WorldPFIndex:
         ds 2,0
@@ -1496,6 +1496,26 @@ HudAdvance:
         sta CTRLPF
         rts
 
+        ORG $FED2
+; EnemyBottom = 170 - enemy Y. Both coordinates contribute, so
+; opposite diagonal directions cannot cancel travel. A stopped knight
+; retains its last pose. ExactNeutralPair requires equal Y and an X
+; gap divisible by 16, so both hardware copies select the same pose.
+KnightWalkPick:
+        lda KnightX
+        asl
+        sec
+        sbc EnemyBottom
+        and #8
+        beq KnightWalkA
+        lda #<K1WalkBBytes
+        sta EnemyRowPtr
+        lda #>K1WalkBBytes
+        sta EnemyRowPtr+1
+        jmp NormalEnemyFace
+KnightWalkA:
+        ldx #0
+        jmp PoseChosen
         ORG $FF01
         ds $FFB0-*,0
 ClipAura:
