@@ -195,6 +195,13 @@ RefineClear:
         lda #1
         rts
 
+AuraMaxXLevel3:
+        dc.b 127,135,135,139,139,143,143,147,147,147,147,151
+        dc.b 151,151,151,151,151,155,155,155,155,155,155,155
+        dc.b 155,155,155,155,155,155,155,155,155,155,155,155
+        dc.b 155,155,155,155,155,155,155,155,155,155,155,151
+        dc.b 151,151,151,151,151,147,147,147,147,143,143,139
+        dc.b 139,135,135
         ORG $F100
 ActorEntry:
         lda ScratchY
@@ -609,6 +616,14 @@ LifeRemains:
         sta PlayerY
         rts
 
+AuraMaxXLevel12:
+        dc.b 129,129,131,131,131,133,133,133,133,133,133,133
+        dc.b 133,133,133,133,133,133,133,133,133,133,133,133
+        dc.b 133,133,131,131,131,129,129,129,133,133,137,137
+        dc.b 137,137,137,141,141,141,141,141,141,141,141,141
+        dc.b 141,141,141,141,141,141,141,141,141,141,141,141
+        dc.b 141,141,141,141,141,141,141,141,137,137,137,137
+        dc.b 137,133,133,129
         ORG $F400
 ; Exact neutral dual-knight copies. Only when Y, facing, neutral art and
 ; spacing match the hardware. Never enable duplicates with an active M1.
@@ -1529,57 +1544,55 @@ ASRRNext:
         lda #0
         rts
 
-; A,Y = visible body centre on X and gameplay Y. X is preserved.
-; The row tables project a 3 x 11 pixel core onto the existing aura.
-; Separate left and right bounds encode P0's measured X offset without
-; another lookup or carry chain in the overscan hot path.
-; Carry set means outside. No new RIOT bytes.
+ ; A,Y = body centre on X and gameplay Y; X preserved.
+; Signed rows, 3x11 core from actual Stella masks. No wider aura graphic.
+; E9 is scratch; ADC after CMP uses carry=0 (in range).
+; Signed coordinate difference cannot alias another accepted value: legal
+; actor/player separation is under 160 clocks, accepted |dx| <=31.
 BodyWithinAura:
         sta ScratchMin
         tya
         sec
         sbc PlayerY
-        bcs AuraBodyPositiveY
-        eor #$FF
-        adc #1
-AuraBodyPositiveY:
         ldy Level
-        cmp AuraBodyHalfH,y
+        clc
+        adc AuraBodyYBias,y
+        cmp AuraBodyYCount,y
         bcs AuraBodyMiss
         adc AuraBodyOffset,y
         tay
         lda ScratchMin
         sec
         sbc PlayerX
-        bcs AuraRightCompare
-        eor #$FF
-        adc #1
-        cmp AuraLeftWidths,y
+        eor #$80
+        cmp AuraMinX,y
+        bcc AuraBodyMiss
+        cpy #76
+        bcs AuraBodyL3
+        cmp AuraMaxXLevel12,y
         rts
-AuraRightCompare:
-        cmp AuraRightWidths,y
+AuraBodyL3:
+        cmp AuraMaxXLevel3-76,y
         rts
 AuraBodyMiss:
         sec
         rts
-AuraBodyHalfH: dc.b 0,16,23,31
-AuraBodyOffset: dc.b 0,0,16,39
-AuraLeftWidths:
-        dc.b 11,11,11,11,11,11,11,11,11,11,11,9
-        dc.b 9,9,7,7
-        dc.b 17,17,17,17,17,17,17,17,17,17,17,17
-        dc.b 17,17,17,13,13,13,13,13,9,9,5
-        dc.b 31,31,31,31,31,31,31,31,31,31,31,31
-        dc.b 31,31,31,27,27,27,27,27,27,23,23,23
-        dc.b 23,19,19,15,15,11,11
-AuraRightWidths:
-        dc.b 5,5,5,5,5,5,5,5,5,5,5,3
-        dc.b 3,3,1,1
-        dc.b 13,13,13,13,13,13,13,13,13,13,13,13
-        dc.b 13,13,13,9,9,9,9,9,5,5,1
-        dc.b 27,27,27,27,27,27,27,27,27,27,27,27
-        dc.b 27,27,27,23,23,23,23,23,23,19,19,19
-        dc.b 19,15,15,11,11,7,7
+AuraBodyYBias: dc.b 0,15,22,30
+AuraBodyYCount: dc.b 0,31,45,63
+AuraBodyOffset: dc.b 0,0,31,76
+AuraMinX:
+        dc.b 121,121,119,119,119,117,117,117,117,117,117,117
+        dc.b 117,117,117,117,117,117,117,117,117,117,117,117
+        dc.b 117,117,119,119,119,121,121,123,119,119,115,115
+        dc.b 115,115,115,111,111,111,111,111,111,111,111,111
+        dc.b 111,111,111,111,111,111,111,111,111,111,111,111
+        dc.b 111,111,111,111,111,111,111,111,115,115,115,115
+        dc.b 115,119,119,123,117,117,113,113,109,109,105,105
+        dc.b 105,105,101,101,101,101,101,101,97,97,97,97
+        dc.b 97,97,97,97,97,97,97,97,97,97,97,97
+        dc.b 97,97,97,97,97,97,97,97,97,97,97,97
+        dc.b 97,97,101,101,101,101,101,101,105,105,105,105
+        dc.b 109,109,113,113,117,117,125
 
         ORG $FC00
 RepositionSurvivors:
