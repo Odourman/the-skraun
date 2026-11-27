@@ -488,26 +488,28 @@ KnightOut:
         lda #0
         rts
 KnightWithinHalo:
-        lda PlayerX
-        sec
-        sbc K1X,x
-        bcs HaloKnightXAbs
-        eor #$FF
+        ; The P1 artwork is offset within its 8 clocks. Decode real
+        ; facing as SelectEnemyArtImpl does, including the locked poses.
+        lda K1Warn,x
+        ora K1Strike,x
+        bne KnightBodyLocked
+        lda K1X,x
+        cmp PlayerX
+        bcc KnightBodyRight
+        bcs KnightBodyLeft
+KnightBodyLocked:
+        lda K1Facing,x
+        beq KnightBodyRight
+KnightBodyLeft:
+        lda #2
+        bne KnightBodyOffset
+KnightBodyRight:
+        lda #$FF
+KnightBodyOffset:
         clc
-        adc #1
-HaloKnightXAbs:
-        sta $E9
-        lda PlayerY
-        sec
-        sbc K1Y,x
-        bcs HaloKnightYAbs
-        eor #$FF
-        clc
-        adc #1
-HaloKnightYAbs:
-        tay
-        lda $E9
-        jsr OctagonOutside
+        adc K1X,x
+        ldy K1Y,x
+        jsr BodyWithinAura
         bcs KnightOut
         lda #1
         rts
@@ -1002,30 +1004,17 @@ RangerExists:
         cmp #159
         bcs RangerTimers
 RangerHaloCheck:
-        lda PlayerX
-        sec
-        sbc RX
-        bcs RangerAbsX
-        eor #$FF
-        clc
-        adc #1
-RangerAbsX:
-        sta $E9
-        lda PlayerY
-        sec
-        sbc RY
-        bcs RangerAbsY
-        eor #$FF
-        clc
-        adc #1
-RangerAbsY:
-        tay
-        lda $E9
-        jsr OctagonOutside
+        ; Ranger's body is centred between native P1 columns 3 and 4
+        ; in its neutral, draw and release poses. Use their shared core.
+        lda RX
+        ldy RY
+        jsr BodyWithinAura
         bcs RangerTimers
         lda #0
         sta RAlive
         jmp AwardRanger
+        ; Keep existing Ranger timing probes and movement entry addresses.
+        ds $F751-*,0
 RangerTimers:
         jmp RangerTactics
 RangerDone:
@@ -1542,12 +1531,44 @@ ASRRNext:
         lda #0
         rts
 
-; Shared octagonal radial metric: maximum of |dx|,|dy| + half minimum.
-; Input A=unsigned |dx| and Y=unsigned |dy|. Output Carry=1 OUTSIDE,
-; Carry=0 INSIDE. X is preserved; scratch E9/EA lives only during call.
-OctagonOutside:
-        sta $E9
+; Input A,Y = body centre on the rendered horizontal axis and gameplay Y.
+; Compare the nearest point of a conservative 3 x 11 px core to the
+; existing stepped aura profile. No arm, sword, bow or leg tips.
+; Carries out=outside. X stays live for KnightTick. No additional RAM.
+BodyWithinAura:
+        sta ScratchMin
         tya
+        sec
+        sbc PlayerY
+        bcs AuraBodyPositiveY
+        eor #$FF
+        clc
+        adc #1
+AuraBodyPositiveY:
+        sec
+        sbc #5
+        bcs AuraBodyNearestY
+        lda #0
+AuraBodyNearestY:
+        sta ScratchMax
+        ldy Level
+        lda PlayerX
+        sec
+        sbc AuraCenterShift,y
+        sec
+        sbc ScratchMin
+        bcs AuraBodyPositiveX
+        eor #$FF
+        clc
+        adc #1
+AuraBodyPositiveX:
+        sec
+        sbc #1
+        bcs AuraBodyNearestX
+        lda #0
+AuraBodyNearestX:
+        sta ScratchMin
+        lda ScratchMax
         ldy Level
         cmp AuraHitHalfH,y
         bcs AuraHitOutside
@@ -1560,6 +1581,7 @@ OctagonOutside:
 AuraHitOutside:
         sec
         rts
+AuraCenterShift: dc.b 0,3,2,2
 AuraHitHalfH: dc.b 0,11,18,26
 AuraHitOffset: dc.b 0,0,11,29
 AuraHitWidths:
