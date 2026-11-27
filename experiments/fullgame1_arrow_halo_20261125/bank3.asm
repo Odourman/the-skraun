@@ -209,14 +209,14 @@ HaloPointerReady:
         ; Each object RESP and fine-HM register is set on its own WSYNC.
         ; One shared HMOVE after all three positions preserves the same
         ; physical X, while recovering 1-2 precious VBLANK scanlines.
+        jsr NewHaloSetup
         lda #0
-        sta HMP0
         sta HMP1
         sta HMM1
         sta HMBL
         lda RenderX
         jsr PositionP0
-        lda KnightX
+        lda ArrowRowPtr
         jsr PositionP1
         lda ArrowDX
         beq NoMissilePosition
@@ -226,7 +226,6 @@ NoMissilePosition:
         sta WSYNC
         sta HMOVE
         lda #0
-        sta HMP0
         sta HMM1
         sta HMBL
         ; Let P1 motion clocks finish before clearing its fine motion latch.
@@ -235,8 +234,8 @@ P1MotionWait:
         dex
         bne P1MotionWait
         sta HMP1
+        sta HMP0
         jsr RestoreOrbIfVisible
-        jsr NewHaloSetup
         jsr SetBallWidth
         ; Point M1's two enabled raster bytes at a *fixed screen Y*.
         ; Off pointer always full 193 zero bytes in preserved FF guard.
@@ -313,6 +312,7 @@ PairNextP0:
         bcs PairFirstBlank
         tay
         lda (GfxPtr),y
+        and HaloRowPtr
         dex
         jmp PairSecond
 PairFirstBlank:
@@ -324,15 +324,14 @@ PairSecond:
         ldy WorldPFIndex,x
         lda (ArrowRowPtr),y
         sta ENAM1
-        lda (HaloRowPtr),y
-        sta ENAM0
         txa
         sec
         sbc EnemyBottom
-        cmp #16
+        cmp HaloRowPtr+1
         bcs PairEnemyBlank
         tay
         lda (EnemyRowPtr),y
+        and HaloRadius
         jmp PairEnemyWrite
 PairEnemyBlank:
         lda #0
@@ -345,6 +344,7 @@ PairEnemyWrite:
         bcs PairSecondBlank
         tay
         lda (GfxPtr),y
+        and HaloRowPtr
         dex
         bne Visible
         jmp VisibleDone
@@ -900,7 +900,7 @@ OrbTolX:
 OrbTolY:
         dc.b 0,9,15,21
 RadiusTable:
-        dc.b 0,20,36,48
+        dc.b 0,8,16,32
 HaloSound:
         dc.b 0,$10,$20,$30
 HaloMaskTable:
@@ -1097,23 +1097,9 @@ PlayArtHi:
         ; Halo is a *first visible centered static contour experiment*,
         ; NOT full P0-following sprite or full-scene claim.
         ; L1 source-baked visible profile, with real signed Y shift
-HaloInwardX:
-        ; Alternate the L3 stroke by eight clocks to widen each arc over time.
-        tay
-        lda FrameCount
-        and #4
-        beq HaloKeepX
-        tya
-        cmp PlayerX
-        bcc HaloShiftRight
-        sbc #8
-        rts
-HaloShiftRight:
-        adc #8
-        rts
-HaloKeepX:
-        tya
-        rts
+AuraPhysicalHalf: dc.b 0,11,18,34
+AuraRightLimit: dc.b 0,155,146,130
+AuraLeftMasks: dc.b $7F,$3F,$1F,$0F
         ORG $F7A8
 K1NeutralBytes:
         dc.b $88,$D8,$A8,$A8,$70,$70,$78,$D8,$F8,$F8,$70,$D8,$D8,$88,$F8,$78,0  ; 17th zero = out-of-16-row lookup
@@ -1367,112 +1353,84 @@ PlayPF1:
 OrbScan:
         ds 70,0
         ds 4,2      ; compact eight physical lines around the orb collision center
-        ds 86,0    ; separate cap table at $FDA0
-HaloCapRows:
-        ds 6,2
-        ds $FE00-*,0      ; all indexed cap reads remain in zero-padded FD
+        ds $FD70-*,0
+AuraL1:
+        dc.b $3C,$3C,$7E,$7E,$7E,$7E,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        dc.b $FF,$FF,$7E,$7E,$7E,$7E,$3C,$3C
+AuraL2:
+        dc.b $18,$18,$3C,$3C,$7E,$7E,$7E,$7E,$7E,$7E,$FF,$FF,$FF,$FF,$FF,$FF
+        dc.b $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7E,$7E
+        dc.b $7E,$7E,$7E,$7E,$3C,$3C,$18,$18
+AuraL3:
+        dc.b $03,$03,$07,$07,$0F,$0F,$1F,$1F,$3F,$3F,$3F,$3F,$7F,$7F,$7F,$7F
+        dc.b $7F,$7F,$7F,$7F,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+        dc.b $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$7F,$7F,$7F,$7F,$7F,$7F,$7F,$7F
+        dc.b $3F,$3F,$3F,$3F,$1F,$1F,$0F,$0F,$07,$07,$03,$03
         ORG $FE00
 NewHaloSetup:
-        ; Attach M0 until it has a valid, current-frame halo position.
-        lda #2
-        sta RESMP0
-        lda #1
-        sta HaloRowPtr
+        lda #16
+        sta HaloRowPtr+1       ; normal P1 height
+        lda KnightX
+        sta ArrowRowPtr        ; scratch until PositionP1 returns
         lda #$FF
-        sta HaloRowPtr+1
+        sta HaloRowPtr         ; P0 mask
+        sta HaloRadius         ; P1 mask; UpdateAttack restores radius before logic
+        lda #0
+        sta ENAM0
         lda HaloFrames
-        bne HaloCheckBudget
-        rts
-HaloCheckBudget:
-        bit TIMINT
-        bmi HaloNoBudget
-        lda INTIM
-        bmi HaloNoBudget
-        cmp #12
-        bcs HaloBudgetReady
-HaloNoBudget:
-        rts
-HaloBudgetReady:
+        beq AuraDone
         lda FrameCount
         and #1
-        bne HaloCap
+        beq AuraDone
         ldx Level
-        lda HaloSideSizes,x
+        lda AuraHeights,x
+        sta SpriteHeight
+        lsr
+        sta RenderBottom
+        lda #177
+        sec
+        sbc PlayerY
+        sec
+        sbc RenderBottom
+        sta RenderBottom
+        lda AuraSize,x
         sta NUSIZ0
-        lda PlayerY
-        lsr
-        adc #$28           ; ceil(PlayerY/2) + side-band seed
-        sta HaloRowPtr
-        lda FrameCount
-        and #2
-        bne HaloAtRight
-        lda PlayerX
-        sec
-        sbc HaloRadius
-        cmp #5
-        bcc HaloSetupDone
-        cmp #160
-        bcs HaloSetupDone
-        bcc HaloPosition
-HaloAtRight:
-        lda PlayerX
-        clc
-        adc HaloRadius
-        cmp #159
-        bcs HaloSetupDone
-        ldx Level
-        sbc HaloRightInset,x ; carry is clear, includes one-clock origin correction
-        jmp HaloPosition
-HaloCap:
-        lda FrameCount
-        and #2
-        bne HaloCapBottom
-        lda PlayerY
-        sec
-        sbc HaloRadius
-        bcc HaloSetupDone
-        adc #9              ; carry from SBC makes the ten-row inset
-        bcc HaloCapY
-HaloCapBottom:
-        lda PlayerY
-        clc
-        adc HaloRadius
-HaloCapY:
-        cmp #6
-        bcc HaloSetupDone
-        cmp #171
-        bcs HaloSetupDone
-        lsr
-        adc #$48           ; HaloCapRows - 88 with ceil(Y/2)
-        sta HaloRowPtr
+        lda #$2E
+        sta COLUP0
+        lda AuraLo,x
+        sta GfxPtr
         lda #$FD
-        sta HaloRowPtr+1
-        ldx Level
-        lda HaloSideSizes,x
-        sta NUSIZ0
+        sta GfxPtr+1
         lda PlayerX
         sec
-        sbc HaloCapInset,x
-HaloPosition:
+        sbc AuraInputHalf,x
+        sta RenderX
         cpx #3
-        bne HaloPositionReady
-        jsr HaloInwardX
-HaloPositionReady:
-        ldx #0
-        stx RESMP0
-        jsr PositionMissile0
-        sta WSYNC
-        sta HMOVE
-        lda #0
-        sta HMM0
-HaloSetupDone:
+        bne AuraClip
+        lda SpriteHeight
+        sta HaloRowPtr+1
+        lda RenderBottom
+        sta EnemyBottom
+        lda #$17
+        sta NUSIZ1
+        lda #8
+        sta REFP1
+        lda #$2E
+        sta COLUP1
+        lda GfxPtr
+        sta EnemyRowPtr
+        lda GfxPtr+1
+        sta EnemyRowPtr+1
+        lda PlayerX
+        sta ArrowRowPtr
+AuraClip:
+        jsr ClipAura
+AuraDone:
         rts
-HaloSideSizes:
-        dc.b 0,$20,$35,$37
-HaloRightInset:
-        dc.b 0,0,5,2
-HaloCapInset:
-        dc.b 0,4,6,6
+AuraHeights: dc.b 0,24,40,60
+AuraSize: dc.b 0,5,7,7
+AuraInputHalf: dc.b 0,9,16,32
+AuraLo: dc.b 0,<AuraL1,<AuraL2,<AuraL3
 HudDraw:
         lda #$0E
         sta COLUPF
@@ -1520,10 +1478,48 @@ HudAdvance:
         rts
 
         ORG $FF01
-        ds 118,0   ; FF01..FF76: OFF guard and padding
-HaloSideRim:
-        ds 19,2    ; FF77..FF89: 38 physical raster lines
-        ds 114,0   ; FF8A..FFFB: zero guard
+        ds $FFB0-*,0
+ClipAura:
+        lda PlayerX
+        sec
+        sbc AuraPhysicalHalf,x
+        bcs AuraRightCheck
+        eor #$FF             ; missing pixels minus 1
+        lsr
+        cpx #1
+        beq AuraLeftIndex
+        lsr
+AuraLeftIndex:
+        tay
+        lda AuraLeftMasks,y
+        sta HaloRowPtr
+        lda RenderX
+        cmp #$E0
+        bcc AuraRightCheck
+        clc
+        adc #160             ; signed position encoded modulo TIA width
+        sta RenderX
+AuraRightCheck:
+        lda PlayerX
+        sec
+        sbc AuraRightLimit,x
+        bcc AuraClipDone
+        beq AuraClipDone
+        sec
+        sbc #1
+        lsr
+        lsr
+        tay
+        cpx #3
+        bne AuraRightP0
+        lda AuraLeftMasks,y  ; reflected P1: clear far right columns
+        sta HaloRadius
+        rts
+AuraRightP0:
+        lda #$FE             ; only L2 can reach this path (one column)
+        sta HaloRowPtr
+AuraClipDone:
+        rts
         ORG $FFFC
         dc.w Reset
         dc.w Reset
