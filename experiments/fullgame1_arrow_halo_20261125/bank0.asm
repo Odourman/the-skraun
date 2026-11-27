@@ -676,6 +676,56 @@ PairReject:
         pla
         rts
 
+DuelNear: dc.b 0,12,19,28
+DuelFar: dc.b 0,40,47,53
+DuelHoldRange: dc.b 0,24,29,38
+
+RangerDuel:
+        lda Reserves
+        bne DuelOpening
+        ; The reserve countdown has ended. Count active solo decision
+        ; ticks in the retired byte, saturating before it can wrap.
+        lda ResWait
+        bmi DuelPress
+        inc ResWait
+DuelOpening:
+        ldx Level
+        tya
+        cmp DuelNear,x
+        bcc DuelBackOff
+        cmp DuelFar,x
+        bcs DuelApproach
+        lda RCool
+        beq DuelAim
+        ; During cooldown alternate a fast close-in phase and a brief
+        ; stationary recovery. Neither phase restarts the shot timer.
+        and #$20
+        bne DuelStay
+        tya
+        cmp DuelHoldRange,x
+        bcs DuelApproach
+DuelStay:
+        rts
+DuelAim:
+        jmp RangerAimWindow
+DuelBackOff:
+        jmp RangerRetreat
+DuelApproach:
+        jmp RangerApproach
+DuelPress:
+        jmp RangerPress
+RangerPress:
+        ldx Level
+        tya
+        cmp DuelPressNear,x
+        bcc DuelBackOff
+        cmp DuelFar,x
+        bcs DuelApproach
+        lda RCool
+        bne DuelApproach
+        jmp RangerAimWindow
+
+DuelPressNear: dc.b 0,6,12,22
         ORG $F500
 ; Forward blade and inflated player body overlap. The 8-clock P1
 ; strike mask extends only a few clocks beyond the centre of the knight.
@@ -1372,17 +1422,11 @@ RangerFallbackReserve:
 KnightAttackBit:
         dc.b 1,0,0,0,0,0,0,2
 
-RangerLastTargetL1:
-        lda Level
-        cmp #1
-        bne RangerNotLastL1
+RangerOnlyEnemy:
         lda StageKills
         clc
         adc #1
         cmp KillsNeed
-        rts
-RangerNotLastL1:
-        clc
         rts
 
         ORG $FA80
@@ -1678,8 +1722,26 @@ RangerNormal:
         dec RDraw
         bne RangerDoneNear
         jsr RangerDistance
+        tay
+        jsr RangerOnlyEnemy
+        bcc RangerStandardShot
+        ldx Level
+        lda ResWait
+        bmi RangerLateShot
+        tya
+        cmp DuelNear,x
+        bcc RangerAbort
+        bcs RangerMaxShot
+RangerLateShot:
+        tya
+        cmp DuelPressNear,x
+        bcc RangerAbort
+        bcs RangerMaxShot
+RangerStandardShot:
+        tya
         cmp #26
         bcc RangerAbort
+RangerMaxShot:
         cmp #53
         bcs RangerAbort
         lda ArrowDX
@@ -1728,18 +1790,10 @@ RangerInwardClear:
         and #$FB
         sta RAlive
 RangerBand:
-        tya
-        cmp #40
-        bcs RangerStandardBand
-        cmp #18
-        bcc RangerThreat
-        jsr RangerLastTargetL1
+        jsr RangerOnlyEnemy
         bcc RangerStandardBand
-        ; In the last L1 duel, take the shot at mid-range instead of
-        ; continually retreating outside the shortest halo.
-        lda RCool
-        bne RangerDoneNear
-        jmp RangerAimWindow
+        jmp RangerDuel
+
 RangerStandardBand:
         tya
         cmp #28
