@@ -21,8 +21,10 @@ ScoreLo   = $AD
         SEG AudioCode
         ORG $F000
 AudioCold:
-        lda $FFF9
-        jmp $F000
+        jmp ColdGateway
+        nop
+        nop
+        nop
         ORG $F100
 AudioEngine:
         ; Channel0 and channel1 can accept different simultaneous events
@@ -285,6 +287,16 @@ AudioEntryTrampoline:
         ORG $F6EA
 AudioBankReturn:
         lda $FFF8       ; bank2 next fetch $F6ED is an RTS
+        ORG $FFE8
+ColdGateway:
+        nop
+        nop
+        nop
+        nop
+        jmp ColdSwitch     ; 11 cycles of compensation before F6 switch
+        ORG $FFF0
+ColdSwitch:
+        lda $FFF9          ; following opcode in bank3
         ORG $FFFC
-        dc.w AudioCold
-        dc.w AudioCold
+        dc.w ColdGateway
+        dc.w ColdGateway
