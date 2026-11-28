@@ -1559,6 +1559,9 @@ AuraRightP0:
         sta HaloRowPtr
 AuraClipDone:
         rts
+        ORG $FFF3
+ColdGatewayContinuation:
+        jmp Reset
         ORG $FFFC
         dc.w Reset
         dc.w Reset
