@@ -74,8 +74,10 @@ AuxMode   = $EF
         SEG GameAux
         ORG $F000
 ColdBoot:
-        lda $FFF9
-        jmp $F000
+        jmp ColdGateway
+        nop
+        nop
+        nop
 ; Bounded two-segment refinement of the conservative LOS (old fast path first).
 ; ScratchMin/Max = x bounds; ScratchIX/Y = y bounds. No new RAM.
 RangerLaneRefined:
@@ -2136,6 +2138,16 @@ RangerCheckY:
 RangerFree:
         lda #0
         rts
+        ORG $FFE8
+ColdGateway:
+        nop
+        nop
+        nop
+        nop
+        jmp ColdSwitch     ; 11 cycles of compensation before F6 switch
+        ORG $FFF0
+ColdSwitch:
+        lda $FFF9          ; following opcode in bank3
         ORG $FFFC
-        dc.w ColdBoot
-        dc.w ColdBoot
+        dc.w ColdGateway
+        dc.w ColdGateway
