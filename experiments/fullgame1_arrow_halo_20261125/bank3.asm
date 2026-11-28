@@ -391,10 +391,8 @@ SelectOrbZero:
         sta OrbRowPtr+1
 OrbSelected:
 OverScanWait:
-        bit TIMINT
-        bmi OverScanWaitDone
-        lda INTIM
-        bne OverScanWait
+        jmp OverScanCheckedWait
+        ds 7,$EA
 OverScanWaitDone:
         sta WSYNC
         sta WSYNC          ; GAMEPLAY-2 measured frame 261 -> add one OVERSCAN line, target 262
@@ -1516,6 +1514,18 @@ KnightWalkPick:
 KnightWalkA:
         ldx #0
         jmp PoseChosen
+        ORG $FEEC
+; Reject values above the loaded TIM64T range if the INTIM read
+; acknowledges an underflow between BIT and LDA.
+OverScanCheckedWait:
+        bit TIMINT
+        bmi OverScanCheckedDone
+        lda INTIM
+        beq OverScanCheckedDone
+        cmp #34
+        bcc OverScanCheckedWait
+OverScanCheckedDone:
+        jmp OverScanWaitDone
         ORG $FF01
         ds $FFB0-*,0
 ClipAura:
