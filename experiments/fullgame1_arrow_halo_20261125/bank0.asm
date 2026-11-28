@@ -208,8 +208,10 @@ ActorEntry:
         beq ActorsRunning
         cmp #2
         beq ActorsRespawning
-        jsr ActorInitialize
-        jmp AuxiliaryReturn
+        jmp ActorInitialize
+        nop
+        nop
+        nop
 ActorsRespawning:
         jsr RepositionSurvivors
         jsr ChooseP1
@@ -255,9 +257,11 @@ ClearActorRAM:
         sta Reserves
         lda #0
         sta NextSlot
-        jsr InstallWorldMap
-        jsr ChooseP1
-        rts
+        jmp LabInitFinish
+        nop
+        nop
+        nop
+        nop
 
 Knight1Tick:
         ldx #0
@@ -741,6 +745,16 @@ RangerPress:
         jmp RangerAimWindow
 
 DuelPressNear: dc.b 0,6,12,22
+        ORG $F4B9
+; HEALTH IV: direct entry saves 3 cycles; this JMP restores that cost.
+; The original init return + caller JMP costs 9 cycles; keep that envelope.
+LabInitFinish:
+        jsr InstallWorldMap
+        jsr ChooseP1
+        nop
+        nop
+        nop
+        jmp AuxiliaryReturn
         ORG $F500
 ; Forward blade and inflated player body overlap. The 8-clock P1
 ; strike mask extends only a few clocks beyond the centre of the knight.
