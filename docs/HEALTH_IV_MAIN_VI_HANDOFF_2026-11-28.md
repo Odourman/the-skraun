@@ -1,0 +1,10 @@
+# HEALTH IV — MAIN VI handoff, 2026-11-28
+HEALTH_OBSERVED; measured improvement bounded, overall audit incomplete; no product integration.
+Base PR78/B2 code 0fce7ccd6ab6d47703bf7233b7a7c928eb338704; experiment code 4048807118bdc7abb1b1558efaa3a53bfbc7a295.
+LAB_BEST Stack B F6 NTSC 16384 bytes SHA256 afd3469df3f40367175b9aff3b560bd6d26b5f05162039ecaae6e6daa1b0bf3c.
+Native DASM baseline reproduced byte-identically. B changes 23 bank0 bytes, consumes 12 bytes of ORG gap, banks1–3 unchanged. Conservative bank3-start stack 14→12 bytes; native trap SP F2→F4. No new allocatable persistent RAM. A rejected because two TIA events shift earlier. B vs B2 7200 matching framebuffer hashes and 7544552 identical PCM int16 values, 7199 normal 262-line intervals per ROM, 49078 matching normalized short TIA events, 98251 long selected trap events. Combat 396/396, orb 219/219 +37 skip, ghost 462/462. Injected timer yields one 250-line interval in both. Directed orb HUD capture nondeterministic across same-ROM runs, strict unconditional parity not claimed. Alternate reset bank model reaches FF opcode at bank3 F003 in both; source/model risk not reproduced hardware defect. Gopher, hardware, exhaustive beam, liveness and all-path timing not established. No independent verification.
+Full report https://drive.google.com/file/d/15QNeK6L7SuHLs8KwWHYnuysbgMX3yYf3/view
+Evidence ZIP https://drive.google.com/file/d/1KSFQaDA2BJ-4wk3DgYH0ERP3LL_zCu0x/view SHA256 50591f63ee16060e31c8263e0457601722e3707cc10dd51c910d6867a5282d45; 2771 manifest entries and CRC verified after re-download.
+Playable experiment https://drive.google.com/file/d/1cySII0kmL68cwUydKlOKt_qHs2NEAjrJ/view
+Native emulator gameplay https://drive.google.com/file/d/1TqXYiCpUi9q0XeNmeiN8edqUqXps_1d0/view
+Recommendation MAIN VI: retain B2 as product reference, review B for isolated adoption; resolve alternative reset bank and stack physical writes before allocating reclaimed RAM. No automatic merge or subsequent work.
